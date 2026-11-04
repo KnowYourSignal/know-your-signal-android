@@ -133,6 +133,18 @@ test('PostgreSQL/PostGIS migrations, permissions and domain contract', async (t)
         );
       }
     );
+    await t.test('projection cache is derived, consistent and cannot be overridden', async () => {
+      const info=(await db.query(`SELECT a.attgenerated AS generated,
+        ST_SRID(m.geom_6933) AS srid,
+        ST_Equals(m.geom_6933,ST_Transform(m.geom::geometry,6933)) AS matches
+        FROM public.mediciones m CROSS JOIN pg_attribute a
+        WHERE a.attrelid='public.mediciones'::regclass AND a.attname='geom_6933'
+        AND m.id=$1`,[legacyId])).rows[0];
+      assert.equal(info.generated,'s');
+      assert.equal(info.srid,6933);
+      assert.equal(info.matches,true);
+      await assert.rejects(()=>db.query('UPDATE public.mediciones SET geom_6933=ST_SetSRID(ST_MakePoint(0,0),6933) WHERE id=$1',[legacyId]),e=>e.code==='428C9');
+    });
     await t.test('consent is required even for direct RPC calls', async () => {
       await assert.rejects(
         () => ingest(users[0], [m()]),
@@ -145,6 +157,15 @@ test('PostgreSQL/PostGIS migrations, permissions and domain contract', async (t)
         () => ingest(null, [m()]),
         (e) => e.code === 'PT401'
       );
+    });
+    await t.test('projection cache preserves ingestion at geographic extremes', async () => {
+      for(const [latitud,longitud] of [[-90,-180],[-86,180],[0,0],[86,-180],[90,180]]) {
+        const item=m({latitud,longitud});
+        assert.deepEqual((await ingest(users[0],[item])).aceptadas,[item.id]);
+        const row=(await db.query('SELECT ST_SRID(geom_6933) AS srid,ST_IsEmpty(geom_6933) AS empty FROM public.mediciones WHERE id=$1',[item.id])).rows[0];
+        assert.equal(row.srid,6933);
+        assert.equal(row.empty,false);
+      }
     });
     await t.test(
       'raw measurements and private policy are inaccessible',
@@ -257,6 +278,7 @@ test('PostgreSQL/PostGIS migrations, permissions and domain contract', async (t)
           [{ tamano_zona: 'other' }, 'INVALID_ZONE_SIZE'],
           [{ version_config: 'missing' }, 'UNKNOWN_CONFIG'],
           [{ usuario_id: users[1] }, 'UNKNOWN_FIELDS'],
+          [{ geom_6933: 'POINT(0 0)' }, 'UNKNOWN_FIELDS'],
           [{ capturada_en: '2026-02-30T12:00:00Z' }, 'INVALID_TIMESTAMP'],
           [
             { capturada_en: new Date(Date.now() + 600000).toISOString() },
