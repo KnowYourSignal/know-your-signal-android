@@ -1,0 +1,16 @@
+{
+  "aceptadas": [],
+  "duplicadas": [],
+  "rechazadas": [
+    {
+      "id": "c1d2e3f4-a5b6-7c8d-9e0f-1a2b3c4d5e6f",
+      "codigo_error": "INVALID_ACCURACY",
+      "mensaje": "La precisión horizontal (25.0m) supera el umbral permitido."
+    },
+    {
+      "id": "d9e8f7a6-b5c4-3d2e-1f0a-9b8c7d6e5f4a",
+      "codigo_error": "INVALID_METRIC",
+      "mensaje": "La potencia dBm (-200) está fuera del rango plausible."
+    }
+  ]
+}

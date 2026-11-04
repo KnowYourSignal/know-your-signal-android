@@ -1,0 +1,37 @@
+{
+  "esquema_version": "1.0",
+  "mediciones": [
+    {
+      "id": "c1d2e3f4-a5b6-7c8d-9e0f-1a2b3c4d5e6f",
+      "latitud": -33.456,
+      "longitud": -70.654,
+      "precision_m": 25.0,
+      "potencia_dbm": -65,
+      "metrica": "wifi_rssi",
+      "tecnologia_radio": "wifi",
+      "tipo_conexion": "wifi_privada",
+      "origen_clasificacion": "sistema",
+      "piso_nivel": 1,
+      "tamano_zona": "pequeno",
+      "capturada_en": "2026-11-02T18:00:00Z",
+      "version_config": "mvp-1",
+      "version_aviso": "1.0"
+    },
+    {
+      "id": "d9e8f7a6-b5c4-3d2e-1f0a-9b8c7d6e5f4a",
+      "latitud": -33.456,
+      "longitud": -70.654,
+      "precision_m": 5.0,
+      "potencia_dbm": -200,
+      "metrica": "wifi_rssi",
+      "tecnologia_radio": "wifi",
+      "tipo_conexion": "wifi_privada",
+      "origen_clasificacion": "sistema",
+      "piso_nivel": 1,
+      "tamano_zona": "pequeno",
+      "capturada_en": "2026-11-02T18:00:00Z",
+      "version_config": "mvp-1",
+      "version_aviso": "1.0"
+    }
+  ]
+}
