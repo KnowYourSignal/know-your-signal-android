@@ -76,8 +76,8 @@ originales mantuvieron su contenido intacto.
 
 También se registraron como aplicadas las dos migraciones iniciales que ya
 existían en el esquema, sin volver a ejecutarlas. El historial queda alineado con
-los tres archivos del repositorio: `20261016000000`, `20261016000001` y
-`20261104032747`. El PR sigue abierto y no se fusionó.
+los cuatro archivos del repositorio: `20261016000000`, `20261016000001`,
+`20261104032747` y `20261104043215`. El PR sigue abierto y no se fusionó.
 
 La [suite nativa](../tests/backend/native.py) añade diez escenarios con conexiones
 PostgreSQL independientes: reintentos simultáneos, conflictos de propietario y
@@ -110,8 +110,8 @@ comprobaron mediante esperas de bloqueo reales observadas en `pg_stat_activity`.
 
 ### Optimización de la consulta del mapa
 
-La migración adicional `20261104041017_cache_map_projection.sql` está preparada y
-probada, pendiente de aplicación en Cloud. Añade `geom_6933`, una columna privada
+La migración adicional `20261104043215_cache_map_projection.sql` se aplicó en
+Cloud con autorización del usuario el 4 de noviembre de 2026. Añade `geom_6933`, una columna privada
 generada desde `geom`, y su índice GiST. Calcula la proyección al escribir y usa
 un filtro rectangular en coordenadas proyectadas; los índices de celda siguen
 comprobando la pertenencia exacta a las celdas completas. Evita transformar y
@@ -136,6 +136,14 @@ y las tres comprobaciones de seguridad del ejecutor. Para 100.000 muestras:
 
 Los ensayos usan instancias de CI distintas; los tiempos no son una garantía de
 capacidad de Cloud. La prueba completa en Android sigue pendiente.
+
+Tras aplicar la migración se comprobaron las tres proyecciones, el índice GiST,
+los permisos de tabla/columna y el mapa con rol anon. Los campos originales
+conservan la misma huella canónica al excluir únicamente `geom_6933` de la
+comparación. El cálculo almacenado coincide con ST_Transform y usa SRID 6933.
+La columna nueva sigue inaccesible para anon/authenticated y el mapa oculta
+grupos con menos de cinco contribuyentes. El nombre de la migración coincide con
+el registro generado por Supabase y su SQL es idéntico al probado en CI.
 
 Para ejecutar la suite se necesitan `psql`, Python y una base nueva y desechable
 en loopback llamada `kys_test_backend`; definir `KYS_TEST_DATABASE_URL` con esa

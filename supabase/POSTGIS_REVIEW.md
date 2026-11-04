@@ -10,16 +10,14 @@ Comprobación de solo lectura del 4 de noviembre de 2026 en
 | Rol conectado | `postgres`, sin membresía en `supabase_admin` |
 | Permisos para revocar grants existentes | Sin grant option sobre la tabla |
 | RLS de `spatial_ref_sys` | Deshabilitado; roles API con permisos de escritura |
-| Columna de la aplicación dependiente | `public.mediciones.geom`: `geography(Point,4326)` |
+| Columnas de la aplicación dependientes | `geom`: `geography(Point,4326)`; `geom_6933`: `geometry(Point,6933)` generado |
 | RPC de aplicación preparadas | Las cuatro tienen `extensions` en su search_path fijo |
 | Cambios de la tabla de referencia registrados en estadísticas | 0 updates y 0 deletes desde el reinicio de estadísticas informado |
 | Logs consultados, últimas 24 horas | 51 entradas de Data API; 0 solicitudes a `spatial_ref_sys` |
 | Mediciones de la aplicación | 3; misma huella que antes de la revisión |
 
-La optimización de rendimiento preparada añade una segunda columna dependiente,
-`geom_6933` (`geometry(Point,6933)`), generada desde `geom`, y un índice GiST.
-Si se aplica antes de solicitar el traslado, incluir también esos objetos en la
-petición. El código con ambas columnas pasó los escenarios nativos con PostGIS
+La optimización de rendimiento ya aplicada añade `geom_6933`, generada desde
+`geom`, y un índice GiST. Incluir también esos objetos en la petición de traslado. El código con ambas columnas pasó los escenarios nativos con PostGIS
 en `public` y en `extensions`; esto no mueve la extensión del proyecto.
 
 Las estadísticas no identifican inserciones ajenas a la instalación y la ventana
@@ -44,8 +42,9 @@ los permisos quedaron corregidos solo porque un comando no produjo errores.
 
 Proyecto `oefdpaqezvksxjgruufv`, Know Your Signal, PostgreSQL 17.11 / PostGIS 3.3.7.
 Solicitar traslado de PostGIS de `public` a `extensions` sin eliminar ni recrear
-las columnas, datos, índices o RPC de aplicación. La columna dependiente es
-`public.mediciones.geom` y deben conservarse los SRID 4326 y 6933. Las RPC ya
+las columnas, datos, índices o RPC de aplicación. Las columnas dependientes son
+`public.mediciones.geom` y `public.mediciones.geom_6933`; deben conservarse sus
+expresiones generadas, índices y los SRID 4326 y 6933. Las RPC ya
 incluyen `extensions` en su search_path. Confirmar la ventana y el procedimiento
 de reconexión de Data API antes de realizar el traslado.
 
