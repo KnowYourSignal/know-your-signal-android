@@ -16,6 +16,12 @@ Comprobación de solo lectura del 4 de noviembre de 2026 en
 | Logs consultados, últimas 24 horas | 51 entradas de Data API; 0 solicitudes a `spatial_ref_sys` |
 | Mediciones de la aplicación | 3; misma huella que antes de la revisión |
 
+La optimización de rendimiento preparada añade una segunda columna dependiente,
+`geom_6933` (`geometry(Point,6933)`), generada desde `geom`, y un índice GiST.
+Si se aplica antes de solicitar el traslado, incluir también esos objetos en la
+petición. El código con ambas columnas pasó los escenarios nativos con PostGIS
+en `public` y en `extensions`; esto no mueve la extensión del proyecto.
+
 Las estadísticas no identifican inserciones ajenas a la instalación y la ventana
 de logs no demuestra ausencia de cambios fuera del periodo consultado.
 

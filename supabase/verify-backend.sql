@@ -19,6 +19,16 @@ ORDER BY p.proname;
 
 SELECT format_type(a.atttypid,a.atttypmod) AS spatial_type
 FROM pg_attribute a WHERE a.attrelid='public.mediciones'::regclass AND a.attname='geom';
+SELECT a.attname,format_type(a.atttypid,a.atttypmod) AS spatial_type,
+  a.attgenerated AS generated,
+  has_column_privilege('anon',a.attrelid,a.attnum,'SELECT') AS anon_select,
+  has_column_privilege('authenticated',a.attrelid,a.attnum,'SELECT') AS authenticated_select
+FROM pg_attribute a WHERE a.attrelid='public.mediciones'::regclass
+  AND a.attname IN ('geom','geom_6933') AND NOT a.attisdropped;
 SELECT indexname,indexdef FROM pg_indexes WHERE schemaname='public' AND tablename='mediciones';
 SELECT min_contribuyentes,celda_min_m,antiguedad_dias,solicitudes_minuto FROM kys_private.politica;
+-- Compare original fields even when the private derived cache column is present.
+SELECT count(*) AS measurements,
+  md5(string_agg(md5((to_jsonb(m)-'geom_6933')::text),'' ORDER BY id)) AS original_fields_checksum
+FROM public.mediciones m;
 ROLLBACK;

@@ -79,7 +79,7 @@ existían en el esquema, sin volver a ejecutarlas. El historial queda alineado c
 los tres archivos del repositorio: `20261016000000`, `20261016000001` y
 `20261104032747`. El PR sigue abierto y no se fusionó.
 
-La [suite nativa](../tests/backend/native.py) añade nueve escenarios con conexiones
+La [suite nativa](../tests/backend/native.py) añade diez escenarios con conexiones
 PostgreSQL independientes: reintentos simultáneos, conflictos de propietario y
 contenido, ocho lotes simultáneos de 100 elementos, cuota atómica, revocación en
 ambos órdenes de bloqueo, uso de GiST y ocho lectores concurrentes. Se ejecuta en
@@ -107,6 +107,35 @@ Los ocho lectores de la vista amplia con 100.000 muestras completaron el escenar
 en aproximadamente 6,6–6,9 segundos. Esta carga mayor no certifica una latencia de
 3 segundos para cada usuario. La cuota y los dos órdenes de revocación sí se
 comprobaron mediante esperas de bloqueo reales observadas en `pg_stat_activity`.
+
+### Optimización de la consulta del mapa
+
+La migración adicional `20261104041017_cache_map_projection.sql` está preparada y
+probada, pendiente de aplicación en Cloud. Añade `geom_6933`, una columna privada
+generada desde `geom`, y su índice GiST. Calcula la proyección al escribir y usa
+un filtro rectangular en coordenadas proyectadas; los índices de celda siguen
+comprobando la pertenencia exacta a las celdas completas. Evita transformar y
+comparar geográficamente cada punto en cada lectura. Conserva los argumentos,
+campos de respuesta, mediana, filtros y mínimo de contribuyentes.
+
+La columna aumenta el almacenamiento y el coste de escritura; no acepta valores
+del cliente y no tiene permisos de lectura para roles API. El backfill puede tomar
+un bloqueo de tabla: la migración limita la espera a 5 segundos y la ejecución a
+30 segundos. No elimina ni reemplaza campos originales. También se probaron
+los polos, latitudes altas, proximidad al cambio de fecha y el origen.
+
+En el [ensayo de la optimización](https://github.com/KnowYourSignal/know-your-signal-android/actions/runs/41772363376)
+pasaron 68 comprobaciones funcionales, los diez escenarios nativos en cada esquema
+y las tres comprobaciones de seguridad del ejecutor. Para 100.000 muestras:
+
+| Medición | PostGIS en public | PostGIS en extensions |
+| --- | ---: | ---: |
+| p95 SQL, viewport | 27,437 ms | 29,660 ms |
+| p95 SQL, vista amplia | 359,490 ms | 386,853 ms |
+| Máximo por cliente, 8 lectores de vista amplia | 2.626,110 ms | 2.720,756 ms |
+
+Los ensayos usan instancias de CI distintas; los tiempos no son una garantía de
+capacidad de Cloud. La prueba completa en Android sigue pendiente.
 
 Para ejecutar la suite se necesitan `psql`, Python y una base nueva y desechable
 en loopback llamada `kys_test_backend`; definir `KYS_TEST_DATABASE_URL` con esa
