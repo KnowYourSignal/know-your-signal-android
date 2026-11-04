@@ -65,16 +65,23 @@ contribuyentes. Las tres mediciones anteriores conservaron exactamente la misma
 huella de contenido. Auth anónimo está habilitado; la API impide la lectura pública
 de mediciones crudas y el mapa agregado funciona sin mostrar grupos pequeños.
 
-Pendientes: una prueba de envío autenticado con usuario/medición temporales y su
-limpieza, la concurrencia y el rendimiento integrado. La revisión automática
-bloqueó la prueba que creaba datos temporales por falta de autorización específica;
-no se creó ningún usuario, consentimiento ni medición de prueba.
+Con autorización adicional se ejecutaron doce comprobaciones HTTP reales: alta
+anónima, bloqueo sin consentimiento, registro del permiso, ingesta en piso 0,
+reintento duplicado, conflicto de contenido, rechazo de precisión en el umbral,
+lote con null, bloqueo de lectura cruda, revocación, bloqueo posterior y privacidad
+del mapa. Todas pasaron. Se comprobó en SQL que el lote inválido no insertó una
+segunda medición. Después se eliminó el usuario temporal y se verificó la limpieza
+de su medición, consentimiento y contador de solicitudes. Las tres mediciones
+originales mantuvieron su contenido intacto.
 
-La base ya tenía las dos migraciones iniciales ejecutadas manualmente, sin
-historial. Registrar esas versiones como aplicadas también fue bloqueado por la
-revisión automática; el historial contiene solo la migración nueva. No ejecutar
-`db push` hasta reconciliar ese historial con autorización. Esto no impide usar
-las funciones que ya quedaron desplegadas. El PR sigue abierto y no se fusionó.
+También se registraron como aplicadas las dos migraciones iniciales que ya
+existían en el esquema, sin volver a ejecutarlas. El historial queda alineado con
+los tres archivos del repositorio: `20261016000000`, `20261016000001` y
+`20261104032747`. El PR sigue abierto y no se fusionó.
+
+Quedan pendientes la concurrencia, el rendimiento integrado y la revisión de los
+avisos de objetos PostGIS administrados por el proveedor. Las pruebas funcionales
+descritas no certifican esos aspectos.
 
 ## Consentimiento
 
