@@ -1,0 +1,63 @@
+name: Backend grupo 11
+on:
+  pull_request:
+    paths: ['supabase/**', 'tests/backend/**', 'scripts/test-ingest.mjs', '.github/workflows/backend.yml']
+  push:
+    branches: [main]
+    paths: ['supabase/**', 'tests/backend/**', '.github/workflows/backend.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  contract-and-database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: tests/backend/package-lock.json
+      - run: npm ci --prefix tests/backend --ignore-scripts
+      - run: npm run check:backend
+      - run: npm run test:backend
+  native-postgres:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        postgis_schema: [public, extensions]
+    services:
+      postgres:
+        image: postgis/postgis:17-3.6
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: backend-test-only
+          POSTGRES_DB: kys_test_backend
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d kys_test_backend"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends postgresql-client
+      - name: Native concurrency and SQL benchmark
+        env:
+          KYS_TEST_DATABASE_URL: postgresql://postgres:backend-test-only@127.0.0.1:5432/kys_test_backend
+          KYS_POSTGIS_SCHEMA: ${{ matrix.postgis_schema }}
+        run: |
+          python3 tests/backend/native_guard_test.py
+          python3 tests/backend/native.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-backend-report-${{ matrix.postgis_schema }}
+          path: tests/backend/native-backend-report.json
+          if-no-files-found: ignore
