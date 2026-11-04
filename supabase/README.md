@@ -8,7 +8,7 @@ dejar acordada esa diferencia.
 
 ## Instalación y verificación local
 
-Las migraciones antiguas se conservan. `20261104000000_harden_backend.sql` añade
+Las migraciones antiguas se conservan. `20261104032747_harden_backend.sql` añade
 los controles sin borrar mediciones existentes. No se debe editar una migración ya
 aplicada ni ejecutar `db reset` sobre un proyecto remoto.
 
@@ -49,6 +49,32 @@ La configuración de Auth Cloud se habilita aparte en el Dashboard; este reposit
 no puede probar que el proyecto remoto tenga el mismo estado. La función usa
 `SUPABASE_URL` y `SUPABASE_PUBLISHABLE_KEY` o `SUPABASE_ANON_KEY`, siempre con el
 JWT del usuario; no necesita `service_role`. Una clave publicable no reemplaza al JWT.
+
+## Despliegue comprobado en Cloud
+
+El 4 de noviembre de 2026 se aplicó, con autorización del usuario, la versión del
+commit `2daa0f0e62453d47c1570b04251e15f3fac9867b` al proyecto
+`oefdpaqezvksxjgruufv` (Know Your Signal): Edge Function `ingest-measurements`
+versión 2, `verify_jwt=true`, y migración `20261104032747_harden_backend.sql`.
+El nombre del archivo se alineó con la versión registrada por Supabase; su SQL
+es idéntico al que pasó las 65 comprobaciones y al que se aplicó.
+
+Se comprobó el contenido de los tres archivos desplegados, el bloqueo de la RPC
+antigua, los permisos de lectura/escritura, los índices y el mínimo de cinco
+contribuyentes. Las tres mediciones anteriores conservaron exactamente la misma
+huella de contenido. Auth anónimo está habilitado; la API impide la lectura pública
+de mediciones crudas y el mapa agregado funciona sin mostrar grupos pequeños.
+
+Pendientes: una prueba de envío autenticado con usuario/medición temporales y su
+limpieza, la concurrencia y el rendimiento integrado. La revisión automática
+bloqueó la prueba que creaba datos temporales por falta de autorización específica;
+no se creó ningún usuario, consentimiento ni medición de prueba.
+
+La base ya tenía las dos migraciones iniciales ejecutadas manualmente, sin
+historial. Registrar esas versiones como aplicadas también fue bloqueado por la
+revisión automática; el historial contiene solo la migración nueva. No ejecutar
+`db push` hasta reconciliar ese historial con autorización. Esto no impide usar
+las funciones que ya quedaron desplegadas. El PR sigue abierto y no se fusionó.
 
 ## Consentimiento
 
@@ -187,7 +213,7 @@ anonimato absoluto. No se implementan borrados automáticos ni retención destru
 
 Antes de desplegar, verificar Auth Cloud, permisos reales, migraciones desde una
 base vacía y desde datos existentes, integración del grupo 10, concurrencia y
-rendimiento. Este cambio no ejecuta despliegues ni modifica la instancia remota.
+rendimiento. Las pruebas aisladas no ejecutan despliegues ni modifican la instancia remota.
 
 Si las tablas ya existen pero no hay historial de migraciones, no ejecutar
 `db push` a ciegas: intentaría volver a crear las tablas iniciales. Primero comparar
