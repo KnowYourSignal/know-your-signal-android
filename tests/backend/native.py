@@ -258,6 +258,20 @@ MAP = "public.public_map_cells(-70.655::float8,-33.457::float8,-70.653::float8,-
 WIDE_MAP = "public.public_map_cells(-71::float8,-34::float8,-70::float8,-33::float8,0::smallint,NULL::text,50::float8,'wifi_rssi')"
 
 
+def global_cells():
+    users=[new_user() for _ in range(5)]
+    for lat,lon in ((84,179.8),(-84,-179.8),(0,0),(45,-70)):
+        for i,uid in enumerate(users):
+            ingest(uid,[measurement(latitud=lat,longitud=lon,potencia_dbm=-65-5*i)])
+        expression='public.public_map_cells('+','.join([
+            str(lon-0.000001)+'::float8',str(lat-0.000001)+'::float8',
+            str(lon+0.000001)+'::float8',str(lat+0.000001)+'::float8',
+            "0::smallint","NULL::text","50::float8","'wifi_rssi'"])+')'
+        rows=result('(SELECT jsonb_agg(to_jsonb(c)) FROM '+expression+' c)', 'BEGIN;SET LOCAL ROLE anon;', 'ROLLBACK;')
+        assert rows and len(rows)==1 and rows[0]['total_contribuyentes']==5
+        assert rows[0]['mediana_potencia']==-75
+
+
 def benchmark():
     execute("INSERT INTO auth.users(id) SELECT md5('bench-user-'||i)::uuid FROM generate_series(0,7) i;")
     budget = float(os.environ.get('KYS_SQL_BUDGET_MS','3000'))
@@ -278,6 +292,9 @@ def benchmark():
     index_plan=json.loads(execute("EXPLAIN(ANALYZE,BUFFERS,FORMAT JSON) SELECT count(*) FROM public.mediciones WHERE ST_Intersects(geom,ST_MakeEnvelope(-70.655,-33.457,-70.653,-33.455,4326)::geography);"))
     assert 'idx_mediciones_geom_gist' in json.dumps(index_plan), 'selective spatial predicate did not use GiST'
     REPORT['spatial_index_plan']=index_plan
+    projected_plan=json.loads(execute("EXPLAIN(ANALYZE,BUFFERS,FORMAT JSON) SELECT count(*) FROM public.mediciones WHERE geom_6933 && ST_Transform(ST_MakeEnvelope(-70.655,-33.457,-70.653,-33.455,4326),6933);"))
+    assert 'idx_mediciones_geom_6933_gist' in json.dumps(projected_plan), 'projected viewport predicate did not use GiST'
+    REPORT['projected_index_plan']=projected_plan
 
 
 def simultaneous_map_reads():
@@ -334,6 +351,7 @@ def main():
     check('sixteen concurrent requests enforce atomic quota',atomic_quota)
     check('ingestion holds consent until commit; revocation then blocks',lambda:consent_race(True))
     check('revocation holds consent; waiting ingestion is denied',lambda:consent_race(False))
+    check('global cell selection works at high latitudes, dateline and origin',global_cells)
     check('map performance and selective GiST plan',benchmark)
     check('eight concurrent map reads preserve identical aggregates',simultaneous_map_reads)
 

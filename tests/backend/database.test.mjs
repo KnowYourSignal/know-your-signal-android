@@ -442,6 +442,16 @@ test('PostgreSQL/PostGIS migrations, permissions and domain contract', async (t)
         await db.exec('UPDATE kys_private.politica SET solicitudes_minuto=60');
       }
     );
+    await t.test('projected cell selection preserves high-latitude, dateline and origin points', async () => {
+      for(const [latitud,longitud] of [[84,179.8],[-84,-179.8],[0,0],[45,-70]]) {
+        for(let i=0;i<5;i++)
+          await ingest(users[i],[m({latitud,longitud,potencia_dbm:-65-5*i})]);
+        const rows=await map({min_lon:longitud-0.000001,max_lon:longitud+0.000001,min_lat:latitud-0.000001,max_lat:latitud+0.000001});
+        assert.equal(rows.length,1);
+        assert.equal(Number(rows[0].total_contribuyentes),5);
+        assert.equal(Number(rows[0].mediana_potencia),-75);
+      }
+    });
     await t.test(
       'unexpected SQL failure rolls back earlier inserts in the batch',
       async () => {

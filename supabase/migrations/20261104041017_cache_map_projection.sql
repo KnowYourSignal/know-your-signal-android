@@ -6,6 +6,7 @@ SET LOCAL lock_timeout = '5s';
 SET LOCAL statement_timeout = '30s';
 ALTER TABLE public.mediciones ADD COLUMN geom_6933 geometry(Point,6933)
   GENERATED ALWAYS AS (ST_Transform(geom::geometry,6933)) STORED;
+CREATE INDEX idx_mediciones_geom_6933_gist ON public.mediciones USING gist(geom_6933);
 COMMENT ON COLUMN public.mediciones.geom_6933 IS
   'Private server-maintained EPSG:6933 projection cache; never a public coordinate field.';
 
@@ -18,7 +19,7 @@ RETURNS TABLE(celda_id text,longitud_centro double precision,latitud_centro doub
   metrica text,tecnologia_radio text,tipo_conexion text,resolucion_m double precision)
 LANGUAGE plpgsql SECURITY DEFINER
 SET search_path = pg_catalog, public, extensions, pg_temp AS $$
-DECLARE resolucion double precision; caja geometry; ampliada geography;
+DECLARE resolucion double precision; caja geometry; ampliada geometry;
   x0 double precision; x1 double precision; y0 double precision; y1 double precision;
   ix0 bigint; ix1 bigint; iy0 bigint; iy1 bigint;
   politica kys_private.politica; inicio timestamptz; fin timestamptz;
@@ -59,17 +60,17 @@ BEGIN
     IF resolucion>1000000 THEN RAISE SQLSTATE 'PT400' USING MESSAGE='ZOOM_REQUIRED'; END IF;
   END LOOP;
   -- Clamp the last cells to the projection's world extent near +/-180 degrees.
-  ampliada := ST_Transform(ST_MakeEnvelope(
+  ampliada := ST_MakeEnvelope(
     greatest(ix0*resolucion,ST_X(ST_Transform(ST_SetSRID(ST_MakePoint(-180,0),4326),6933))),
     greatest(iy0*resolucion,ST_Y(ST_Transform(ST_SetSRID(ST_MakePoint(0,-86),4326),6933))),
     least((ix1+1)*resolucion,ST_X(ST_Transform(ST_SetSRID(ST_MakePoint(180,0),4326),6933))),
-    least((iy1+1)*resolucion,ST_Y(ST_Transform(ST_SetSRID(ST_MakePoint(0,86),4326),6933))),6933),4326)::geography;
+    least((iy1+1)*resolucion,ST_Y(ST_Transform(ST_SetSRID(ST_MakePoint(0,86),4326),6933))),6933);
   RETURN QUERY
   WITH candidatas AS (
     SELECT m.usuario_id,m.potencia_dbm,m.metrica,m.tecnologia_radio,
       m.tipo_conexion,m.geom_6933 AS proyectada
     FROM public.mediciones m JOIN public.configuraciones c ON c.version=m.version_config
-    WHERE ST_Intersects(m.geom,ampliada) AND m.piso_nivel=piso_filtro
+    WHERE m.geom_6933 && ampliada AND m.piso_nivel=piso_filtro
       AND m.metrica=metrica_filtro AND m.capturada_en>=inicio AND m.capturada_en<fin
       AND (tipo_conexion_filtro IS NULL OR m.tipo_conexion=tipo_conexion_filtro)
       -- Legacy data is retained, but invalid legacy rows cannot reach the map.
