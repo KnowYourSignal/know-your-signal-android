@@ -294,7 +294,23 @@ def simultaneous_map_reads():
 
 
 def main():
-    if not result("to_regclass('public.mediciones') IS NULL AND to_regnamespace('auth') IS NULL"):
+    # Ignore extension-owned reference objects, but protect any application table,
+    # sequence, view or function, even when it has an unrelated name/schema.
+    fresh = """to_regnamespace('auth') IS NULL AND NOT EXISTS (
+      SELECT FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+      WHERE n.nspname NOT IN ('pg_catalog','information_schema')
+        AND n.nspname NOT LIKE 'pg_toast%' AND n.nspname NOT LIKE 'pg_temp_%'
+        AND c.relkind IN ('r','p','v','m','S','f')
+        AND NOT EXISTS(SELECT FROM pg_depend d WHERE d.classid='pg_class'::regclass
+          AND d.objid=c.oid AND d.deptype='e')
+    ) AND NOT EXISTS (
+      SELECT FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+      WHERE n.nspname NOT IN ('pg_catalog','information_schema')
+        AND n.nspname NOT LIKE 'pg_temp_%'
+        AND NOT EXISTS(SELECT FROM pg_depend d WHERE d.classid='pg_proc'::regclass
+          AND d.objid=p.oid AND d.deptype='e')
+    )"""
+    if not result(fresh):
         raise RuntimeError('requires a fresh disposable database; existing schemas were not modified')
     if POSTGIS_SCHEMA == 'extensions':
         # Safe only after the disposable/fresh database checks above. No app data exists.
