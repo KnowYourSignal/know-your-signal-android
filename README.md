@@ -1,5 +1,12 @@
 This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
 
+## Backend del grupo 11
+
+La [guía de Supabase](supabase/README.md) describe las migraciones, el contrato de
+ingesta, consentimiento y mapa público, las decisiones propuestas y las pruebas.
+Las pruebas aisladas se preparan con `npm ci --prefix tests/backend` y se ejecutan
+con `npm run check:backend` y `npm run test:backend`, sin acceso a un proyecto remoto.
+
 # Getting Started
 
 > **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.

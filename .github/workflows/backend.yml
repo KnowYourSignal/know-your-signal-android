@@ -1,0 +1,24 @@
+name: Backend grupo 11
+on:
+  pull_request:
+    paths: ['supabase/**', 'tests/backend/**', 'scripts/test-ingest.mjs', '.github/workflows/backend.yml']
+  push:
+    branches: [main]
+    paths: ['supabase/**', 'tests/backend/**', '.github/workflows/backend.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  contract-and-database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: tests/backend/package-lock.json
+      - run: npm ci --prefix tests/backend --ignore-scripts
+      - run: npm run check:backend
+      - run: npm run test:backend

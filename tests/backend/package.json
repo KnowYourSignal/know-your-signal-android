@@ -1,0 +1,17 @@
+{
+  "name": "know-your-signal-backend-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test handler.test.mjs database.test.mjs",
+    "check": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.8",
+    "@electric-sql/pglite-postgis": "0.2.8",
+    "typescript": "6.0.3"
+  },
+  "engines": {
+    "node": ">=24.3.0"
+  }
+}

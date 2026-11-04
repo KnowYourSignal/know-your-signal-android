@@ -7,7 +7,10 @@
     "ios": "react-native run-ios",
     "lint": "eslint .",
     "start": "react-native start",
-    "test": "jest"
+    "test": "jest",
+    "test:backend": "npm --prefix tests/backend test",
+    "check:backend": "npm --prefix tests/backend run check",
+    "test:backend:integration": "node scripts/test-ingest.mjs"
   },
   "dependencies": {
     "@react-native/new-app-screen": "0.88.1",
