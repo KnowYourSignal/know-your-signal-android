@@ -18,7 +18,9 @@ import uuid
 ROOT = Path(__file__).resolve().parents[2]
 DSN = os.environ.get('KYS_TEST_DATABASE_URL', '')
 TARGET = urllib.parse.urlsplit(DSN)
-if TARGET.hostname not in ('127.0.0.1', 'localhost', '::1') or TARGET.path != '/kys_test_backend':
+if not __debug__:
+    raise SystemExit('Run the assertions without Python optimization flags')
+if TARGET.scheme not in ('postgresql','postgres') or TARGET.hostname not in ('127.0.0.1', 'localhost', '::1') or TARGET.path != '/kys_test_backend':
     raise SystemExit('KYS_TEST_DATABASE_URL must name a disposable loopback database kys_test_backend')
 if TARGET.query or TARGET.fragment:
     raise SystemExit('Connection overrides in URL query/fragment are not allowed')
@@ -37,7 +39,9 @@ class SqlError(RuntimeError):
 
 
 def command(app='kys_native'):
-    env = dict(os.environ, PGAPPNAME=app, PGOPTIONS='-c statement_timeout=15000 -c lock_timeout=10000 -c search_path=pg_catalog,public,extensions')
+    # Inherited PGHOSTADDR/PGSERVICE must never redirect the loopback connection.
+    env = {key:value for key,value in os.environ.items() if not key.startswith('PG')}
+    env.update(PGAPPNAME=app, PGOPTIONS='-c statement_timeout=15000 -c lock_timeout=10000 -c search_path=pg_catalog,public,extensions')
     return subprocess.Popen(['psql', '-X', '-qAt', '-v', 'ON_ERROR_STOP=1', '-v', 'VERBOSITY=verbose', DSN],
                             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                             text=True, env=env)
@@ -285,10 +289,13 @@ def simultaneous_map_reads():
     assert reads[0][0] and len(reads[0][0])<=1000
     assert all(rows==reads[0][0] for rows,_ in reads)
     REPORT['concurrent_map_client_ms']=[elapsed for _,elapsed in reads]
+    timings=sorted(REPORT['concurrent_map_client_ms'])
+    print(json.dumps({'concurrent_map':{'clients':8,'rows':100000,'client_p50_ms':round(statistics.median(timings),3),'client_max_ms':max(timings),'scope':'isolated clients, including connection setup; not Cloud SLA'}}),flush=True)
 
 
 def main():
-    assert result("to_regclass('public.mediciones') IS NULL AND to_regnamespace('auth') IS NULL"), 'requires a fresh disposable database'
+    if not result("to_regclass('public.mediciones') IS NULL AND to_regnamespace('auth') IS NULL"):
+        raise RuntimeError('requires a fresh disposable database; existing schemas were not modified')
     if POSTGIS_SCHEMA == 'extensions':
         # Safe only after the disposable/fresh database checks above. No app data exists.
         execute('DROP EXTENSION IF EXISTS postgis CASCADE; CREATE SCHEMA IF NOT EXISTS extensions; CREATE EXTENSION postgis WITH SCHEMA extensions;')
@@ -303,6 +310,7 @@ def main():
     REPORT['environment']=result("jsonb_build_object('postgres',version(),'postgis',postgis_full_version(),'time_utc',now())")
     REPORT['postgis_schema']=result("(SELECT to_jsonb(n.nspname) FROM pg_extension e JOIN pg_namespace n ON n.oid=e.extnamespace WHERE e.extname='postgis')")
     assert REPORT['postgis_schema'] == POSTGIS_SCHEMA
+    print(json.dumps({'environment':REPORT['environment'],'postgis_schema':REPORT['postgis_schema']}),flush=True)
     check('eight simultaneous exact retries produce one row',same_uuid_retries)
     check('simultaneous owners cannot claim the same UUID',owner_conflict)
     check('simultaneous conflicting contents are detected',content_conflict)
@@ -321,5 +329,5 @@ if __name__=='__main__':
         REPORT['error']=str(error)
         raise
     finally:
-        path=Path(os.environ.get('KYS_NATIVE_REPORT','native-backend-report.json'))
+        path=Path(os.environ.get('KYS_NATIVE_REPORT',str(Path(__file__).with_name('native-backend-report.json'))))
         path.write_text(json.dumps(REPORT,indent=2)+'\n')

@@ -79,9 +79,46 @@ existían en el esquema, sin volver a ejecutarlas. El historial queda alineado c
 los tres archivos del repositorio: `20261016000000`, `20261016000001` y
 `20261104032747`. El PR sigue abierto y no se fusionó.
 
-Quedan pendientes la concurrencia, el rendimiento integrado y la revisión de los
-avisos de objetos PostGIS administrados por el proveedor. Las pruebas funcionales
-descritas no certifican esos aspectos.
+La [suite nativa](../tests/backend/native.py) añade nueve escenarios con conexiones
+PostgreSQL independientes: reintentos simultáneos, conflictos de propietario y
+contenido, ocho lotes simultáneos de 100 elementos, cuota atómica, revocación en
+ambos órdenes de bloqueo, uso de GiST y ocho lectores concurrentes. Se ejecuta en
+GitHub Actions con PostgreSQL 17 y PostGIS tanto en `public` como en `extensions`.
+Los dos esquemas pasaron; esto comprueba compatibilidad del código, sin trasladar
+la extensión de Cloud ni simular permisos de `supabase_admin`.
+
+También mide consultas con 1.000, 10.000 y 100.000 muestras sintéticas. Se registran
+tiempos de `EXPLAIN ANALYZE` para diez consultas en conexiones nuevas; con diez
+muestras, el percentil 95 coincide con el máximo observado. No incluye red móvil,
+gateway ni renderizado de Android. El límite aislado de SQL es 3.000 ms y se
+mantiene configurable para entornos de CI. Los resultados JSON se publican como
+artefactos del workflow.
+
+Resultados del [ensayo inicial](https://github.com/KnowYourSignal/know-your-signal-android/actions/runs/41770229214)
+(p95 SQL, milisegundos):
+
+| Muestras | Viewport, public | Viewport, extensions | Vista amplia, public | Vista amplia, extensions |
+| --- | ---: | ---: | ---: | ---: |
+| 1.000 | 29,923 | 20,836 | 26,298 | 29,722 |
+| 10.000 | 28,961 | 21,761 | 109,425 | 94,759 |
+| 100.000 | 26,248 | 25,509 | 888,918 | 809,851 |
+
+Los ocho lectores de la vista amplia con 100.000 muestras completaron el escenario
+en aproximadamente 6,6–6,9 segundos. Esta carga mayor no certifica una latencia de
+3 segundos para cada usuario. La cuota y los dos órdenes de revocación sí se
+comprobaron mediante esperas de bloqueo reales observadas en `pg_stat_activity`.
+
+Para ejecutar la suite se necesitan `psql`, Python y una base nueva y desechable
+en loopback llamada `kys_test_backend`; definir `KYS_TEST_DATABASE_URL` con esa
+conexión y ejecutar `python3 tests/backend/native.py`. `KYS_POSTGIS_SCHEMA` elige
+`public` o `extensions`. Cada ejecución requiere una base nueva. El script rechaza
+destinos remotos, parámetros de conexión adicionales y esquemas de aplicación
+existentes; no usarlo contra Cloud. Auth se modela con el mismo contrato mínimo
+de roles/JWT, complementado por las doce pruebas HTTP reales ya realizadas.
+
+Quedan pendientes el rendimiento integrado con Android y el traslado de PostGIS
+por el proveedor. La [revisión específica](POSTGIS_REVIEW.md) contiene evidencia,
+comprobaciones y los datos para solicitar el traslado sin eliminar las columnas.
 
 ## Consentimiento
 
