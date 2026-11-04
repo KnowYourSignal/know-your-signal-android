@@ -96,10 +96,19 @@ test('PostgreSQL/PostGIS migrations, permissions and domain contract', async (t)
     for (const uid of users)
       await db.query('INSERT INTO auth.users VALUES($1)', [uid]);
     const dir = new URL('../../supabase/migrations/', import.meta.url);
+    let legacyId;
     for (const file of (await readdir(dir))
       .filter((f) => f.endsWith('.sql'))
       .sort()) {
       try {
+        if (file.endsWith('_harden_backend.sql')) {
+          // Reproduce a manually initialized Cloud project with existing data.
+          legacyId = m().id;
+          await db.query(`SELECT public.insertar_medicion_individual(
+            $1::uuid,$2::uuid,-33.456::float8,-70.654::float8,5::real,-72::smallint,
+            'wifi_rssi','wifi','wifi_privada','sistema',0::smallint,'mediano',
+            now(),'mvp-1','1.0')`, [legacyId, users[0]]);
+        }
         await db.exec(await readFile(new URL(file, dir), 'utf8'));
       } catch (e) {
         throw new Error(
@@ -107,6 +116,10 @@ test('PostgreSQL/PostGIS migrations, permissions and domain contract', async (t)
         );
       }
     }
+    await t.test('hardening preserves existing measurements without inventing consent', async () => {
+      assert.equal((await db.query('SELECT count(*)::int AS n FROM public.mediciones WHERE id=$1', [legacyId])).rows[0].n, 1);
+      assert.equal((await db.query('SELECT count(*)::int AS n FROM public.consentimientos')).rows[0].n, 0);
+    });
     await t.test(
       'all migrations apply and PostGIS 4326 is available',
       async () => {
@@ -235,6 +248,7 @@ test('PostgreSQL/PostGIS migrations, permissions and domain contract', async (t)
       async () => {
         for (const [change, code] of [
           [{ precision_m: 10 }, 'INVALID_ACCURACY'],
+          [{ precision_m: 9.99999999 }, 'INVALID_ACCURACY'],
           [{ precision_m: 25 }, 'INVALID_ACCURACY'],
           [{ potencia_dbm: -200 }, 'INVALID_METRIC'],
           [{ piso_nivel: 999 }, 'INVALID_FLOOR'],

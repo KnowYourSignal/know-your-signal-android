@@ -24,6 +24,15 @@ Las pruebas SQL usan PostgreSQL WASM/PGlite con PostGIS real y un esquema Auth
 mínimo que reproduce roles/JWT de Supabase. Comprueban migraciones, permisos,
 consentimiento, reintentos, conflictos, privacidad y rollback. No sustituyen las
 pruebas de concurrencia ni la validación del gateway/Auth en Supabase Cloud.
+La migración también se prueba con una medición anterior ya guardada: conserva
+sus datos y no inventa un consentimiento para autorizar envíos nuevos.
+
+`supabase/verify-backend.sql` permite comprobar tablas, permisos, geometría,
+índices y parámetros tras el despliegue mediante consultas de solo lectura.
+Resultados esperados: sin lectura ni inserción directa de mediciones para roles
+API; RPC antigua sin EXECUTE; ingesta/consentimiento solo para authenticated;
+mapa agregado disponible para anon y authenticated; todas las RPC nuevas con
+search_path fijo. No ejecutar el script de integración local contra Cloud.
 
 Para probar el stack Supabase completo en un entorno local desechable:
 
@@ -161,6 +170,9 @@ crudas tampoco permiten lectura. El endpoint de consentimiento y la RPC de inges
 derivan su usuario del JWT, comprueban autorización y fijan `search_path`.
 Se revoca la antigua RPC que recibía un propietario libre. Los esquemas del camino
 de búsqueda no permiten CREATE a roles API. No se registran tokens ni payloads.
+La precisión se valida también después de convertirla a `real`, para que un valor
+como 9.99999999 no termine guardado como 10 si el umbral es 10. Los índices de las
+claves foráneas de usuario y configuración evitan los avisos de claves sin índice.
 
 `kys_private.politica` solo es administrable desde SQL privilegiado: mínimo 5
 contribuyentes, celda mínima 50 m proyectados, antigüedad 90 días y 60 solicitudes
@@ -176,6 +188,19 @@ anonimato absoluto. No se implementan borrados automáticos ni retención destru
 Antes de desplegar, verificar Auth Cloud, permisos reales, migraciones desde una
 base vacía y desde datos existentes, integración del grupo 10, concurrencia y
 rendimiento. Este cambio no ejecuta despliegues ni modifica la instancia remota.
+
+Si las tablas ya existen pero no hay historial de migraciones, no ejecutar
+`db push` a ciegas: intentaría volver a crear las tablas iniciales. Primero comparar
+el esquema con las dos migraciones iniciales y reconciliar su historial; aplicar
+solo la migración nueva a esa base existente. La verificación debe comparar el
+conteo y una huella de las mediciones antes y después, sin exportar datos crudos.
+
+Las alertas de objetos de la extensión PostGIS instalada en `public` se revisan
+aparte: `spatial_ref_sys` y `st_estimatedextent` pueden pertenecer a
+`supabase_admin`. No cambiar su propietario ni mover la extensión sin seguir un
+procedimiento compatible del proveedor; el rol `postgres` del proyecto puede
+carecer de permisos para corregir esos objetos. Las RPC de la aplicación y sus
+tablas se verifican de forma independiente.
 
 Orden de publicación para evitar acuses incorrectos del código anterior: primero
 publicar la nueva Edge Function en certificación (responderá 503 reintentable

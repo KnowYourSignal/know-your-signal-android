@@ -97,7 +97,8 @@ BEGIN
   SELECT * INTO c FROM public.configuraciones WHERE version = m->>'version_config';
   IF NOT FOUND OR c.esquema_version <> '1.0' THEN RETURN 'UNKNOWN_CONFIG'; END IF;
   IF NOT ((m->>'precision_m')::numeric > 0 AND (m->>'precision_m')::numeric < c.umbral_precision_m) THEN RETURN 'INVALID_ACCURACY'; END IF;
-  IF NOT ((m->>'precision_m')::real > 0) THEN RETURN 'INVALID_ACCURACY'; END IF;
+  -- Validate the stored real value too: rounding must not reach the threshold.
+  IF NOT ((m->>'precision_m')::real > 0 AND (m->>'precision_m')::real < c.umbral_precision_m) THEN RETURN 'INVALID_ACCURACY'; END IF;
   v := (m->>'piso_nivel')::numeric;
   IF v <> trunc(v) OR v NOT BETWEEN c.pisos_min AND c.pisos_max THEN RETURN 'INVALID_FLOOR'; END IF;
   IF m->>'tamano_zona' NOT IN ('pequeno','mediano','grande','muy_grande') THEN RETURN 'INVALID_ZONE_SIZE'; END IF;
@@ -189,6 +190,8 @@ END $$;
 REVOKE ALL ON FUNCTION public.ingest_measurements(jsonb) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.ingest_measurements(jsonb) TO authenticated;
 CREATE INDEX IF NOT EXISTS idx_mediciones_filtros ON public.mediciones(piso_nivel,metrica,capturada_en);
+CREATE INDEX IF NOT EXISTS idx_mediciones_usuario ON public.mediciones(usuario_id);
+CREATE INDEX IF NOT EXISTS idx_mediciones_version_config ON public.mediciones(version_config);
 
 -- New optional filters extend the existing RPC name; metric selection is mandatory.
 DROP FUNCTION public.public_map_cells(double precision,double precision,double precision,double precision,smallint,text,double precision);
