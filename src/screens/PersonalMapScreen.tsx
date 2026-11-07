@@ -65,7 +65,8 @@ export function PersonalMapScreen({
 }: BottomTabScreenProps<MainTabsParamList, 'MapaPersonal'>) {
   const focused = useIsFocused();
   const { status: settings } = useSettings();
-  const { height } = useWindowDimensions();
+  const { height, fontScale } = useWindowDimensions();
+  const mapControlStyle = { flexGrow: 1, flexBasis: 90 * fontScale };
   const [layers, setLayers] = useState<ReadonlyArray<HistoryLayer> | null>(
     null,
   );
@@ -329,25 +330,22 @@ export function PersonalMapScreen({
               <SignalLegend />
               <View style={s.filterRow}>
                 <Button
-                  label="Ajustar vista"
-                  icon="locate"
+                  label="Ajustar"
                   kind="secondary"
                   onPress={() => setRegion(null)}
-                  style={s.grow}
+                  style={mapControlStyle}
                 />
                 <Button
                   label="Acercar"
-                  icon="plus"
                   kind="secondary"
                   onPress={() => setRegion(zoomRegion(viewRegion, 0.6))}
-                  style={s.grow}
+                  style={mapControlStyle}
                 />
                 <Button
                   label="Alejar"
-                  icon="minus"
                   kind="secondary"
                   onPress={() => setRegion(zoomRegion(viewRegion, 1.65))}
-                  style={s.grow}
+                  style={mapControlStyle}
                 />
               </View>
               {current && layerCount > points.length && (

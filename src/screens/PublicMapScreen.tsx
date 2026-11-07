@@ -63,7 +63,8 @@ export function PublicMapScreen() {
   const foreground = useAppForeground();
   const reduced = useReducedMotion();
   const { status: settings } = useSettings();
-  const { height } = useWindowDimensions();
+  const { height, fontScale } = useWindowDimensions();
+  const mapControlStyle = { flexGrow: 1, flexBasis: 90 * fontScale };
   const mapHeight = Math.max(250, Math.min(365, height * 0.39));
   const [configuration, setConfiguration] = useState<MapConfiguration | null>(
     null,
@@ -265,24 +266,21 @@ export function PublicMapScreen() {
             <Button
               label="Mi zona"
               kind="secondary"
-              icon="locate"
               onPress={locate}
               busy={locating}
-              style={s.grow}
+              style={mapControlStyle}
             />
             <Button
               label="Acercar"
               kind="secondary"
-              icon="plus"
               onPress={() => center(zoomRegion(region, 0.5))}
-              style={s.grow}
+              style={mapControlStyle}
             />
             <Button
               label="Alejar"
               kind="secondary"
-              icon="minus"
               onPress={() => center(zoomRegion(region, 2))}
-              style={s.grow}
+              style={mapControlStyle}
             />
           </View>
           {locationError && (
