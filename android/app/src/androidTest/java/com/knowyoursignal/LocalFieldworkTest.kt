@@ -47,7 +47,7 @@ class LocalFieldworkTest {
 
     @After fun close() = database.close()
 
-    @Test fun offlineCaptureAndExplicitConsentNeverPublishOldHistory() = runBlocking {
+    @Test fun offlineCaptureAndExplicitConsentNeverPublishOldHistory(): Unit = runBlocking {
         val old = capture()
         assertEquals(LOCAL_ONLY, history.save(old, 0.0, "mediano", server).syncState)
         val granted = privacy.choose(true, server)
@@ -61,7 +61,7 @@ class LocalFieldworkTest {
         assertEquals(listOf(old), history.list(0.0, "wifi_rssi").map { it.id })
     }
 
-    @Test fun revocationPreservesLocalRowsAndRejectsStaleReceipts() = runBlocking {
+    @Test fun revocationPreservesLocalRowsAndRejectsStaleReceipts(): Unit = runBlocking {
         val granted = privacy.choose(true, server)
         val accepted = capture()
         history.save(accepted, 0.0, "mediano", server)
@@ -78,7 +78,7 @@ class LocalFieldworkTest {
         assertTrue(database.measurements().nextBatch(granted.revision).isEmpty())
     }
 
-    @Test fun failureToQueueRollsBackTheHistoryInsert() = runBlocking {
+    @Test fun failureToQueueRollsBackTheHistoryInsert(): Unit = runBlocking {
         privacy.choose(true, server)
         database.openHelper.writableDatabase.execSQL(
             "CREATE TRIGGER fail_enqueue BEFORE INSERT ON outbox BEGIN SELECT RAISE(ABORT, 'test'); END",
@@ -90,7 +90,7 @@ class LocalFieldworkTest {
         assertNull(database.measurements().find(id))
     }
 
-    @Test fun payloadAndReceiptsFollowTheStrictBackendContract() = runBlocking {
+    @Test fun payloadAndReceiptsFollowTheStrictBackendContract(): Unit = runBlocking {
         val granted = privacy.choose(true, server)
         val id = capture()
         history.save(id, 0.0, "mediano", server)
