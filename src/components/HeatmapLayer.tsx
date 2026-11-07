@@ -1,154 +1,149 @@
-// src/components/HeatmapLayer.tsx
-import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, Easing, TouchableOpacity } from 'react-native';
-import { useIsFocused } from '@react-navigation/native';
-import { getSignalColor } from '../state/SettingsContext';
-import { COLORS } from '../theme/theme';
+import React, { memo, useMemo } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import Svg, { Circle, Path, Rect } from 'react-native-svg';
+import { signalQuality, signalWeight } from '../domain/Measurement';
+import { project, type Coordinate, type Region } from '../state/MapFilters';
+import { COLORS, SIGNAL_COLORS } from '../theme/theme';
+import { globalStyles as g } from '../theme/globalStyles';
 
-export interface HeatmapPointData {
-  id: string;
-  lat: string;
-  lng: string;
-  floor: string;
-  dbm: number;
-  accuracyM?: number;
-  timestamp?: string;
-  contributors?: number;
+export type HeatPoint = Coordinate & { id: string; powerDbm: number };
+
+const legend = [
+  { quality: 'good', label: 'Favorable' },
+  { quality: 'fair', label: 'Intermedia' },
+  { quality: 'weak', label: 'Débil' },
+] as const;
+
+export function SignalLegend() {
+  return (
+    <View style={styles.legend}>
+      {legend.map(item => (
+        <View key={item.quality} style={styles.legendItem}>
+          <View
+            style={[
+              styles.dot,
+              { backgroundColor: SIGNAL_COLORS[item.quality] },
+            ]}
+          />
+          <Text style={g.caption}>{item.label}</Text>
+        </View>
+      ))}
+    </View>
+  );
 }
 
-interface HeatmapPointProps {
-  point: HeatmapPointData;
-  isTechnical: boolean;
-  index?: number;
-  onSelect?: (point: HeatmapPointData) => void;
+function disk(x: number, y: number, radius: number): string {
+  return (
+    'M' +
+    (x - radius).toFixed(1) +
+    ' ' +
+    y.toFixed(1) +
+    'a' +
+    radius +
+    ' ' +
+    radius +
+    ' 0 1 0 ' +
+    2 * radius +
+    ' 0' +
+    'a' +
+    radius +
+    ' ' +
+    radius +
+    ' 0 1 0 ' +
+    -2 * radius +
+    ' 0Z'
+  );
 }
 
-export const HeatmapPoint: React.FC<HeatmapPointProps> = ({
-  point,
-  isTechnical,
-  index = 0,
-  onSelect,
-}) => {
-  const isFocused = useIsFocused();
-  const scaleAnim = useRef(new Animated.Value(0)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-  const color = getSignalColor(point.dbm);
-
-  useEffect(() => {
-    if (!isFocused) {
-      // Cuando sales de la pestaña del mapa, dejamos los puntos en 0 listos para la próxima visita
-      scaleAnim.setValue(0);
-      pulseAnim.setValue(1);
-      return;
-    }
-
-    // Al entrar a la pestaña o cambiar de piso, animamos la aparición en cascada
-    scaleAnim.setValue(0);
-    Animated.spring(scaleAnim, {
-      toValue: 1,
-      tension: 55,
-      friction: 7,
-      delay: index * 35,
-      useNativeDriver: true,
-    }).start();
-
-    // Efecto de respiración continua mientras el mapa está visible
-    const pulseLoop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.08,
-          duration: 1800,
-          easing: Easing.inOut(Easing.quad),
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 1800,
-          easing: Easing.inOut(Easing.quad),
-          useNativeDriver: true,
-        }),
-      ])
-    );
-    pulseLoop.start();
-
-    return () => {
-      pulseLoop.stop();
+export const HeatmapLayer = memo(function HeatmapArtwork({
+  points,
+  region,
+  metric,
+  width,
+  height,
+  selected,
+}: {
+  points: ReadonlyArray<HeatPoint>;
+  region: Region;
+  metric: string;
+  width: number;
+  height: number;
+  selected?: HeatPoint | null;
+}) {
+  const paths = useMemo(() => {
+    const groups = {
+      good: { glow: '', inner: '', dots: '' },
+      fair: { glow: '', inner: '', dots: '' },
+      weak: { glow: '', inner: '', dots: '' },
     };
-  }, [isFocused, point.floor, index, scaleAnim, pulseAnim]);
+    for (const point of points) {
+      const { x, y } = project(point, region, width, height);
+      if (x < -28 || x > width + 28 || y < -28 || y > height + 28) {
+        continue;
+      }
+      const group = groups[signalQuality(point.powerDbm, metric)];
+      const radius = Math.round(12 + signalWeight(point.powerDbm, metric) * 9);
+      group.glow += disk(x, y, radius);
+      group.inner += disk(x, y, Math.round(radius * 0.57));
+      group.dots += disk(x, y, 4);
+    }
+    return groups;
+  }, [points, region, metric, width, height]);
+
+  const grid = useMemo(() => {
+    let lines = '';
+    for (let index = 1; index < 8; index += 1) {
+      lines +=
+        'M' +
+        (width * index) / 8 +
+        ' 0v' +
+        height +
+        'M0 ' +
+        (height * index) / 8 +
+        'h' +
+        width;
+    }
+    return lines;
+  }, [width, height]);
+  const focus = selected ? project(selected, region, width, height) : null;
 
   return (
-    <Animated.View
-      style={[
-        styles.heatmapPointContainer,
-        {
-          top: point.lat as any,
-          left: point.lng as any,
-          transform: [
-            { translateX: -70 },
-            { translateY: -70 },
-            { scale: Animated.multiply(scaleAnim, pulseAnim) },
-          ],
-        },
-      ]}
-    >
-      <View pointerEvents="none" style={[styles.heatLayer1, { backgroundColor: color }]} />
-      <View pointerEvents="none" style={[styles.heatLayer2, { backgroundColor: color }]} />
-      <View pointerEvents="none" style={[styles.heatLayer3, { backgroundColor: color }]} />
-      <View pointerEvents="none" style={[styles.heatLayer4, { backgroundColor: color }]} />
-      <View pointerEvents="none" style={[styles.heatLayer5, { backgroundColor: color }]} />
-      <View pointerEvents="none" style={[styles.heatLayer6, { backgroundColor: color }]} />
-      <View pointerEvents="none" style={[styles.heatLayer7, { backgroundColor: color }]} />
-      
-      <TouchableOpacity
-        activeOpacity={0.8}
-        onPress={() => onSelect && onSelect(point)}
-        style={[styles.heatLayer8, { backgroundColor: color }]}
-      />
-
-      {isTechnical && (
-        <View pointerEvents="none" style={styles.dbmBadge}>
-          <Text style={styles.heatDbmLabel}>{point.dbm}</Text>
-        </View>
+    <Svg width={width} height={height} accessible={false}>
+      <Rect width={width} height={height} fill="#EAF1FD" />
+      <Path d={grid} stroke="#CCDBF4" strokeWidth={1} />
+      {legend.map(({ quality }) => {
+        const group = paths[quality];
+        const color = SIGNAL_COLORS[quality];
+        return group.dots ? (
+          <React.Fragment key={quality}>
+            <Path d={group.glow} fill={color} opacity={0.13} />
+            <Path d={group.inner} fill={color} opacity={0.25} />
+            <Path d={group.dots} fill={color} stroke="#FFF" strokeWidth={0.9} />
+          </React.Fragment>
+        ) : null;
+      })}
+      {focus && (
+        <Circle
+          cx={focus.x}
+          cy={focus.y}
+          r={8}
+          fill="none"
+          stroke={COLORS.navy}
+          strokeWidth={2}
+        />
       )}
-    </Animated.View>
+    </Svg>
   );
-};
+});
 
 const styles = StyleSheet.create({
-  heatmapPointContainer: {
-    position: 'absolute',
-    width: 140,
-    height: 140,
-    alignItems: 'center',
+  legend: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'center',
+    gap: 12,
+    paddingVertical: 8,
   },
-  heatLayer1: { position: 'absolute', width: 140, height: 140, borderRadius: 70, opacity: 0.04 },
-  heatLayer2: { position: 'absolute', width: 120, height: 120, borderRadius: 60, opacity: 0.06 },
-  heatLayer3: { position: 'absolute', width: 100, height: 100, borderRadius: 50, opacity: 0.08 },
-  heatLayer4: { position: 'absolute', width: 80, height: 80, borderRadius: 40, opacity: 0.12 },
-  heatLayer5: { position: 'absolute', width: 60, height: 60, borderRadius: 30, opacity: 0.18 },
-  heatLayer6: { position: 'absolute', width: 40, height: 40, borderRadius: 20, opacity: 0.25 },
-  heatLayer7: { position: 'absolute', width: 25, height: 25, borderRadius: 12.5, opacity: 0.4 },
-  heatLayer8: {
-    position: 'absolute',
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    opacity: 0.9,
-    borderWidth: 2,
-    borderColor: COLORS.cardBg,
-  },
-  dbmBadge: {
-    position: 'absolute',
-    top: 48,
-    backgroundColor: 'rgba(24, 51, 105, 0.85)',
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-    borderRadius: 4,
-  },
-  heatDbmLabel: {
-    color: COLORS.textLight,
-    fontSize: 9,
-    fontWeight: 'bold',
-  },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  dot: { width: 8, height: 8, borderRadius: 4 },
 });

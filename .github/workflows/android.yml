@@ -1,0 +1,133 @@
+name: Android client
+
+on:
+  pull_request:
+    paths:
+      [
+        'App.tsx',
+        'src/**',
+        'android/**',
+        '__tests__/**',
+        'tests/domain/**',
+        'package*.json',
+        'jest.config.js',
+        'tsconfig.json',
+        '.github/workflows/android.yml',
+      ]
+  push:
+    branches: [main]
+    paths:
+      [
+        'App.tsx',
+        'src/**',
+        'android/**',
+        '__tests__/**',
+        'tests/domain/**',
+        'package*.json',
+        'jest.config.js',
+        'tsconfig.json',
+        '.github/workflows/android.yml',
+      ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-client-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  javascript:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run typecheck
+      - run: npm test -- --runInBand
+      - run: npx --no-install eslint --max-warnings 0 --ext .ts,.tsx App.tsx src __tests__ tests/domain
+      - name: Bundle the Android entry point
+        run: |
+          mkdir -p "$RUNNER_TEMP/kys-bundle"
+          npx --no-install react-native bundle --platform android --dev false --entry-file index.js \
+            --bundle-output "$RUNNER_TEMP/kys-bundle/index.android.bundle"
+
+  native:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      CMAKE_BUILD_PARALLEL_LEVEL: '2'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      - run: npm ci --no-audit --no-fund
+      - name: Prepare Android command-line tools
+        run: |
+          sdk="$RUNNER_TEMP/kys-android-sdk"
+          tools="$RUNNER_TEMP/android-command-tools.zip"
+          curl --fail --location --retry 2 --output "$tools" \
+            https://dl.google.com/android/repository/commandlinetools-linux-13114758_latest.zip
+          printf '%s  %s\n' 7ec965280a073311c339e571cd5de778b9975026cfcbe79f2b1cdcb1e15317ee "$tools" | sha256sum --check
+          mkdir -p "$sdk/cmdline-tools"
+          unzip -q "$tools" -d "$sdk/cmdline-tools"
+          mv "$sdk/cmdline-tools/cmdline-tools" "$sdk/cmdline-tools/latest"
+          echo "ANDROID_HOME=$sdk" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$sdk" >> "$GITHUB_ENV"
+          printf '%s\n' "$sdk/cmdline-tools/latest/bin" "$sdk/platform-tools" "$sdk/emulator" >> "$GITHUB_PATH"
+      - name: Install Android SDK and emulator image
+        run: |
+          (set +o pipefail; yes | sdkmanager --licenses >/dev/null)
+          sdkmanager 'platforms;android-37.0' 'build-tools;37.0.0' 'ndk;27.1.12297006' \
+            'cmake;3.22.1' 'platform-tools' 'emulator' 'system-images;android-29;default;x86_64'
+      - name: Build and run JVM tests
+        working-directory: android
+        run: |
+          gradle_args=(
+            --no-daemon --max-workers=1 -PreactNativeArchitectures=x86_64
+            '-Dorg.gradle.jvmargs=-Xmx1400m -XX:MaxMetaspaceSize=640m'
+            -Pkotlin.compiler.execution.strategy=in-process
+          )
+          bash gradlew "${gradle_args[@]}" :app:testDebugUnitTest :app:assembleDebug :app:assembleDebugAndroidTest
+          bash gradlew "${gradle_args[@]}" :app:assembleQa
+          git diff --exit-code -- app/schemas
+      - name: Verify Room and the sync contract on Android
+        working-directory: android
+        run: |
+          export ANDROID_AVD_HOME="$RUNNER_TEMP/kys-avd"
+          mkdir -p "$ANDROID_AVD_HOME"
+          accel=off
+          if test -c /dev/kvm; then sudo chmod a+rw /dev/kvm; accel=on; fi
+          printf 'no\n' | avdmanager create avd --name KysCi --package 'system-images;android-29;default;x86_64' \
+            --device pixel_4 --path "$ANDROID_AVD_HOME/KysCi.avd" --force
+          test -f "$ANDROID_AVD_HOME/KysCi.ini"
+          adb start-server
+          emulator -avd KysCi -accel "$accel" -no-window -no-audio -gpu swiftshader_indirect \
+            -feature -Vulkan -no-snapshot -no-boot-anim -memory 1536 -cores 1 > "$RUNNER_TEMP/kys-emulator.log" 2>&1 &
+          emulator_pid=$!
+          trap 'kill "$emulator_pid" 2>/dev/null || true' EXIT
+          timeout 300 bash -c 'until [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d "\r")" = 1 ]; do kill -0 "$1" || exit 1; sleep 3; done' _ "$emulator_pid"
+          adb shell input keyevent 82
+          adb install app/build/outputs/apk/debug/app-debug.apk
+          adb install app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+          timeout 120 adb shell am instrument -w com.knowyoursignal.test/androidx.test.runner.AndroidJUnitRunner | tee "$RUNNER_TEMP/kys-instrumentation.log"
+          awk '/^OK \([0-9]+ tests?\)/ {passed=1} END {exit !passed}' "$RUNNER_TEMP/kys-instrumentation.log"
+          adb install app/build/outputs/apk/qa/app-qa.apk
+          adb shell am start -n com.knowyoursignal.qa/com.knowyoursignal.MainActivity
+          sleep 20
+          adb shell pidof com.knowyoursignal.qa
+      - name: Show emulator log on failure
+        if: failure()
+        run: if test -f "$RUNNER_TEMP/kys-emulator.log"; then tail -80 "$RUNNER_TEMP/kys-emulator.log"; fi

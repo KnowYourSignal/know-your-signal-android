@@ -1,332 +1,481 @@
-// src/screens/PersonalMapScreen.tsx
-import React, { useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
+  ScrollView,
   StyleSheet,
-  Modal,
-  ActivityIndicator,
+  Text,
+  View,
+  useWindowDimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
+import { useIsFocused } from '@react-navigation/native';
+import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+
+import { EvidenceCard } from '../components/EvidenceCard';
+import { GeoPlane } from '../components/GeoPlane';
+import { SignalLegend } from '../components/HeatmapLayer';
+import { Icon } from '../components/Icon';
+import { Reveal } from '../components/Motion';
+import {
+  Button,
+  Chip,
+  Dialog,
+  ScreenTitle,
+  StatePanel,
+  StatusPill,
+} from '../components/UI';
+import {
+  METRIC_LABELS,
+  floorLabel,
+  formatDate,
+  formatSignal,
+  isMetric,
+  networkLabel,
+} from '../domain/Measurement';
+import { shareEvidence } from '../services/EvidenceService';
+import { fieldwork } from '../services/LocalRepositoryAdapter';
+import type { HistoryLayer, SavedMeasurement } from '../specs/NativeFieldwork';
+import {
+  fitRegion,
+  zoomRegion,
+  type Filters,
+  type Region,
+} from '../state/MapFilters';
+import { useSettings } from '../state/SettingsContext';
+import type { MainTabsParamList } from '../state/WizardState';
 import { COLORS } from '../theme/theme';
-import { useSettings, formatSignal, getSignalColor } from '../state/SettingsContext';
-import { HeatmapPoint, HeatmapPointData } from '../components/HeatmapLayer';
+import { globalStyles as g } from '../theme/globalStyles';
 
-// Coordenadas simuladas sobre un recinto real (ej: Campus universitario o zona corporativa)
-const MOCK_MEASUREMENTS: HeatmapPointData[] = [
-  // PISO 1 (Pasillo de oficinas)
-  { id: '1', lat: '-33.4561', lng: '-70.6541', floor: '1', dbm: -58, accuracyM: 4.8, timestamp: '16:02' },
-  { id: '2', lat: '-33.4563', lng: '-70.6543', floor: '1', dbm: -61, accuracyM: 5.1, timestamp: '16:03' },
-  { id: '3', lat: '-33.4565', lng: '-70.6540', floor: '1', dbm: -60, accuracyM: 4.5, timestamp: '16:03' },
-  { id: '4', lat: '-33.4567', lng: '-70.6545', floor: '1', dbm: -64, accuracyM: 5.4, timestamp: '16:04' },
-  // Transición a Amarillo (zona alejada del router)
-  { id: '5', lat: '-33.4570', lng: '-70.6548', floor: '1', dbm: -72, accuracyM: 6.8, timestamp: '16:06' },
-  { id: '6', lat: '-33.4573', lng: '-70.6551', floor: '1', dbm: -78, accuracyM: 7.0, timestamp: '16:08' },
-  // Zona Roja (Punto ciego / extremo del edificio)
-  { id: '7', lat: '-33.4578', lng: '-70.6556', floor: '1', dbm: -92, accuracyM: 8.9, timestamp: '16:10' },
-  { id: '8', lat: '-33.4580', lng: '-70.6559', floor: '1', dbm: -95, accuracyM: 9.2, timestamp: '16:11' },
+const EMPTY: ReadonlyArray<SavedMeasurement> = [];
 
-  // PISO 2
-  { id: '9', lat: '-33.4562', lng: '-70.6542', floor: '2', dbm: -50, accuracyM: 4.2, timestamp: '15:40' },
-  { id: '10', lat: '-33.4566', lng: '-70.6546', floor: '2', dbm: -62, accuracyM: 5.0, timestamp: '15:42' },
-
-  // PISO -1 (Sótano)
-  { id: '11', lat: '-33.4568', lng: '-70.6548', floor: '-1', dbm: -94, accuracyM: 9.5, timestamp: '15:21' },
-];
-
-export const PersonalMapScreen = ({ navigation }: any) => {
-  const { technicalMode } = useSettings();
-  const [pisoActivo, setPisoActivo] = useState('1');
-  const [redActiva, setRedActiva] = useState<'wifi' | 'celular'>('wifi');
-  const [selectedPoint, setSelectedPoint] = useState<HeatmapPointData | null>(null);
-  const [exportModalVisible, setExportModalVisible] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
-
-  const datosVisibles = MOCK_MEASUREMENTS.filter((m) => m.floor === pisoActivo);
-
-  const handleExportConfirm = () => {
-    setIsExporting(true);
-    setTimeout(() => {
-      setIsExporting(false);
-      setExportModalVisible(false);
-    }, 900);
-  };
-
-  return (
-    <SafeAreaView style={styles.safeContainer} edges={['bottom']}>
-      <View style={styles.screenBody}>
-        {/* CABECERA Y FILTRO */}
-        <View style={styles.headerRow}>
-          <View>
-            <Text style={styles.screenTitle}>Mi Historial</Text>
-            <Text style={styles.screenSubtitle}>
-              {datosVisibles.length} muestras en Piso {pisoActivo} · Geolocalizadas
-            </Text>
-          </View>
-          <View style={styles.techFilterPill}>
-            <TouchableOpacity
-              style={[styles.techBtn, redActiva === 'wifi' && styles.techBtnActive]}
-              onPress={() => setRedActiva('wifi')}
-            >
-              <Text style={[styles.techBtnText, redActiva === 'wifi' && styles.techBtnTextActive]}>
-                Wi-Fi
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.techBtn, redActiva === 'celular' && styles.techBtnActive]}
-              onPress={() => setRedActiva('celular')}
-            >
-              <Text style={[styles.techBtnText, redActiva === 'celular' && styles.techBtnTextActive]}>
-                Móvil
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* SELECTOR DE PISOS */}
-        <View style={styles.mapFloorSelector}>
-          {['-1', '1', '2', '3'].map((piso) => (
-            <TouchableOpacity
-              key={piso}
-              style={[styles.floorTab, pisoActivo === piso && styles.floorTabActive]}
-              onPress={() => {
-                setSelectedPoint(null);
-                setPisoActivo(piso);
-              }}
-            >
-              <Text style={[styles.floorTabText, pisoActivo === piso && styles.floorTabTextActive]}>
-                Piso {piso}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* CONTENEDOR DE MAPA GEOGRÁFICO REAL CON PAN Y ZOOM */}
-        <View style={styles.mapCanvasPlaceholder}>
-          <MapView
-            provider={PROVIDER_GOOGLE}
-            style={styles.mapView}
-            initialRegion={{
-              latitude: -33.4568,
-              longitude: -70.6548,
-              latitudeDelta: 0.005,
-              longitudeDelta: 0.005,
-            }}
-          >
-            {/* Renderizamos los puntos de calor sobre el mapa */}
-            {datosVisibles.map((punto, idx) => (
-              <HeatmapPoint
-                key={punto.id}
-                point={punto}
-                index={idx}
-                isTechnical={technicalMode}
-                onSelect={(pt) => setSelectedPoint(pt)}
-              />
-            ))}
-          </MapView>
-
-          {/* TARJETA DE INSPECCIÓN AL TOCAR UN PUNTO */}
-          {selectedPoint && (
-            <View style={styles.pointInspectorCard}>
-              <View style={[styles.legendDot, { backgroundColor: getSignalColor(selectedPoint.dbm) }]} />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.inspectorTitle}>
-                  Potencia: {formatSignal(selectedPoint.dbm, true)} ({formatSignal(selectedPoint.dbm, false)})
-                </Text>
-                <Text style={styles.inspectorMeta}>
-                  Precisión GPS: ±{selectedPoint.accuracyM}m · {selectedPoint.timestamp}
-                </Text>
-              </View>
-              <TouchableOpacity onPress={() => setSelectedPoint(null)}>
-                <Text style={styles.closeInspectorText}>✕</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-
-          {/* LEYENDA SEMÁNTICA FLOTANTE */}
-          <View style={styles.legendBar}>
-            <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: COLORS.success }]} />
-              <Text style={styles.legendText}>Favorable</Text>
-            </View>
-            <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: COLORS.warning }]} />
-              <Text style={styles.legendText}>Intermedia</Text>
-            </View>
-            <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: COLORS.danger }]} />
-              <Text style={styles.legendText}>Débil</Text>
-            </View>
-          </View>
-        </View>
-
-        <TouchableOpacity
-          style={styles.primaryButton}
-          onPress={() => setExportModalVisible(true)}
-        >
-          <Text style={styles.primaryButtonText}>Exportar evidencia a mi proveedor</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* MODAL DE EXPORTACIÓN */}
-      <Modal
-        visible={exportModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setExportModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalEmoji}>📸</Text>
-            <Text style={styles.modalTitle}>Exportar Evidencia Técnica</Text>
-            <Text style={styles.modalBody}>
-              Se generará una tarjeta PNG con el mapa geográfico del Piso {pisoActivo} y el historial de dBm.
-            </Text>
-            <View style={styles.privacyWarningBox}>
-              <Text style={styles.privacyWarningText}>
-                ⚠️ Aviso: La imagen exportada contiene la ubicación geográfica visible del recinto.
-              </Text>
-            </View>
-            <View style={{ gap: 10, width: '100%' }}>
-              <TouchableOpacity
-                style={styles.primaryButton}
-                onPress={handleExportConfirm}
-                disabled={isExporting}
-              >
-                {isExporting ? (
-                  <ActivityIndicator color={COLORS.textLight} />
-                ) : (
-                  <Text style={styles.primaryButtonText}>Generar PNG y Compartir</Text>
-                )}
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.secondaryButton}
-                onPress={() => setExportModalVisible(false)}
-              >
-                <Text style={styles.secondaryButtonText}>Cancelar</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-    </SafeAreaView>
-  );
+const stateLabel: Record<string, string> = {
+  PENDING: 'En cola de aporte',
+  SYNCED: 'Aportada',
+  LOCAL_ONLY: 'En este teléfono',
+  FAILED: 'Guardada localmente · aporte rechazado',
 };
 
-const styles = StyleSheet.create({
-  safeContainer: { flex: 1, backgroundColor: COLORS.surface },
-  screenBody: { flex: 1, padding: 20 },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
-  screenTitle: { fontSize: 22, fontWeight: 'bold', color: COLORS.textDark },
-  screenSubtitle: { fontSize: 12, color: COLORS.textMuted, marginTop: 2 },
-  techFilterPill: {
+export function PersonalMapScreen({
+  navigation,
+  route,
+}: BottomTabScreenProps<MainTabsParamList, 'MapaPersonal'>) {
+  const focused = useIsFocused();
+  const { status: settings } = useSettings();
+  const { height, fontScale } = useWindowDimensions();
+  const mapControlStyle = { flexGrow: 1, flexBasis: 90 * fontScale };
+  const [layers, setLayers] = useState<ReadonlyArray<HistoryLayer> | null>(
+    null,
+  );
+  const [filters, setFilters] = useState<Filters | null>(null);
+  const [result, setResult] = useState<{
+    key: string;
+    points: ReadonlyArray<SavedMeasurement>;
+  } | null>(null);
+  const [region, setRegion] = useState<Region | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [reload, setReload] = useState(0);
+  const [failure, setFailure] = useState(false);
+  const [preview, setPreview] =
+    useState<ReadonlyArray<SavedMeasurement> | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [previewReady, setPreviewReady] = useState(false);
+  const markPreviewReady = useCallback(() => setPreviewReady(true), []);
+  const [exportError, setExportError] = useState(false);
+  const cardRef = useRef<React.ComponentRef<typeof View>>(null);
+  const sharing = useRef(false);
+  const requested = useRef<string | null>(null);
+  const params = route.params;
+
+  useEffect(() => {
+    if (!focused) return;
+    let active = true;
+    setFailure(false);
+    fieldwork()
+      .listLayers()
+      .then(rows => {
+        if (!active) {
+          return;
+        }
+        setLayers(rows);
+        const isNew = params && params.savedId !== requested.current;
+        if (isNew && params) {
+          requested.current = params.savedId;
+          setSelectedId(params.savedId);
+          setRegion(null);
+        }
+        setFilters(previous => {
+          if (
+            isNew &&
+            params &&
+            rows.some(
+              layer =>
+                layer.floor === params.floor && layer.metric === params.metric,
+            )
+          ) {
+            return { floor: params.floor, metric: params.metric };
+          }
+          if (
+            previous &&
+            rows.some(
+              layer =>
+                layer.floor === previous.floor &&
+                layer.metric === previous.metric,
+            )
+          ) {
+            return previous;
+          }
+          const first = rows.find(layer => isMetric(layer.metric));
+          return first && isMetric(first.metric)
+            ? { floor: first.floor, metric: first.metric }
+            : null;
+        });
+      })
+      .catch(() => {
+        if (active) setFailure(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, [focused, params, reload]);
+
+  const floor = filters?.floor;
+  const metric = filters?.metric;
+  const key =
+    floor === undefined || !metric ? null : String(floor) + ':' + metric;
+
+  useEffect(() => {
+    if (!focused || floor === undefined || !metric || key === null) {
+      return;
+    }
+    let active = true;
+    fieldwork()
+      .listMeasurements(floor, metric)
+      .then(points => {
+        if (active) {
+          setResult({ key, points });
+        }
+      })
+      .catch(() => {
+        if (active) setFailure(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, [focused, floor, metric, key, reload, params?.savedId]);
+
+  const current = result?.key === key ? result : null;
+  const points = current?.points ?? EMPTY;
+  const naturalRegion = useMemo(() => fitRegion(points), [points]);
+  const viewRegion = region ?? naturalRegion;
+  const selected = points.find(point => point.id === selectedId);
+  const floors = useMemo(
+    () => Array.from(new Set(layers?.map(layer => layer.floor) ?? [])),
+    [layers],
+  );
+  const floorLayers = layers?.filter(layer => layer.floor === floor) ?? [];
+  const layerCount =
+    floorLayers.find(layer => layer.metric === metric)?.count ?? 0;
+
+  function change(next: Filters) {
+    setSelectedId(null);
+    setRegion(null);
+    setFailure(false);
+    setFilters(next);
+  }
+
+  async function sendEvidence() {
+    if (sharing.current || !previewReady || !cardRef.current) {
+      return;
+    }
+    sharing.current = true;
+    setExporting(true);
+    setExportError(false);
+    try {
+      await shareEvidence(cardRef.current);
+      setPreview(null);
+    } catch {
+      setExportError(true);
+    } finally {
+      sharing.current = false;
+      setExporting(false);
+    }
+  }
+
+  const mapHeight = Math.max(240, Math.min(365, height * 0.38));
+
+  return (
+    <ScrollView
+      style={g.screen}
+      contentContainerStyle={g.content}
+      nestedScrollEnabled
+    >
+      <Reveal style={s.layout}>
+        <ScreenTitle
+          eyebrow="GUARDADO EN ESTE TELÉFONO"
+          title="Mi historial"
+          subtitle="Compara tus capturas por piso y tecnología, incluso sin conexión."
+        />
+        {failure ? (
+          <View style={g.card}>
+            <StatePanel
+              icon="refresh"
+              title="No pudimos abrir el historial"
+              body="Vuelve a intentar la lectura local."
+              action={{
+                label: 'Reintentar',
+                onPress: () => setReload(value => value + 1),
+              }}
+            />
+          </View>
+        ) : layers === null ? (
+          <View style={g.card}>
+            <StatePanel
+              icon="map"
+              title="Abriendo tus mediciones"
+              body="Preparando los pisos y las redes de tu historial."
+              busy
+            />
+          </View>
+        ) : !filters || !metric ? (
+          <View style={g.card}>
+            <StatePanel
+              icon="map"
+              title="Tu primer mapa empieza aquí"
+              body="Registra una señal y confirma el piso. Tu captura aparecerá en este historial."
+              action={{
+                label: 'Ir a Medir',
+                onPress: () => navigation.navigate('Medir'),
+              }}
+            />
+          </View>
+        ) : (
+          <>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={s.filterRow}
+              style={s.filters}
+            >
+              {floors.map(level => (
+                <Chip
+                  label={floorLabel(level)}
+                  key={level}
+                  selected={level === floor}
+                  onPress={() => {
+                    const layer =
+                      layers.find(
+                        item => item.floor === level && item.metric === metric,
+                      ) ??
+                      layers.find(
+                        item => item.floor === level && isMetric(item.metric),
+                      );
+                    if (layer && isMetric(layer.metric)) {
+                      change({ floor: level, metric: layer.metric });
+                    }
+                  }}
+                />
+              ))}
+            </ScrollView>
+            <View style={s.filterRow}>
+              {floorLayers.map(
+                layer =>
+                  isMetric(layer.metric) && (
+                    <Chip
+                      key={layer.metric}
+                      label={METRIC_LABELS[layer.metric]}
+                      selected={metric === layer.metric}
+                      onPress={() =>
+                        change({
+                          floor: layer.floor,
+                          metric: layer.metric as Filters['metric'],
+                        })
+                      }
+                    />
+                  ),
+              )}
+            </View>
+            <View style={[g.card, s.mapCard]}>
+              <View style={s.mapHeading}>
+                <Text style={g.sectionTitle}>Plano de señal</Text>
+                <StatusPill
+                  label={
+                    current
+                      ? points.length + (points.length === 1 ? ' medición' : ' mediciones')
+                      : 'Cargando'
+                  }
+                />
+              </View>
+              {!current ? (
+                <StatePanel
+                  icon="layers"
+                  title="Preparando capa"
+                  body="Leyendo el piso seleccionado."
+                  busy
+                />
+              ) : (
+                <GeoPlane
+                  points={points}
+                  region={viewRegion}
+                  metric={metric}
+                  height={mapHeight}
+                  onChange={setRegion}
+                  onSelect={setSelectedId}
+                  selected={selected}
+                />
+              )}
+              <SignalLegend />
+              <View style={s.filterRow}>
+                <Button
+                  label="Ajustar"
+                  kind="secondary"
+                  onPress={() => setRegion(null)}
+                  style={mapControlStyle}
+                />
+                <Button
+                  label="Acercar"
+                  kind="secondary"
+                  onPress={() => setRegion(zoomRegion(viewRegion, 0.6))}
+                  style={mapControlStyle}
+                />
+                <Button
+                  label="Alejar"
+                  kind="secondary"
+                  onPress={() => setRegion(zoomRegion(viewRegion, 1.65))}
+                  style={mapControlStyle}
+                />
+              </View>
+              {current && layerCount > points.length && (
+                <Text style={g.caption}>
+                  Mostrando las {points.length} capturas más recientes de{' '}
+                  {layerCount} en esta capa.
+                </Text>
+              )}
+            </View>
+
+            {selected && (
+              <Reveal key={selected.id} style={g.card}>
+                <View style={g.row}>
+                  <View style={s.grow}>
+                    <Text style={g.sectionTitle}>
+                      {formatSignal(
+                        selected.powerDbm,
+                        metric,
+                        settings?.technicalMode ?? false,
+                      )}
+                    </Text>
+                    <Text style={g.caption}>
+                      {networkLabel(selected.connection)} · ±
+                      {selected.accuracyM.toFixed(1)} m
+                    </Text>
+                    <Text style={g.caption}>
+                      {formatDate(selected.capturedAt)}
+                    </Text>
+                  </View>
+                  <Button
+                    label="Cerrar"
+                    kind="quiet"
+                    onPress={() => setSelectedId(null)}
+                  />
+                </View>
+                <StatusPill
+                  label={stateLabel[selected.syncState] ?? 'Guardada'}
+                />
+              </Reveal>
+            )}
+            <Button
+              label="Preparar evidencia PNG"
+              icon="share"
+              disabled={points.length === 0}
+              onPress={() => {
+                setExportError(false);
+                setPreviewReady(false);
+                setPreview(points);
+              }}
+            />
+            {points.length > 0 && (
+              <View style={g.card}>
+                <Text style={g.sectionTitle}>Capturas recientes</Text>
+                {points.slice(0, 4).map(point => (
+                  <Chip
+                    key={point.id}
+                    label={
+                      formatDate(point.capturedAt) +
+                      ' · ' +
+                      formatSignal(
+                        point.powerDbm,
+                        metric,
+                        settings?.technicalMode ?? false,
+                      )
+                    }
+                    selected={point.id === selectedId}
+                    onPress={() => setSelectedId(point.id)}
+                  />
+                ))}
+              </View>
+            )}
+          </>
+        )}
+      </Reveal>
+      <Dialog
+        title="Vista previa de evidencia"
+        visible={preview !== null}
+        onClose={() => {
+          if (!sharing.current) setPreview(null);
+        }}
+      >
+        {preview && (
+          <EvidenceCard
+            measurements={preview}
+            cardRef={cardRef}
+            onReady={markPreviewReady}
+          />
+        )}
+        <View style={g.row}>
+          <Icon name="info" size={17} />
+          <Text style={[g.caption, s.grow]}>
+            El PNG incluye las coordenadas de referencia que ves en la tarjeta.
+          </Text>
+        </View>
+        {exportError && (
+          <Text accessibilityLiveRegion="polite" style={s.error}>
+            No pudimos generar el PNG. Inténtalo de nuevo.
+          </Text>
+        )}
+        <Button
+          label={
+            !previewReady
+              ? 'Preparando vista'
+              : exporting
+              ? 'Generando PNG'
+              : 'Compartir PNG'
+          }
+          icon="share"
+          busy={exporting}
+          disabled={!previewReady}
+          onPress={sendEvidence}
+        />
+      </Dialog>
+    </ScrollView>
+  );
+}
+
+const s = StyleSheet.create({
+  layout: { gap: 14 },
+  mapCard: { padding: 11, gap: 7 },
+  mapHeading: {
     flexDirection: 'row',
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 10,
-    padding: 3,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  techBtn: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
-  techBtnActive: { backgroundColor: COLORS.primary },
-  techBtnText: { fontSize: 11, fontWeight: 'bold', color: COLORS.textMuted },
-  techBtnTextActive: { color: COLORS.textLight },
-  mapFloorSelector: { flexDirection: 'row', gap: 8, marginBottom: 14 },
-  floorTab: {
-    paddingHorizontal: 15,
-    paddingVertical: 7,
-    borderRadius: 20,
-    backgroundColor: COLORS.cardBg,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  floorTabActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
-  floorTabText: { fontSize: 13, color: COLORS.textDark, fontWeight: '600' },
-  floorTabTextActive: { color: COLORS.textLight },
-  mapCanvasPlaceholder: {
-    flex: 1,
-    borderRadius: 16,
-    overflow: 'hidden',
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  mapView: {
-    width: '100%',
-    height: '100%',
-  },
-  pointInspectorCard: {
-    position: 'absolute',
-    top: 12,
-    left: 12,
-    right: 12,
-    backgroundColor: COLORS.cardBg,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 12,
-    flexDirection: 'row',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 8,
     alignItems: 'center',
-    gap: 10,
-    elevation: 4,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    paddingHorizontal: 3,
   },
-  inspectorTitle: { fontSize: 12, fontWeight: 'bold', color: COLORS.textDark },
-  inspectorMeta: { fontSize: 11, color: COLORS.textMuted },
-  closeInspectorText: { fontSize: 14, fontWeight: 'bold', color: COLORS.textMuted, paddingHorizontal: 4 },
-  legendBar: {
-    position: 'absolute',
-    bottom: 12,
-    alignSelf: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 20,
-    flexDirection: 'row',
-    gap: 14,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  legendDot: { width: 9, height: 9, borderRadius: 4.5 },
-  legendText: { fontSize: 11, fontWeight: '600', color: COLORS.textDark },
-  primaryButton: {
-    backgroundColor: COLORS.primary,
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-    width: '100%',
-  },
-  primaryButtonText: { color: COLORS.textLight, fontSize: 15, fontWeight: 'bold' },
-  secondaryButton: { paddingVertical: 10, alignItems: 'center' },
-  secondaryButtonText: { color: COLORS.textMuted, fontSize: 14, fontWeight: '600' },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: COLORS.modalOverlay,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-  },
-  modalCard: {
-    width: '100%',
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 20,
-    padding: 24,
-    alignItems: 'center',
-  },
-  modalEmoji: { fontSize: 42, marginBottom: 8 },
-  modalTitle: { fontSize: 19, fontWeight: 'bold', color: COLORS.textDark, marginBottom: 8 },
-  modalBody: { fontSize: 13, color: COLORS.textMuted, textAlign: 'center', lineHeight: 18, marginBottom: 14 },
-  privacyWarningBox: {
-    backgroundColor: '#FFF8E6',
-    padding: 12,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#F5D67B',
-    marginBottom: 18,
-    width: '100%',
-  },
-  privacyWarningText: { fontSize: 12, color: '#8A6508', fontWeight: '600', textAlign: 'center' },
+  filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  filters: { flexGrow: 0 },
+  grow: { flex: 1 },
+  error: { color: COLORS.danger, fontSize: 13 },
 });

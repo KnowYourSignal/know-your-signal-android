@@ -2,32 +2,30 @@ import { StyleSheet } from 'react-native';
 import { COLORS } from './theme';
 
 export const globalStyles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: COLORS.white,
+  screen: { flex: 1, backgroundColor: COLORS.surface },
+  content: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 24,
+    gap: 16,
   },
-  button: {
-    paddingVertical: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  primaryButton: {
-    backgroundColor: COLORS.primary,
-  },
-  primaryButtonText: {
-    color: COLORS.white,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  secondaryButton: {
-    backgroundColor: 'transparent',
+  card: {
+    backgroundColor: COLORS.cardBg,
+    borderColor: COLORS.border,
     borderWidth: 1,
-    borderColor: COLORS.primary,
+    borderRadius: 20,
+    padding: 16,
+    gap: 10,
   },
-  secondaryButtonText: {
-    color: COLORS.primary,
-    fontSize: 16,
-    fontWeight: '600',
+  heading: {
+    color: COLORS.navy,
+    fontSize: 28,
+    fontWeight: '800',
+    letterSpacing: -0.8,
   },
+  sectionTitle: { color: COLORS.textDark, fontSize: 17, fontWeight: '700' },
+  body: { color: COLORS.textMuted, fontSize: 14, lineHeight: 21 },
+  caption: { color: COLORS.textMuted, fontSize: 12, lineHeight: 17 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  divider: { height: StyleSheet.hairlineWidth, backgroundColor: COLORS.border },
 });

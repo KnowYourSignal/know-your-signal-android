@@ -10,7 +10,8 @@
     "test": "jest",
     "test:backend": "npm --prefix tests/backend test",
     "check:backend": "npm --prefix tests/backend run check",
-    "test:backend:integration": "node scripts/test-ingest.mjs"
+    "test:backend:integration": "node scripts/test-ingest.mjs",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@react-native/new-app-screen": "0.88.1",
@@ -21,7 +22,9 @@
     "react-native": "0.88.1",
     "react-native-maps": "^1.29.11",
     "react-native-safe-area-context": "^5.11.1",
-    "react-native-screens": "^4.30.1"
+    "react-native-screens": "^4.30.1",
+    "react-native-svg": "15.16.1",
+    "react-native-view-shot": "6.2.1"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
@@ -46,5 +49,13 @@
   },
   "engines": {
     "node": ">= 22.11.0"
+  },
+  "codegenConfig": {
+    "name": "KnowYourSignalSpec",
+    "type": "modules",
+    "jsSrcsDir": "src/specs",
+    "android": {
+      "javaPackageName": "com.knowyoursignal"
+    }
   }
 }
