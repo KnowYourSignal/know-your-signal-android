@@ -41,6 +41,9 @@ internal interface MeasurementDao {
     """)
     suspend fun nextBatch(revision: Long): List<MeasurementEntity>
 
+    @Query("SELECT EXISTS(SELECT 1 FROM outbox WHERE consentRevision = :revision)")
+    suspend fun hasQueued(revision: Long): Boolean
+
     @Query("UPDATE measurements SET syncState = :state WHERE syncState = 'PENDING' AND id IN (:ids)")
     suspend fun setBatchState(ids: List<String>, state: String)
 

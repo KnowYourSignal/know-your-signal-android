@@ -26,6 +26,7 @@ type Position = { latitude: number; longitude: number };
 
 export interface Spec extends TurboModule {
   readSensors(): Promise<SensorReading>;
+  stopReading(): void;
   freezeCapture(): Promise<FrozenCapture>;
   locate(): Promise<Position>;
 }

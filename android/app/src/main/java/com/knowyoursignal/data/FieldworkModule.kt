@@ -11,6 +11,7 @@ import com.knowyoursignal.sync.SyncConfig
 import com.knowyoursignal.sync.SyncCoordinator
 import com.knowyoursignal.sync.SyncScheduler
 import com.knowyoursignal.telemetry.CaptureException
+import com.knowyoursignal.telemetry.CaptureDrafts
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -31,11 +32,12 @@ internal class FieldworkModule(private val context: ReactApplicationContext) : N
 
     override fun setConsent(enabled: Boolean, promise: Promise) = run(promise) {
         if (enabled && config == null) throw CaptureException("SYNC_NOT_CONFIGURED")
-        SyncCoordinator.consent.withLock {
-            ConsentRepository(database).choose(enabled, config?.server.orEmpty())
-            SyncCoordinator.cancelUpload()
+        val choice = SyncCoordinator.consent.withLock {
+            ConsentRepository(database).choose(enabled, config?.server.orEmpty()).also {
+                SyncCoordinator.cancelUpload()
+            }
         }
-        SyncScheduler.request(context, replace = true)
+        if (choice.remotePending) schedule(choice.revision, replace = true)
         status()
     }
 
@@ -46,8 +48,9 @@ internal class FieldworkModule(private val context: ReactApplicationContext) : N
 
     override fun saveMeasurement(captureId: String, floor: Double, zoneSize: String, promise: Promise) = run(promise) {
         val saved = repository.save(captureId, floor, zoneSize, config?.server.orEmpty())
-        if (saved.syncState == PENDING) SyncScheduler.request(context)
-        saved.toMap()
+        CaptureDrafts.forget(captureId)
+        saved.wakeRevision?.let { schedule(it) }
+        saved.measurement.toMap()
     }
 
     override fun listLayers(promise: Promise) = run(promise) {
@@ -67,8 +70,10 @@ internal class FieldworkModule(private val context: ReactApplicationContext) : N
     }
 
     override fun retrySync(promise: Promise) = run(promise) {
-        dao.consent()?.let { dao.setSyncProblem(it.revision, null) }
-        SyncScheduler.request(context, replace = true)
+        dao.consent()?.let {
+            dao.setSyncProblem(it.revision, null)
+            if (!schedule(it.revision, replace = true)) throw CaptureException("SYNC_NOT_SCHEDULED")
+        }
         null
     }
 
@@ -84,6 +89,18 @@ internal class FieldworkModule(private val context: ReactApplicationContext) : N
         val activity = context.currentActivity ?: throw CaptureException("EXPORT_FAILED")
         ShareAdapter.share(activity, path)
         null
+    }
+
+    private suspend fun schedule(revision: Long, replace: Boolean = false): Boolean = try {
+        SyncScheduler.request(context, replace)
+        true
+    } catch (error: CancellationException) {
+        throw error
+    } catch (_: Exception) {
+        // Room already committed. Retain the capture and let periodic recovery
+        // or the user's retry wake the durable queue.
+        dao.setSyncProblem(revision, "SYNC_NOT_SCHEDULED")
+        false
     }
 
     private suspend fun status() = Arguments.createMap().apply {

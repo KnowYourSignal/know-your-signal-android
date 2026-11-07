@@ -1,8 +1,15 @@
 import type { MapConfiguration } from '../specs/NativeFieldwork';
-import { boundsFor, type Filters, type Region } from '../state/MapFilters';
+import { queryBounds, type Filters, type Region } from '../state/MapFilters';
 
 export const MAP_CACHE_MS = 5 * 60 * 1_000;
 export const VIEWPORT_DEBOUNCE_MS = 300;
+
+export const WIFI_CONNECTIONS = [
+  { value: 'wifi_publica', label: 'Abierta' },
+  { value: 'wifi_privada', label: 'Protegida' },
+  { value: 'wifi_desconocida', label: 'Sin clasificar' },
+] as const;
+export type WifiConnection = (typeof WIFI_CONNECTIONS)[number]['value'];
 
 export type PublicCell = {
   id: string;
@@ -21,15 +28,17 @@ export function mapQuery(
   config: MapConfiguration,
   region: Region,
   filters: Filters,
+  wifiConnection: WifiConnection | null = null,
 ) {
-  const bounds = boundsFor(region);
+  const bounds = queryBounds(region);
   if (!bounds.length) {
     return null;
   }
   const payloads = bounds.map(boundsPart => ({
     ...boundsPart,
     piso_filtro: filters.floor,
-    tipo_conexion_filtro: null,
+    tipo_conexion_filtro:
+      filters.metric === 'wifi_rssi' ? wifiConnection : null,
     grid_size_m: 50,
     metrica_filtro: filters.metric,
   }));
@@ -55,7 +64,11 @@ export function cachedCells(
   return undefined;
 }
 
-function parseCells(value: unknown, metric: Filters['metric']): PublicCell[] {
+function parseCells(
+  value: unknown,
+  metric: Filters['metric'],
+  connection: WifiConnection | null,
+): PublicCell[] {
   if (!Array.isArray(value) || value.length > 1_000) {
     throw new Error('INVALID_MAP_RESPONSE');
   }
@@ -74,6 +87,12 @@ function parseCells(value: unknown, metric: Filters['metric']): PublicCell[] {
       !Number.isInteger(row.total_contribuyentes) ||
       row.total_contribuyentes < 5 ||
       !Number.isFinite(row.mediana_potencia) ||
+      row.mediana_potencia > -1 ||
+      row.mediana_potencia < (metric === 'wifi_rssi' ? -127 : -160) ||
+      (metric === 'wifi_rssi'
+        ? !WIFI_CONNECTIONS.some(option => option.value === row.tipo_conexion)
+        : row.tipo_conexion !== 'datos_moviles') ||
+      (connection !== null && row.tipo_conexion !== connection) ||
       !(Math.abs(row.latitud_centro) <= 90) ||
       !(Math.abs(row.longitud_centro) <= 180) ||
       !(row.resolucion_m > 0 && Number.isFinite(row.resolucion_m))
@@ -125,7 +144,11 @@ export async function requestCells(
         if (!result.ok) {
           throw new Error('MAP_REQUEST_FAILED');
         }
-        return parseCells(await result.json(), payload.metrica_filtro);
+        return parseCells(
+          await result.json(),
+          payload.metrica_filtro,
+          payload.tipo_conexion_filtro,
+        );
       }),
     );
     if (controller.signal.aborted) {

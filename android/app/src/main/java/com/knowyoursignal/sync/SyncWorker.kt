@@ -11,6 +11,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import androidx.work.await
 import com.knowyoursignal.data.ConsentEntity
 import com.knowyoursignal.data.FieldDatabase
 import com.knowyoursignal.data.LocalRepository
@@ -27,7 +28,7 @@ internal object SyncScheduler {
     private const val RECONCILE = "kys-outbox-reconcile"
     private val online = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
 
-    fun request(context: Context, replace: Boolean = false) {
+    suspend fun request(context: Context, replace: Boolean = false) {
         if (SyncConfig.load() == null) return
         val work = OneTimeWorkRequestBuilder<SyncWorker>()
             .setConstraints(online)
@@ -35,7 +36,7 @@ internal object SyncScheduler {
             .build()
         WorkManager.getInstance(context).enqueueUniqueWork(
             QUEUE, if (replace) ExistingWorkPolicy.REPLACE else ExistingWorkPolicy.APPEND_OR_REPLACE, work,
-        )
+        ).await()
     }
 
     fun reconcile(context: Context) {

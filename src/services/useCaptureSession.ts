@@ -1,27 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AppState } from 'react-native';
 import { canCapture } from '../domain/CapturePolicy';
 import { errorCode, type CaptureStatus } from '../domain/CaptureState';
 import type { SensorReading } from '../specs/NativeTelemetry';
 import { requestLocation, telemetry } from './NativeTelemetryAdapter';
+import { useAppForeground } from './useAppForeground';
 
 export function useCaptureSession(focused: boolean) {
-  const [foreground, setForeground] = useState(
-    AppState.currentState !== 'background',
-  );
+  const foreground = useAppForeground();
   const [enabled, setEnabled] = useState(false);
   const [status, setStatus] = useState<CaptureStatus>('idle');
   const [reading, setReading] = useState<SensorReading | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const freezing = useRef(false);
   const requesting = useRef(false);
-
-  useEffect(() => {
-    const subscription = AppState.addEventListener('change', state =>
-      setForeground(state === 'active'),
-    );
-    return () => subscription.remove();
-  }, []);
+  const session = useRef(0);
 
   const start = useCallback(async () => {
     if (requesting.current) {
@@ -46,6 +38,8 @@ export function useCaptureSession(focused: boolean) {
   }, []);
 
   const pause = useCallback(() => {
+    session.current += 1;
+    telemetry.stop();
     setEnabled(false);
     setReading(null);
     setProblem(null);
@@ -103,6 +97,8 @@ export function useCaptureSession(focused: boolean) {
     refresh();
     return () => {
       active = false;
+      session.current += 1;
+      telemetry.stop();
       if (timer) {
         clearTimeout(timer);
       }
@@ -123,16 +119,22 @@ export function useCaptureSession(focused: boolean) {
       return null;
     }
     freezing.current = true;
+    const captureSession = session.current;
     setStatus('freezing');
     try {
       const saved = await telemetry.freeze();
+      if (captureSession !== session.current) {
+        return null;
+      }
       // The draft is held natively while the user completes the floor form.
       pause();
       return saved;
     } catch (error) {
-      setReading(null);
-      setProblem(errorCode(error));
-      setStatus('reading');
+      if (captureSession === session.current) {
+        setReading(null);
+        setProblem(errorCode(error));
+        setStatus('reading');
+      }
       return null;
     } finally {
       freezing.current = false;

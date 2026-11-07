@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
   PanResponder,
@@ -7,7 +7,12 @@ import {
   Text,
   View,
 } from 'react-native';
-import { project, shiftRegion, type Region } from '../state/MapFilters';
+import {
+  horizontalScale,
+  project,
+  shiftRegion,
+  type Region,
+} from '../state/MapFilters';
 import { COLORS } from '../theme/theme';
 import { HeatmapLayer, type HeatPoint } from './HeatmapLayer';
 
@@ -19,6 +24,7 @@ export function GeoPlane({
   selected,
   onChange,
   onSelect,
+  onReady,
 }: {
   points: ReadonlyArray<HeatPoint>;
   region: Region;
@@ -27,8 +33,10 @@ export function GeoPlane({
   selected?: HeatPoint | null;
   onChange?: (region: Region) => void;
   onSelect?: (id: string) => void;
+  onReady?: () => void;
 }) {
   const [width, setWidth] = useState(0);
+  const scale = horizontalScale(region, width);
   const drag = useRef(new Animated.ValueXY()).current;
   const pan = useMemo(
     () =>
@@ -52,6 +60,13 @@ export function GeoPlane({
       }),
     [drag, onChange, region, width, height],
   );
+
+  useEffect(() => {
+    if (width > 0 && onReady) {
+      const frame = requestAnimationFrame(onReady);
+      return () => cancelAnimationFrame(frame);
+    }
+  }, [width, onReady]);
 
   function select(x: number, y: number) {
     let best = 22 ** 2;
@@ -112,6 +127,12 @@ export function GeoPlane({
           {region.latitude.toFixed(4)}°, {region.longitude.toFixed(4)}°
         </Text>
       </View>
+      {scale && (
+        <View pointerEvents="none" style={s.scale}>
+          <Text style={s.referenceText}>≈ {scale.label}</Text>
+          <View style={[s.scaleRule, { width: scale.length }]} />
+        </View>
+      )}
     </View>
   );
 }
@@ -132,6 +153,7 @@ const s = StyleSheet.create({
     position: 'absolute',
     bottom: 8,
     left: 8,
+    maxWidth: '62%',
     backgroundColor: 'rgba(255,255,255,0.92)',
     borderRadius: 6,
     paddingHorizontal: 6,
@@ -141,5 +163,22 @@ const s = StyleSheet.create({
     fontSize: 10,
     color: COLORS.textMuted,
     fontVariant: ['tabular-nums'],
+  },
+  scale: {
+    position: 'absolute',
+    bottom: 8,
+    right: 8,
+    alignItems: 'center',
+    gap: 1,
+    backgroundColor: 'rgba(255,255,255,0.92)',
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+  },
+  scaleRule: {
+    height: 3,
+    borderWidth: 1,
+    borderTopWidth: 0,
+    borderColor: COLORS.textDark,
   },
 });

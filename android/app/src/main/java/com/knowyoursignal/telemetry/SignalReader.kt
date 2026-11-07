@@ -1,6 +1,7 @@
 package com.knowyoursignal.telemetry
 
 import android.content.Context
+import android.net.Network
 import android.net.wifi.SupplicantState
 import android.net.wifi.WifiManager
 import android.os.Build
@@ -17,15 +18,19 @@ import kotlinx.coroutines.withTimeoutOrNull
 internal class SignalReader(private val context: Context) {
     private val classifier = NetworkClassifier(context)
 
-    suspend fun read(): Signal? = when (classifier.activeTransport()) {
-        RadioTransport.WIFI -> readWifi()
+    fun currentNetwork(): Network? = classifier.currentNetwork()
+
+    suspend fun read(network: Network): Signal? = when (classifier.transport(network)) {
+        RadioTransport.WIFI -> readWifi(network)
         RadioTransport.CELLULAR -> readCellular()
         null -> null
     }
 
     @Suppress("DEPRECATION")
-    private fun readWifi(): Signal? {
-        val info = context.getSystemService(WifiManager::class.java)?.connectionInfo ?: return null
+    private fun readWifi(network: Network): Signal? {
+        val info = classifier.wifiInfo(network)
+            ?: context.getSystemService(WifiManager::class.java)?.connectionInfo
+            ?: return null
         if (info.supplicantState != SupplicantState.COMPLETED || info.rssi !in -126..-1) return null
         // WifiInfo has no sample timestamp. This is the elapsed time of the current read.
         return Signal(info.rssi, "wifi_rssi", "wifi", classifier.wifiConnection(info), SystemClock.elapsedRealtime())

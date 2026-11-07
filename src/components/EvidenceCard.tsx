@@ -17,12 +17,17 @@ import { Icon } from './Icon';
 export function EvidenceCard({
   measurements,
   cardRef,
+  onReady,
 }: {
   measurements: ReadonlyArray<SavedMeasurement>;
   cardRef: React.RefObject<React.ComponentRef<typeof View> | null>;
+  onReady: () => void;
 }) {
   const newest = measurements[0];
   const oldest = measurements[measurements.length - 1];
+  const firstDay = formatDate(oldest.capturedAt);
+  const lastDay = formatDate(newest.capturedAt);
+  const dates = firstDay === lastDay ? firstDay : firstDay + ' — ' + lastDay;
   const connections = Array.from(
     new Set(measurements.map(point => networkLabel(point.connection))),
   ).join(' · ');
@@ -43,14 +48,17 @@ export function EvidenceCard({
       </Text>
       <Text style={g.body}>{connections}</Text>
       <Text style={g.caption}>
-        {formatDate(oldest.capturedAt)} — {formatDate(newest.capturedAt)} ·{' '}
-        {measurements.length} mediciones
+        {dates} ·{' '}
+        {measurements.length === 1
+          ? '1 medición'
+          : measurements.length + ' mediciones'}
       </Text>
       <GeoPlane
         points={measurements}
         region={fitRegion(measurements)}
         metric={newest.metric}
         height={210}
+        onReady={onReady}
       />
       <SignalLegend />
       <Text style={g.caption}>

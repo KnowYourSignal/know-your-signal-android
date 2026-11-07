@@ -28,6 +28,7 @@ export async function requestLocation(precise: boolean): Promise<boolean> {
 
 export const telemetry = {
   read: () => native().readSensors(),
+  stop: () => NativeTelemetry?.stopReading(),
   freeze: () => native().freezeCapture(),
   locate: () => native().locate(),
 };

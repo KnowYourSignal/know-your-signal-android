@@ -124,6 +124,13 @@ android {
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
         }
+        qa {
+            initWith release
+            applicationIdSuffix ".qa"
+            versionNameSuffix "-qa"
+            matchingFallbacks = ["release"]
+            signingConfig signingConfigs.debug
+        }
     }
 }
 

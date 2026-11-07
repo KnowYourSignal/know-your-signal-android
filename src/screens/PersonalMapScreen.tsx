@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -75,6 +81,8 @@ export function PersonalMapScreen({
   const [preview, setPreview] =
     useState<ReadonlyArray<SavedMeasurement> | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [previewReady, setPreviewReady] = useState(false);
+  const markPreviewReady = useCallback(() => setPreviewReady(true), []);
   const [exportError, setExportError] = useState(false);
   const cardRef = useRef<React.ComponentRef<typeof View>>(null);
   const sharing = useRef(false);
@@ -179,7 +187,7 @@ export function PersonalMapScreen({
   }
 
   async function sendEvidence() {
-    if (sharing.current || !cardRef.current) {
+    if (sharing.current || !previewReady || !cardRef.current) {
       return;
     }
     sharing.current = true;
@@ -293,7 +301,11 @@ export function PersonalMapScreen({
               <View style={s.mapHeading}>
                 <Text style={g.sectionTitle}>Plano de señal</Text>
                 <StatusPill
-                  label={current ? points.length + ' mediciones' : 'Cargando'}
+                  label={
+                    current
+                      ? points.length + (points.length === 1 ? ' medición' : ' mediciones')
+                      : 'Cargando'
+                  }
                 />
               </View>
               {!current ? (
@@ -382,6 +394,7 @@ export function PersonalMapScreen({
               disabled={points.length === 0}
               onPress={() => {
                 setExportError(false);
+                setPreviewReady(false);
                 setPreview(points);
               }}
             />
@@ -416,7 +429,13 @@ export function PersonalMapScreen({
           if (!sharing.current) setPreview(null);
         }}
       >
-        {preview && <EvidenceCard measurements={preview} cardRef={cardRef} />}
+        {preview && (
+          <EvidenceCard
+            measurements={preview}
+            cardRef={cardRef}
+            onReady={markPreviewReady}
+          />
+        )}
         <View style={g.row}>
           <Icon name="info" size={17} />
           <Text style={[g.caption, s.grow]}>
@@ -429,9 +448,16 @@ export function PersonalMapScreen({
           </Text>
         )}
         <Button
-          label={exporting ? 'Generando PNG' : 'Compartir PNG'}
+          label={
+            !previewReady
+              ? 'Preparando vista'
+              : exporting
+              ? 'Generando PNG'
+              : 'Compartir PNG'
+          }
           icon="share"
           busy={exporting}
+          disabled={!previewReady}
           onPress={sendEvidence}
         />
       </Dialog>

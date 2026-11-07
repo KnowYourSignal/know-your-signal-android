@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.os.Looper
 import android.os.SystemClock
 import androidx.core.content.ContextCompat
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -39,15 +40,16 @@ internal class LocationReader(private val context: Context) {
             return cached.toPosition()
         }
 
-        var best = cached
+        val best = AtomicReference(cached)
         val fresh = withTimeoutOrNull(5_000) {
             suspendCancellableCoroutine<Location> { continuation ->
                 val listener = object : LocationListener {
                     override fun onLocationChanged(location: Location) {
                         if (!location.hasAccuracy() || !continuation.isActive) return
-                        if (best == null || location.accuracy <= best!!.accuracy ||
-                            location.elapsedMs - best!!.elapsedMs > 1_500
-                        ) best = location
+                        val previous = best.get()
+                        if (previous == null || location.accuracy <= previous.accuracy ||
+                            location.elapsedMs - previous.elapsedMs > 1_500
+                        ) best.set(location)
                         if (!requirePrecise || location.accuracy < MAX_ACCURACY_M) {
                             manager.removeUpdates(this)
                             continuation.resume(location)
@@ -72,7 +74,7 @@ internal class LocationReader(private val context: Context) {
                 }
             }
         }
-        val location = fresh ?: best ?: throw CaptureException("LOCATION_TIMEOUT")
+        val location = fresh ?: best.get() ?: throw CaptureException("LOCATION_TIMEOUT")
         if (SystemClock.elapsedRealtime() - location.elapsedMs !in 0 until MAX_READING_AGE_MS) {
             throw CaptureException("STALE_READING")
         }

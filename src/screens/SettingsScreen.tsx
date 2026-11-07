@@ -27,6 +27,8 @@ const problemText: Record<string, string> = {
   SESSION_STORAGE: 'La sesión de aporte no se pudo leer en este teléfono.',
   CONSENT_BLOCKED: 'El servidor no confirmó el permiso para aportar.',
   SERVER_REJECTED: 'El servidor no pudo procesar el lote.',
+  SYNC_NOT_SCHEDULED:
+    'Tu historial está guardado. Puedes reintentar la sincronización desde aquí.',
   CONFIG_CHANGED:
     'El servicio configurado cambió desde tu última decisión de privacidad.',
 };

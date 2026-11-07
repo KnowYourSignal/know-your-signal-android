@@ -9,10 +9,12 @@ internal const val MAX_HISTORY_POINTS = 750
 internal val METRICS = setOf("wifi_rssi", "lte_rsrp", "nr_ss_rsrp", "celular_dbm")
 internal val ZONE_SIZES = setOf("pequeno", "mediano", "grande", "muy_grande")
 
+internal data class SavedCapture(val measurement: MeasurementEntity, val wakeRevision: Long?)
+
 internal class LocalRepository(private val database: FieldDatabase) {
     private val dao = database.measurements()
 
-    suspend fun save(captureId: String, floor: Double, zoneSize: String, server: String): MeasurementEntity =
+    suspend fun save(captureId: String, floor: Double, zoneSize: String, server: String): SavedCapture =
         database.withTransaction {
             val level = floorLevel(floor)
             if (zoneSize !in ZONE_SIZES) throw CaptureException("INVALID_ZONE")
@@ -20,17 +22,19 @@ internal class LocalRepository(private val database: FieldDatabase) {
                 if (previous.floor != level || previous.zoneSize != zoneSize) {
                     throw CaptureException("CAPTURE_ALREADY_SAVED")
                 }
-                return@withTransaction previous
+                return@withTransaction SavedCapture(previous, null)
             }
             val draft = CaptureDrafts.find(captureId) ?: throw CaptureException("CAPTURE_EXPIRED")
-            val consent = dao.consent()
-            val canQueue = consent?.enabled == true && consent.server == server && server.isNotEmpty()
-            val measurement = draft.toMeasurement(level, zoneSize, if (canQueue) PENDING else LOCAL_ONLY)
+            val consent = dao.consent()?.takeIf {
+                it.enabled && it.server == server && server.isNotEmpty() && draft.shareRevision == it.revision
+            }
+            val wake = if (consent != null && !dao.hasQueued(consent.revision)) consent.revision else null
+            val measurement = draft.toMeasurement(level, zoneSize, if (consent != null) PENDING else LOCAL_ONLY)
             dao.insert(measurement)
-            if (canQueue && consent != null) {
+            if (consent != null) {
                 dao.enqueue(OutboxEntity(measurement.id, consent.revision, System.currentTimeMillis()))
             }
-            measurement
+            SavedCapture(measurement, wake)
         }
 
     suspend fun list(floor: Double, metric: String): List<MeasurementEntity> {

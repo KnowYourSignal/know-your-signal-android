@@ -36,12 +36,11 @@ import {
 import { fieldwork } from '../services/LocalRepositoryAdapter';
 import { requestLocation, telemetry } from '../services/NativeTelemetryAdapter';
 import {
-  VIEWPORT_DEBOUNCE_MS,
-  cachedCells,
-  mapQuery,
-  requestCells,
-  type PublicCell,
+  WIFI_CONNECTIONS,
+  type WifiConnection,
 } from '../services/PublicMapService';
+import { useAppForeground } from '../services/useAppForeground';
+import { usePublicCells } from '../services/usePublicCells';
 import type { MapConfiguration } from '../specs/NativeFieldwork';
 import {
   START_REGION,
@@ -54,22 +53,14 @@ import { useSettings } from '../state/SettingsContext';
 import { COLORS } from '../theme/theme';
 import { globalStyles as g } from '../theme/globalStyles';
 
-const EMPTY_CELLS: ReadonlyArray<PublicCell> = [];
 const noConfig: MapConfiguration = {
   url: '',
   publishableKey: '',
   mapTiles: false,
 };
-type Result = {
-  key: string;
-  cells: ReadonlyArray<PublicCell>;
-  loading: boolean;
-  cached: boolean;
-  error: boolean;
-};
-
 export function PublicMapScreen() {
   const focused = useIsFocused();
+  const foreground = useAppForeground();
   const reduced = useReducedMotion();
   const { status: settings } = useSettings();
   const { height } = useWindowDimensions();
@@ -82,19 +73,22 @@ export function PublicMapScreen() {
     floor: 0,
     metric: 'wifi_rssi',
   });
-  const [result, setResult] = useState<Result | null>(null);
-  const [refresh, setRefresh] = useState(0);
+  const [wifiConnection, setWifiConnection] = useState<WifiConnection | null>(
+    null,
+  );
+  const [connectionPicker, setConnectionPicker] = useState(false);
   const [floorEdit, setFloorEdit] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const map = useRef<MapView>(null);
-  const force = useRef(false);
   const locatingRef = useRef(false);
-  const query = useMemo(
-    () =>
-      configuration?.url ? mapQuery(configuration, region, filters) : null,
-    [configuration, region, filters],
+  const { hasViewport, current, cells, loading, reload } = usePublicCells(
+    configuration,
+    region,
+    filters,
+    wifiConnection,
+    focused && foreground,
   );
 
   useEffect(() => {
@@ -112,70 +106,6 @@ export function PublicMapScreen() {
     };
   }, []);
 
-  useEffect(() => {
-    if (!focused || !configuration || !query) {
-      return;
-    }
-    const skipCache = force.current;
-    force.current = false;
-    const existing = !skipCache ? cachedCells(query.key) : undefined;
-    if (existing) {
-      setResult({
-        key: query.key,
-        cells: existing.cells,
-        loading: false,
-        cached: true,
-        error: false,
-      });
-      return;
-    }
-    const controller = new AbortController();
-    setResult(previous => ({
-      key: query.key,
-      cells: previous?.key === query.key ? previous.cells : EMPTY_CELLS,
-      loading: true,
-      cached: false,
-      error: false,
-    }));
-    const timer = setTimeout(
-      () => {
-        requestCells(configuration, query, controller.signal)
-          .then(response => {
-            if (!controller.signal.aborted) {
-              setResult({
-                key: query.key,
-                cells: response.cells,
-                loading: false,
-                cached: false,
-                error: false,
-              });
-            }
-          })
-          .catch(() => {
-            if (!controller.signal.aborted) {
-              setResult(previous => ({
-                key: query.key,
-                cells:
-                  previous?.key === query.key ? previous.cells : EMPTY_CELLS,
-                loading: false,
-                cached: false,
-                error: true,
-              }));
-            }
-          });
-      },
-      skipCache ? 0 : VIEWPORT_DEBOUNCE_MS,
-    );
-    return () => {
-      clearTimeout(timer);
-      controller.abort();
-    };
-  }, [configuration, query, focused, refresh]);
-
-  const current = result?.key === query?.key ? result : null;
-  const cells = current?.cells ?? EMPTY_CELLS;
-  const loading =
-    configuration === null || (!!query && (!current || current.loading));
   const selected = cells.find(cell => cell.id === selectedId);
   const resolution = cells.length
     ? Math.max(...cells.map(cell => cell.resolutionM))
@@ -230,11 +160,6 @@ export function PublicMapScreen() {
     }
   }
 
-  function reload() {
-    force.current = true;
-    setRefresh(value => value + 1);
-  }
-
   const floor = floorEdit === null ? null : parseFloor(floorEdit);
 
   return (
@@ -267,6 +192,19 @@ export function PublicMapScreen() {
             />
           ))}
         </View>
+        {filters.metric === 'wifi_rssi' && (
+          <View style={s.filters}>
+            <Chip
+              label={
+                (WIFI_CONNECTIONS.find(
+                  option => option.value === wifiConnection,
+                )?.label ?? 'Todas las Wi-Fi') + ' ▾'
+              }
+              selected={wifiConnection !== null}
+              onPress={() => setConnectionPicker(true)}
+            />
+          </View>
+        )}
 
         <View style={[g.card, s.mapCard]}>
           <View style={s.mapHeading}>
@@ -275,6 +213,8 @@ export function PublicMapScreen() {
               label={
                 loading
                   ? 'Consultando'
+                  : current?.error && cells.length
+                  ? 'Última consulta'
                   : current?.cached
                   ? 'En caché'
                   : resolution
@@ -370,7 +310,7 @@ export function PublicMapScreen() {
               body="El mapa comunitario estará disponible al configurar el servicio en esta instalación."
             />
           </View>
-        ) : !query ? (
+        ) : !hasViewport ? (
           <View style={g.card}>
             <StatePanel
               icon="map"
@@ -383,7 +323,11 @@ export function PublicMapScreen() {
             <StatePanel
               icon="refresh"
               title="No se pudo consultar esta zona"
-              body="Revisa tu conexión y vuelve a intentarlo."
+              body={
+                cells.length
+                  ? 'Conservamos las celdas de la última consulta de esta zona. Intenta actualizar cuando vuelva la conexión.'
+                  : 'Revisa tu conexión y vuelve a intentarlo.'
+              }
               action={{ label: 'Reintentar', onPress: reload }}
             />
           </View>
@@ -420,7 +364,7 @@ export function PublicMapScreen() {
           </View>
         )}
 
-        {!!query && !current?.error && (
+        {hasViewport && !current?.error && (
           <Button
             label="Actualizar zona"
             icon="refresh"
@@ -430,6 +374,26 @@ export function PublicMapScreen() {
           />
         )}
       </Reveal>
+      <Dialog
+        title="Tipo de Wi-Fi"
+        visible={connectionPicker}
+        onClose={() => setConnectionPicker(false)}
+      >
+        {[{ value: null, label: 'Todas las Wi-Fi' }, ...WIFI_CONNECTIONS].map(
+          option => (
+            <Chip
+              key={option.value ?? 'all'}
+              label={option.label}
+              selected={option.value === wifiConnection}
+              onPress={() => {
+                setWifiConnection(option.value);
+                setSelectedId(null);
+                setConnectionPicker(false);
+              }}
+            />
+          ),
+        )}
+      </Dialog>
       <Dialog
         title="Elegir piso"
         visible={floorEdit !== null}

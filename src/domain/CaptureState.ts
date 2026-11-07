@@ -16,6 +16,8 @@ const captureMessages: Record<string, string> = {
   NO_SIGNAL: 'Conéctate a Wi-Fi o datos móviles y espera una lectura de señal.',
   STALE_READING: 'La lectura venció. Espera una muestra nueva.',
   OUT_OF_SYNC: 'Estamos alineando las lecturas de ubicación y señal.',
+  NETWORK_CHANGED:
+    'Cambiaste de red. Espera una lectura de la conexión actual.',
   SENSOR_UNAVAILABLE:
     'No pudimos leer los sensores. Intenta iniciar otra lectura.',
   CAPTURE_EXPIRED: 'Vuelve a Medir para obtener una muestra nueva.',
