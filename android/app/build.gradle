@@ -129,6 +129,7 @@ android {
             applicationIdSuffix ".qa"
             versionNameSuffix "-qa"
             matchingFallbacks = ["release"]
+            manifestPlaceholders["usesCleartextTraffic"] = "false"
             signingConfig signingConfigs.debug
         }
     }

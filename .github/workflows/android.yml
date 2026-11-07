@@ -97,7 +97,7 @@ jobs:
         run: |
           bash gradlew --no-daemon --max-workers=2 -PreactNativeArchitectures=x86_64 \
             -Dorg.gradle.jvmargs='-Xmx1400m -XX:MaxMetaspaceSize=420m' -Pkotlin.compiler.execution.strategy=in-process \
-            :app:testDebugUnitTest :app:assembleDebug :app:assembleDebugAndroidTest
+            :app:testDebugUnitTest :app:assembleDebug :app:assembleDebugAndroidTest :app:assembleQa
           git diff --exit-code -- app/schemas
       - name: Verify Room and the sync contract on Android
         working-directory: android
@@ -120,6 +120,10 @@ jobs:
           adb install app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
           timeout 120 adb shell am instrument -w com.knowyoursignal.test/androidx.test.runner.AndroidJUnitRunner | tee "$RUNNER_TEMP/kys-instrumentation.log"
           awk '/^OK \([0-9]+ tests?\)/ {passed=1} END {exit !passed}' "$RUNNER_TEMP/kys-instrumentation.log"
+          adb install app/build/outputs/apk/qa/app-qa.apk
+          adb shell am start -n com.knowyoursignal.qa/com.knowyoursignal.MainActivity
+          sleep 20
+          adb shell pidof com.knowyoursignal.qa
       - name: Show emulator log on failure
         if: failure()
         run: if test -f "$RUNNER_TEMP/kys-emulator.log"; then tail -80 "$RUNNER_TEMP/kys-emulator.log"; fi
