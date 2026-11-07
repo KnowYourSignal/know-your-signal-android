@@ -61,7 +61,7 @@ export function WizardScreen({ navigation }: Props) {
             <ScreenTitle
               eyebrow="01 / 02 · CAPTURA"
               title="Medir señal"
-              subtitle="Quédate quieto en el lugar que quieres evaluar."
+              subtitle="Quédate quieto mientras medimos."
             />
           </View>
           <Button

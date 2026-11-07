@@ -3,7 +3,10 @@ import { StatusBar, StyleSheet, View } from 'react-native';
 import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import {
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 
 import { Icon, type IconName } from './src/components/Icon';
 import { MotionProvider, useReducedMotion } from './src/components/Motion';
@@ -51,6 +54,7 @@ const tabIcons = {
 
 function MainTabs() {
   const reduced = useReducedMotion();
+  const { bottom } = useSafeAreaInsets();
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -58,7 +62,7 @@ function MainTabs() {
         animation: reduced ? 'none' : 'fade',
         tabBarActiveTintColor: COLORS.primary,
         tabBarInactiveTintColor: COLORS.textMuted,
-        tabBarStyle: styles.tabBar,
+        tabBarStyle: [styles.tabBar, { height: 62 + bottom }],
         tabBarLabelStyle: styles.tabLabel,
         tabBarIcon: tabIcons[route.name],
       })}
