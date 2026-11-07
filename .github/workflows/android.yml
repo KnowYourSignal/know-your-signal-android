@@ -102,15 +102,19 @@ jobs:
       - name: Verify Room and the sync contract on Android
         working-directory: android
         run: |
+          export ANDROID_AVD_HOME="$RUNNER_TEMP/kys-avd"
+          mkdir -p "$ANDROID_AVD_HOME"
           accel=off
           if test -c /dev/kvm; then sudo chmod a+rw /dev/kvm; accel=on; fi
-          printf 'no\n' | avdmanager create avd --name KysCi --package 'system-images;android-29;default;x86_64' --device pixel_4
+          printf 'no\n' | avdmanager create avd --name KysCi --package 'system-images;android-29;default;x86_64' \
+            --device pixel_4 --path "$ANDROID_AVD_HOME/KysCi.avd" --force
+          test -f "$ANDROID_AVD_HOME/KysCi.ini"
           adb start-server
           emulator -avd KysCi -accel "$accel" -no-window -no-audio -gpu swiftshader_indirect \
             -feature -Vulkan -no-snapshot -no-boot-anim -memory 1536 -cores 1 > "$RUNNER_TEMP/kys-emulator.log" 2>&1 &
-          trap 'adb emu kill || true' EXIT
-          timeout 240 adb wait-for-device
-          timeout 240 bash -c 'until [ "$(adb shell getprop sys.boot_completed | tr -d "\r")" = 1 ]; do sleep 3; done'
+          emulator_pid=$!
+          trap 'kill "$emulator_pid" 2>/dev/null || true' EXIT
+          timeout 300 bash -c 'until [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d "\r")" = 1 ]; do kill -0 "$1" || exit 1; sleep 3; done' _ "$emulator_pid"
           adb shell input keyevent 82
           adb install app/build/outputs/apk/debug/app-debug.apk
           adb install app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
