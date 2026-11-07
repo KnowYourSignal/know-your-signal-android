@@ -1,3 +1,21 @@
+# Know Your Signal
+
+Aplicación Android para medir cobertura interior, guardar el historial por piso y consultar la señal agregada de la comunidad.
+
+## Ejecutar el cliente Android
+
+Usa Node.js 24, JDK 17, Android SDK 37.0, Build Tools 37.0.0 y NDK 27.1.12297006. En la raíz del proyecto ejecuta npm ci y npm start. En otra terminal ejecuta npm run android con un teléfono o emulador conectado.
+
+El historial y el plano personal funcionan sin configurar servicios externos. Para habilitar la comunidad y la sincronización, configura estas variables de entorno antes de compilar. También puedes colocarlas en el gradle.properties de tu usuario.
+
+| Variable | Valor |
+| --- | --- |
+| KYS_SUPABASE_URL | URL HTTPS de la API del proyecto de Know Your Signal. |
+| KYS_SUPABASE_PUBLISHABLE_KEY | Clave del cliente con prefijo sb_publishable_. |
+| KYS_GOOGLE_MAPS_KEY | Opcional. Clave de Maps SDK restringida al identificador y la firma de la aplicación Android. |
+
+El mapa comunitario usa un plano geográfico si omites la clave de Google Maps. Consulta el [diseño técnico y las pruebas por issue](docs/architecture.md) para revisar el flujo completo.
+
 This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
 
 ## Backend del grupo 11

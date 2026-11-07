@@ -1,52 +1,85 @@
-// src/state/SettingsContext.tsx
-import React, { createContext, useState, useContext } from 'react';
-import { COLORS } from '../theme/theme';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import type { FieldStatus } from '../specs/NativeFieldwork';
+import { fieldwork } from '../services/LocalRepositoryAdapter';
 
-interface SettingsContextProps {
-  technicalMode: boolean;
-  toggleTechnicalMode: () => void;
-  sharingEnabled: boolean;
-  setSharingEnabled: (val: boolean) => void;
-}
+type Settings = {
+  status: FieldStatus | null;
+  loadError: boolean;
+  refresh: () => Promise<void>;
+  setConsent: (enabled: boolean) => Promise<void>;
+  setTechnicalMode: (enabled: boolean) => Promise<void>;
+};
 
-export const SettingsContext = createContext<SettingsContextProps>({
-  technicalMode: false,
-  toggleTechnicalMode: () => {},
-  sharingEnabled: true,
-  setSharingEnabled: () => {},
-});
+const SettingsContext = createContext<Settings | null>(null);
 
-export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [technicalMode, setTechnicalMode] = useState(false);
-  const [sharingEnabled, setSharingEnabled] = useState(true);
+export function SettingsProvider({ children }: React.PropsWithChildren) {
+  const [status, setStatus] = useState<FieldStatus | null>(null);
+  const [loadError, setLoadError] = useState(false);
+  const generation = useRef(0);
 
-  const toggleTechnicalMode = () => setTechnicalMode((prev) => !prev);
+  const refresh = useCallback(async () => {
+    const request = ++generation.current;
+    try {
+      const next = await fieldwork().getStatus();
+      if (request === generation.current) {
+        setStatus(next);
+        setLoadError(false);
+      }
+    } catch {
+      if (request === generation.current) {
+        setLoadError(true);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    refresh();
+    return () => {
+      generation.current += 1;
+    };
+  }, [refresh]);
+
+  const setConsent = useCallback(async (enabled: boolean) => {
+    ++generation.current;
+    const next = await fieldwork().setConsent(enabled);
+    // Ignore refreshes started before the transaction completed.
+    ++generation.current;
+    setStatus(next);
+    setLoadError(false);
+  }, []);
+
+  const setTechnicalMode = useCallback(
+    async (enabled: boolean) => {
+      await fieldwork().setTechnicalMode(enabled);
+      await refresh();
+    },
+    [refresh],
+  );
+
+  const value = useMemo(
+    () => ({ status, loadError, refresh, setConsent, setTechnicalMode }),
+    [status, loadError, refresh, setConsent, setTechnicalMode],
+  );
 
   return (
-    <SettingsContext.Provider
-      value={{
-        technicalMode,
-        toggleTechnicalMode,
-        sharingEnabled,
-        setSharingEnabled,
-      }}
-    >
+    <SettingsContext.Provider value={value}>
       {children}
     </SettingsContext.Provider>
   );
-};
+}
 
-export const useSettings = () => useContext(SettingsContext);
-
-export const formatSignal = (dbm: number, isTechnical: boolean): string => {
-  if (isTechnical) return `${dbm} dBm`;
-  if (dbm >= -67) return 'Muy Buena';
-  if (dbm >= -75) return 'Intermedia';
-  return 'Débil';
-};
-
-export const getSignalColor = (dbm: number): string => {
-  if (dbm >= -67) return COLORS.success;
-  if (dbm >= -75) return COLORS.warning;
-  return COLORS.danger;
-};
+export function useSettings() {
+  const settings = useContext(SettingsContext);
+  if (!settings) {
+    throw new Error('SettingsProvider required');
+  }
+  return settings;
+}

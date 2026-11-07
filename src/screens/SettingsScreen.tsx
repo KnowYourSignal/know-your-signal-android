@@ -1,193 +1,196 @@
-// src/screens/SettingsScreen.tsx
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
+  AppState,
+  ScrollView,
   StyleSheet,
   Switch,
-  Modal,
+  Text,
+  View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { COLORS } from '../theme/theme';
+import { useFocusEffect, useIsFocused } from '@react-navigation/native';
+import { Icon } from '../components/Icon';
+import { Reveal } from '../components/Motion';
+import { PrivacySettings } from '../components/PrivacySettings';
+import { Button, ScreenTitle, StatusPill } from '../components/UI';
+import { fieldwork } from '../services/LocalRepositoryAdapter';
 import { useSettings } from '../state/SettingsContext';
+import { COLORS } from '../theme/theme';
+import { globalStyles as g } from '../theme/globalStyles';
 
-export const SettingsScreen = () => {
-  const { technicalMode, toggleTechnicalMode, sharingEnabled, setSharingEnabled } = useSettings();
-  const [confirmRevokeModal, setConfirmRevokeModal] = useState(false);
+const problemText: Record<string, string> = {
+  NETWORK: 'Esperando una conexión estable.',
+  RATE_LIMITED: 'La cola continuará cuando el servidor acepte más capturas.',
+  SERVICE_UNAVAILABLE:
+    'El servicio está temporalmente ocupado. Reintentaremos automáticamente.',
+  SESSION_EXPIRED:
+    'La sesión de aporte necesita atención. Puedes seguir usando el historial.',
+  SESSION_STORAGE: 'La sesión de aporte no se pudo leer en este teléfono.',
+  CONSENT_BLOCKED: 'El servidor no confirmó el permiso para aportar.',
+  SERVER_REJECTED: 'El servidor no pudo procesar el lote.',
+  CONFIG_CHANGED:
+    'El servicio configurado cambió desde tu última decisión de privacidad.',
+};
+
+export function SettingsScreen() {
+  const { status, refresh, setTechnicalMode } = useSettings();
+  const focused = useIsFocused();
+  const [updating, setUpdating] = useState(false);
+  const [feedback, setFeedback] = useState<string | null>(null);
+  const lock = useRef(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+    }, [refresh]),
+  );
+
+  const waiting = !!status && (status.pending > 0 || status.consentPending);
+  useEffect(() => {
+    if (!focused || !waiting) {
+      return;
+    }
+    const timer = setInterval(() => {
+      if (AppState.currentState === 'active') {
+        refresh();
+      }
+    }, 4_000);
+    return () => clearInterval(timer);
+  }, [focused, waiting, refresh]);
+
+  async function toggle(enabled: boolean) {
+    if (lock.current) {
+      return;
+    }
+    lock.current = true;
+    setUpdating(true);
+    setFeedback(null);
+    try {
+      await setTechnicalMode(enabled);
+    } catch {
+      setFeedback('No pudimos guardar el modo de visualización.');
+    } finally {
+      lock.current = false;
+      setUpdating(false);
+    }
+  }
+
+  async function retry() {
+    if (lock.current) {
+      return;
+    }
+    lock.current = true;
+    setUpdating(true);
+    try {
+      await fieldwork().retrySync();
+      setFeedback('Sincronización programada para cuando haya conexión.');
+      await refresh();
+    } catch {
+      setFeedback('No pudimos programar el reintento.');
+    } finally {
+      lock.current = false;
+      setUpdating(false);
+    }
+  }
 
   return (
-    <SafeAreaView style={styles.safeContainer} edges={['bottom']}>
-      <View style={styles.screenBody}>
-        <Text style={styles.screenTitle}>Ajustes y Privacidad</Text>
-        <Text style={styles.screenSubtitle}>Control de telemetría, visualización y consentimiento</Text>
-
-        {/* TARJETA MODO TÉCNICO */}
-        <View style={styles.cardContainer}>
-          <View style={styles.settingRow}>
-            <View style={{ flex: 1, paddingRight: 12 }}>
-              <Text style={styles.cardValue}>Activar Modo Técnico (dBm)</Text>
-              <Text style={styles.cardHelp}>
-                Muestra los valores exactos de potencia en dBm (RSSI / RSRP) sobre los mapas y el wizard.
+    <ScrollView style={g.screen} contentContainerStyle={g.content}>
+      <Reveal style={s.layout}>
+        <ScreenTitle
+          eyebrow="PREFERENCIAS"
+          title="Ajustes"
+          subtitle="Controla cómo ves y compartes tus mediciones."
+        />
+        <View style={g.card}>
+          <View style={g.row}>
+            <Icon name="signal" size={23} />
+            <View style={s.copy}>
+              <Text style={g.sectionTitle}>Modo técnico</Text>
+              <Text style={g.caption}>
+                Muestra potencia en dBm en lugar de niveles de señal.
               </Text>
             </View>
             <Switch
-              value={technicalMode}
-              onValueChange={toggleTechnicalMode}
+              accessibilityLabel="Modo técnico"
+              value={status?.technicalMode ?? false}
+              disabled={updating}
+              onValueChange={toggle}
               trackColor={{ false: COLORS.border, true: COLORS.primary }}
               thumbColor={COLORS.cardBg}
             />
           </View>
         </View>
 
-        {/* TARJETA ESTADO DE CONSENTIMIENTO */}
-        <View style={styles.cardContainer}>
-          <Text style={styles.cardLabel}>Estado de privacidad (Aviso v1.0):</Text>
-          <View style={styles.statusRow}>
-            <View
-              style={[
-                styles.statusIndicator,
-                { backgroundColor: sharingEnabled ? COLORS.success : COLORS.warning },
-              ]}
+        <PrivacySettings />
+
+        <View style={g.card}>
+          <View style={g.row}>
+            <Icon name="layers" size={21} />
+            <Text style={g.sectionTitle}>Estado del historial</Text>
+          </View>
+          <View style={s.stats}>
+            {[
+              { value: status?.total ?? 0, label: 'Guardadas' },
+              { value: status?.pending ?? 0, label: 'Pendientes' },
+              { value: status?.synced ?? 0, label: 'Aportadas' },
+            ].map(item => (
+              <View key={item.label} style={s.stat}>
+                <Text style={s.count}>{item.value}</Text>
+                <Text style={g.caption}>{item.label}</Text>
+              </View>
+            ))}
+          </View>
+          {!!status?.failed && (
+            <StatusPill
+              label={
+                status.failed +
+                ' aportes rechazados, conservados en el historial'
+              }
+              tone="amber"
             />
-            <Text
-              style={[
-                styles.cardValue,
-                { color: sharingEnabled ? COLORS.success : COLORS.textDark },
-              ]}
-            >
-              {sharingEnabled
-                ? 'Aporte comunitario activo (Opt-in)'
-                : 'Modo estrictamente personal (LOCAL_ONLY)'}
+          )}
+          {status?.syncProblem && (
+            <Text style={g.body}>
+              {problemText[status.syncProblem] ??
+                'La sincronización necesita un reintento.'}
             </Text>
-          </View>
-          <Text style={styles.cardHelp}>
-            {sharingEnabled
-              ? 'Tus nuevas capturas se envían de forma seudonimizada mediante WorkManager cuando hay red disponible.'
-              : 'Ninguna medición abandona tu teléfono. La cola de sincronización en segundo plano está detenida.'}
+          )}
+          {waiting && status?.syncAvailable && (
+            <Button
+              label="Reintentar sincronización"
+              kind="secondary"
+              icon="refresh"
+              busy={updating}
+              onPress={retry}
+            />
+          )}
+        </View>
+        {feedback && (
+          <Text accessibilityLiveRegion="polite" style={g.caption}>
+            {feedback}
           </Text>
-        </View>
-
-        {/* TARJETA ESTADO DEL OUTBOX */}
-        <View style={styles.cardContainer}>
-          <Text style={styles.cardLabel}>Cola de sincronización local (Room Outbox):</Text>
-          <View style={styles.outboxStatsRow}>
-            <View style={styles.statBox}>
-              <Text style={styles.statNumber}>0</Text>
-              <Text style={styles.statLabel}>Pendientes</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statBox}>
-              <Text style={[styles.statNumber, { color: COLORS.success }]}>24</Text>
-              <Text style={styles.statLabel}>Guardadas en Room</Text>
-            </View>
-          </View>
-        </View>
-
-        {sharingEnabled ? (
-          <TouchableOpacity
-            style={[styles.primaryButton, { backgroundColor: COLORS.danger, marginTop: 'auto' }]}
-            onPress={() => setConfirmRevokeModal(true)}
-          >
-            <Text style={styles.primaryButtonText}>Revocar consentimiento comunitario</Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity
-            style={[styles.primaryButton, { backgroundColor: COLORS.primary, marginTop: 'auto' }]}
-            onPress={() => setSharingEnabled(true)}
-          >
-            <Text style={styles.primaryButtonText}>Habilitar aporte comunitario</Text>
-          </TouchableOpacity>
         )}
-      </View>
-
-      {/* MODAL DE CONFIRMACIÓN DE REVOCACIÓN */}
-      <Modal
-        visible={confirmRevokeModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setConfirmRevokeModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalEmoji}>🔒</Text>
-            <Text style={styles.modalTitle}>¿Detener aportes futuros?</Text>
-            <Text style={styles.modalBody}>
-              Al revocar el permiso, los envíos pendientes pasarán a estado LOCAL_ONLY y WorkManager cancelará la sincronización. Tu historial personal seguirá intacto en tu teléfono.
-            </Text>
-            <View style={{ gap: 10, width: '100%' }}>
-              <TouchableOpacity
-                style={[styles.primaryButton, { backgroundColor: COLORS.danger }]}
-                onPress={() => {
-                  setSharingEnabled(false);
-                  setConfirmRevokeModal(false);
-                }}
-              >
-                <Text style={styles.primaryButtonText}>Sí, pasar a uso solo personal</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.secondaryButton}
-                onPress={() => setConfirmRevokeModal(false)}
-              >
-                <Text style={styles.secondaryButtonText}>Cancelar</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-    </SafeAreaView>
+      </Reveal>
+    </ScrollView>
   );
-};
+}
 
-const styles = StyleSheet.create({
-  safeContainer: { flex: 1, backgroundColor: COLORS.surface },
-  screenBody: { flex: 1, padding: 24 },
-  screenTitle: { fontSize: 22, fontWeight: 'bold', color: COLORS.textDark, marginBottom: 4 },
-  screenSubtitle: { fontSize: 13, color: COLORS.textMuted, marginBottom: 20 },
-  cardContainer: {
-    backgroundColor: COLORS.cardBg,
-    padding: 16,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    marginBottom: 14,
-  },
-  settingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  statusRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
-  statusIndicator: { width: 10, height: 10, borderRadius: 5 },
-  cardLabel: { fontSize: 12, color: COLORS.textMuted, marginBottom: 4, fontWeight: '600' },
-  cardValue: { fontSize: 15, fontWeight: 'bold', color: COLORS.textDark },
-  cardHelp: { fontSize: 12, color: COLORS.textMuted, marginTop: 6, lineHeight: 17 },
-  outboxStatsRow: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
-  statBox: { flex: 1, alignItems: 'center', paddingVertical: 4 },
-  statNumber: { fontSize: 20, fontWeight: 'bold', color: COLORS.textDark },
-  statLabel: { fontSize: 11, color: COLORS.textMuted, marginTop: 2 },
-  statDivider: { width: 1, height: 32, backgroundColor: COLORS.border },
-  primaryButton: {
-    backgroundColor: COLORS.primary,
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-    width: '100%',
-  },
-  primaryButtonText: { color: COLORS.textLight, fontSize: 15, fontWeight: 'bold' },
-  secondaryButton: { paddingVertical: 10, alignItems: 'center' },
-  secondaryButtonText: { color: COLORS.textMuted, fontSize: 14, fontWeight: '600' },
-  modalOverlay: {
+const s = StyleSheet.create({
+  layout: { gap: 14 },
+  copy: { flex: 1 },
+  stats: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  stat: {
     flex: 1,
-    backgroundColor: COLORS.modalOverlay,
-    justifyContent: 'center',
+    minWidth: 76,
+    borderRadius: 12,
+    backgroundColor: COLORS.surface,
+    padding: 10,
     alignItems: 'center',
-    paddingHorizontal: 24,
+    gap: 3,
   },
-  modalCard: {
-    width: '100%',
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 20,
-    padding: 24,
-    alignItems: 'center',
+  count: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: COLORS.navy,
+    fontVariant: ['tabular-nums'],
   },
-  modalEmoji: { fontSize: 44, marginBottom: 10 },
-  modalTitle: { fontSize: 19, fontWeight: 'bold', color: COLORS.textDark, marginBottom: 8 },
-  modalBody: { fontSize: 13, color: COLORS.textMuted, textAlign: 'center', lineHeight: 18, marginBottom: 20 },
 });

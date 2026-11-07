@@ -1,1 +1,10 @@
-// TODO: Implementar LocalRepositoryAdapter.ts según el Informe de Diseño y Arquitectura
+import NativeFieldwork from '../specs/NativeFieldwork';
+
+export const fieldworkAvailable = NativeFieldwork !== null;
+
+export function fieldwork() {
+  if (!NativeFieldwork) {
+    throw new Error('El almacenamiento de mediciones requiere Android.');
+  }
+  return NativeFieldwork;
+}
