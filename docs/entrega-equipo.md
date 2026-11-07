@@ -15,6 +15,23 @@ El [PR #11](https://github.com/KnowYourSignal/know-your-signal-android/pull/11) 
 
 La APK de prueba se instala como **Know Your Signal QA**. Su historial queda separado del de la app principal. El [README](../README.md) explica cómo compilarla y configurar el servicio.
 
+La APK ARM64 entregada usa el proyecto Supabase actual y la firma de desarrollo para pruebas internas. Incluye JavaScript y ocupa aproximadamente 27 MiB. Su compilación, firma y alineación de las bibliotecas nativas para páginas de 16 KiB se verificaron.
+
+## Qué se comprobó en esta ronda
+
+| Verificación | Resultado |
+| --- | --- |
+| TypeScript y ESLint | Sin errores. |
+| Cliente JavaScript | 8 pruebas aprobadas. |
+| Validador Kotlin | 4 pruebas aprobadas. |
+| Room en Android API 29 | 7 pruebas aprobadas. |
+| Regresiones del backend | 68 pruebas aprobadas. |
+| APK QA | Compilación ARM64 y x86_64 aprobada. |
+
+Las pruebas de Room cubren el guardado transaccional, los duplicados, la reversión ante fallo de cola, la revocación y la recuperación del historial desde un archivo cerrado y reabierto. También verifican que una captura privada no herede un consentimiento posterior.
+
+El [flujo de integración automática](../.github/workflows/android.yml) vuelve a compilar el cliente, ejecutar las pruebas y comprobar el arranque de QA. El resultado de su última ejecución se consulta desde el PR.
+
 ## Prueba corta en un teléfono
 
 1. Abre la APK y elige **Solo uso personal**. Activa los sensores desde Medir, toma una muestra válida y guárdala en el piso 0 con un tamaño de recinto.
@@ -28,3 +45,5 @@ Para probar el aporte y la revocación de extremo a extremo, usa una instalació
 ## Qué queda por validar
 
 La revisión en teléfono debe cubrir la señal Wi-Fi y móvil real, el ciclo de aporte y revocación con red intermitente, y la carga de Comunidad con datos representativos. El objetivo del issue #9 es mostrar la zona en menos de tres segundos, contando red, consulta y dibujo. El [seguimiento de PostGIS](../supabase/POSTGIS_REVIEW.md) sigue como tarea de infraestructura.
+
+La última consulta de lectura al mapa respondió HTTP 200 con una zona vacía y tardó 8,5 segundos desde este entorno. Queda medir y resolver el rendimiento completo en las condiciones del teléfono. Una celda comunitaria requiere al menos cinco cuentas técnicas contribuyentes en la capa consultada.

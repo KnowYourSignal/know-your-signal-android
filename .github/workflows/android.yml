@@ -95,9 +95,13 @@ jobs:
       - name: Build and run JVM tests
         working-directory: android
         run: |
-          bash gradlew --no-daemon --max-workers=2 -PreactNativeArchitectures=x86_64 \
-            -Dorg.gradle.jvmargs='-Xmx1400m -XX:MaxMetaspaceSize=420m' -Pkotlin.compiler.execution.strategy=in-process \
-            :app:testDebugUnitTest :app:assembleDebug :app:assembleDebugAndroidTest :app:assembleQa
+          gradle_args=(
+            --no-daemon --max-workers=1 -PreactNativeArchitectures=x86_64
+            '-Dorg.gradle.jvmargs=-Xmx1400m -XX:MaxMetaspaceSize=640m'
+            -Pkotlin.compiler.execution.strategy=in-process
+          )
+          bash gradlew "${gradle_args[@]}" :app:testDebugUnitTest :app:assembleDebug :app:assembleDebugAndroidTest
+          bash gradlew "${gradle_args[@]}" :app:assembleQa
           git diff --exit-code -- app/schemas
       - name: Verify Room and the sync contract on Android
         working-directory: android
