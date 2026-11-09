@@ -6,6 +6,7 @@ import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ExistingWorkPolicy
+import androidx.work.ListenableWorker.Result
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
@@ -75,11 +76,24 @@ internal object SyncCoordinator {
 }
 
 class SyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
-    override suspend fun doWork(): Result = SyncCoordinator.worker.withLock { sync() }
-
-    private suspend fun sync(): Result {
+    override suspend fun doWork(): Result {
         val config = SyncConfig.load() ?: return Result.success()
-        val database = FieldDatabase.open(applicationContext)
+        return OutboxSynchronizer(
+            config, FieldDatabase.open(applicationContext), SyncApi(config),
+            SessionStore(applicationContext, config.server),
+        ).sync()
+    }
+}
+
+internal class OutboxSynchronizer(
+    private val config: SyncConfig,
+    private val database: FieldDatabase,
+    private val api: SyncApi,
+    private val store: SessionStore,
+) {
+    suspend fun sync(): Result = SyncCoordinator.worker.withLock { perform() }
+
+    private suspend fun perform(): Result {
         val dao = database.measurements()
         val choice = dao.consent() ?: return Result.success()
         if (choice.server != config.server) {
@@ -91,8 +105,6 @@ class SyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(c
             return Result.success()
         }
 
-        val api = SyncApi(config)
-        val store = SessionStore(applicationContext, config.server)
         val gate = SyncCoordinator.gate(dao, choice)
         try {
             var session = store.read()

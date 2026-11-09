@@ -17,8 +17,9 @@ internal object ShareAdapter {
             val parsed = Uri.parse(path)
             if (parsed.scheme != "file" && parsed.scheme != null) throw CaptureException("EXPORT_FAILED")
             val source = File(parsed.path ?: throw CaptureException("EXPORT_FAILED")).canonicalFile
+            val parent = source.parentFile ?: throw CaptureException("EXPORT_FAILED")
             val caches = listOfNotNull(activity.cacheDir, activity.externalCacheDir).map { it.canonicalFile }
-            if (source.parentFile !in caches || !source.name.startsWith("ReactNative-snapshot-image") ||
+            if (parent !in caches || !source.name.startsWith("ReactNative-snapshot-image") ||
                 source.extension != "png" || !source.isFile || source.length() !in 8..(20 * 1024 * 1024L)
             ) throw CaptureException("EXPORT_FAILED")
 

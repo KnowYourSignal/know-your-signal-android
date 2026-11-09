@@ -11,6 +11,7 @@ import {
   horizontalScale,
   project,
   shiftRegion,
+  type MapLayout,
   type Region,
 } from '../state/MapFilters';
 import { COLORS } from '../theme/theme';
@@ -33,7 +34,7 @@ export function GeoPlane({
   selected?: HeatPoint | null;
   onChange?: (region: Region) => void;
   onSelect?: (id: string) => void;
-  onReady?: () => void;
+  onReady?: (layout: MapLayout) => void;
 }) {
   const [width, setWidth] = useState(0);
   const scale = horizontalScale(region, width);
@@ -63,10 +64,10 @@ export function GeoPlane({
 
   useEffect(() => {
     if (width > 0 && onReady) {
-      const frame = requestAnimationFrame(onReady);
+      const frame = requestAnimationFrame(() => onReady({ width, height }));
       return () => cancelAnimationFrame(frame);
     }
-  }, [width, onReady]);
+  }, [width, height, onReady]);
 
   function select(x: number, y: number) {
     let best = 22 ** 2;

@@ -62,7 +62,10 @@ internal data class BatchReceipt(val confirmed: List<String>, val rejected: List
     }
 }
 
-internal class SyncApi(private val config: SyncConfig) {
+internal class SyncApi(
+    private val config: SyncConfig,
+    private val client: OkHttpClient = sharedClient,
+) {
     suspend fun signIn(gate: RequestGate) = session(
         post("auth/v1/signup", JSONObject().put("data", JSONObject()), gate = gate),
     )
@@ -102,7 +105,7 @@ internal class SyncApi(private val config: SyncConfig) {
         try {
             gate(call) {
                 call.enqueue(object : Callback {
-                    override fun onFailure(call: Call, error: IOException) {
+                    override fun onFailure(call: Call, e: IOException) {
                         result.completeExceptionally(SyncFailure("NETWORK", retryable = true))
                     }
 
@@ -145,7 +148,7 @@ internal class SyncApi(private val config: SyncConfig) {
 
     companion object {
         private val JSON = "application/json; charset=utf-8".toMediaType()
-        private val client = OkHttpClient.Builder()
+        private val sharedClient = OkHttpClient.Builder()
             .callTimeout(15, TimeUnit.SECONDS)
             .followRedirects(false)
             .followSslRedirects(false)

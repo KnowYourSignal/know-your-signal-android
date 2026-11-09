@@ -21,6 +21,7 @@ export type SavedMeasurement = {
   metric: string;
   technology: string;
   connection: string;
+  classificationOrigin: string;
   capturedAt: string;
   floor: number;
   zoneSize: string;
@@ -28,6 +29,7 @@ export type SavedMeasurement = {
 };
 
 export type HistoryLayer = { floor: number; metric: string; count: number };
+export type RecentRoom = { floor: number; zoneSize: string };
 export type MapConfiguration = {
   url: string;
   publishableKey: string;
@@ -43,6 +45,13 @@ export interface Spec extends TurboModule {
     floor: number,
     zoneSize: string,
   ): Promise<SavedMeasurement>;
+  saveMeasurementWithClassification(
+    captureId: string,
+    floor: number,
+    zoneSize: string,
+    connectionChoice: string | null,
+  ): Promise<SavedMeasurement>;
+  getRecentRoom(): Promise<RecentRoom | null>;
   listLayers(): Promise<ReadonlyArray<HistoryLayer>>;
   listMeasurements(
     floor: number,

@@ -3,6 +3,25 @@ import { queryBounds, type Filters, type Region } from '../state/MapFilters';
 
 export const MAP_CACHE_MS = 5 * 60 * 1_000;
 export const VIEWPORT_DEBOUNCE_MS = 300;
+export const MAP_REQUEST_TIMEOUT_MS = 15_000;
+
+export type MapErrorCode =
+  | 'NETWORK'
+  | 'TIMEOUT'
+  | 'RATE_LIMITED'
+  | 'SERVICE_UNAVAILABLE'
+  | 'CONFIGURATION'
+  | 'FILTERS'
+  | 'INVALID_RESPONSE';
+
+export class MapRequestError extends Error {
+  readonly code: MapErrorCode;
+
+  constructor(code: MapErrorCode) {
+    super(code);
+    this.code = code;
+  }
+}
 
 export const WIFI_CONNECTIONS = [
   { value: 'wifi_publica', label: 'Abierta' },
@@ -70,7 +89,7 @@ function parseCells(
   connection: WifiConnection | null,
 ): PublicCell[] {
   if (!Array.isArray(value) || value.length > 1_000) {
-    throw new Error('INVALID_MAP_RESPONSE');
+    throw new MapRequestError('INVALID_RESPONSE');
   }
   return value.flatMap(row => {
     if (
@@ -124,7 +143,11 @@ export async function requestCells(
     abort();
   }
   signal.addEventListener('abort', abort, { once: true });
-  const timeout = setTimeout(abort, 9_000);
+  let timedOut = false;
+  const timeout = setTimeout(() => {
+    timedOut = true;
+    abort();
+  }, MAP_REQUEST_TIMEOUT_MS);
   try {
     const responses = await Promise.all(
       query.payloads.map(async payload => {
@@ -142,10 +165,20 @@ export async function requestCells(
           },
         );
         if (!result.ok) {
-          throw new Error('MAP_REQUEST_FAILED');
+          if (result.status === 429) throw new MapRequestError('RATE_LIMITED');
+          if (result.status >= 500)
+            throw new MapRequestError('SERVICE_UNAVAILABLE');
+          if (result.status === 400) throw new MapRequestError('FILTERS');
+          throw new MapRequestError('CONFIGURATION');
+        }
+        let data: unknown;
+        try {
+          data = await result.json();
+        } catch {
+          throw new MapRequestError('INVALID_RESPONSE');
         }
         return parseCells(
-          await result.json(),
+          data,
           payload.metrica_filtro,
           payload.tipo_conexion_filtro,
         );
@@ -166,6 +199,11 @@ export async function requestCells(
       }
     }
     return entry;
+  } catch (error) {
+    if (signal.aborted) throw error;
+    if (timedOut) throw new MapRequestError('TIMEOUT');
+    if (error instanceof MapRequestError) throw error;
+    throw new MapRequestError('NETWORK');
   } finally {
     abort();
     clearTimeout(timeout);

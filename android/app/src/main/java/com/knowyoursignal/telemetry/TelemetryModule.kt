@@ -55,6 +55,7 @@ internal class TelemetryModule(context: ReactApplicationContext) : NativeTelemet
     private val lock = Any()
     private var generation = 0L
     private var pendingRead: Job? = null
+    private var pendingLocate: Job? = null
     private var latest: Observation? = null
 
     override fun readSensors(promise: Promise) {
@@ -148,13 +149,21 @@ internal class TelemetryModule(context: ReactApplicationContext) : NativeTelemet
     }
 
     override fun locate(promise: Promise) {
-        submit(promise) {
-            val position = location.read(requirePrecise = false)
-            Arguments.createMap().apply {
-                putDouble("latitude", position.latitude)
-                putDouble("longitude", position.longitude)
+        synchronized(lock) {
+            pendingLocate?.cancel()
+            pendingLocate = submit(promise) {
+                val position = location.read(requirePrecise = false)
+                Arguments.createMap().apply {
+                    putDouble("latitude", position.latitude)
+                    putDouble("longitude", position.longitude)
+                }
             }
         }
+    }
+
+    override fun stopLocating() {
+        val job = synchronized(lock) { pendingLocate.also { pendingLocate = null } }
+        job?.cancel()
     }
 
     private fun submit(promise: Promise, block: suspend () -> Any?): Job {
@@ -185,6 +194,7 @@ internal class TelemetryModule(context: ReactApplicationContext) : NativeTelemet
 
     override fun invalidate() {
         stopReading()
+        stopLocating()
         scope.cancel()
         super.invalidate()
     }

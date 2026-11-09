@@ -3,7 +3,8 @@ import { AppState } from 'react-native';
 
 export function useAppForeground() {
   const [foreground, setForeground] = useState(
-    AppState.currentState === null || AppState.currentState === 'active',
+    AppState.currentState !== 'background' &&
+      AppState.currentState !== 'inactive',
   );
 
   useEffect(() => {

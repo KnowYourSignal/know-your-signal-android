@@ -1,17 +1,10 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  AppState,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  View,
-} from 'react-native';
-import { useFocusEffect, useIsFocused } from '@react-navigation/native';
+import React, { useCallback, useRef, useState } from 'react';
+import { ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { Icon } from '../components/Icon';
 import { Reveal } from '../components/Motion';
 import { PrivacySettings } from '../components/PrivacySettings';
-import { Button, ScreenTitle, StatusPill } from '../components/UI';
+import { Button, ScreenTitle, StatePanel, StatusPill } from '../components/UI';
 import { fieldwork } from '../services/LocalRepositoryAdapter';
 import { useSettings } from '../state/SettingsContext';
 import { COLORS } from '../theme/theme';
@@ -34,8 +27,7 @@ const problemText: Record<string, string> = {
 };
 
 export function SettingsScreen() {
-  const { status, refresh, setTechnicalMode } = useSettings();
-  const focused = useIsFocused();
+  const { status, loadError, refresh, setTechnicalMode } = useSettings();
   const [updating, setUpdating] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const lock = useRef(false);
@@ -47,17 +39,6 @@ export function SettingsScreen() {
   );
 
   const waiting = !!status && (status.pending > 0 || status.consentPending);
-  useEffect(() => {
-    if (!focused || !waiting) {
-      return;
-    }
-    const timer = setInterval(() => {
-      if (AppState.currentState === 'active') {
-        refresh();
-      }
-    }, 4_000);
-    return () => clearInterval(timer);
-  }, [focused, waiting, refresh]);
 
   async function toggle(enabled: boolean) {
     if (lock.current) {
@@ -102,6 +83,16 @@ export function SettingsScreen() {
           title="Ajustes"
           subtitle="Controla cómo ves y compartes tus mediciones."
         />
+        {loadError && (
+          <View style={g.card}>
+            <StatePanel
+              icon="refresh"
+              title="No pudimos actualizar el estado"
+              body="Mostramos la última información del historial que pudimos leer."
+              action={{ label: 'Reintentar', onPress: refresh }}
+            />
+          </View>
+        )}
         <View style={g.card}>
           <View style={g.row}>
             <Icon name="signal" size={23} />

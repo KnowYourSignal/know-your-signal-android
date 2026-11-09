@@ -14,22 +14,42 @@ internal data class SavedCapture(val measurement: MeasurementEntity, val wakeRev
 internal class LocalRepository(private val database: FieldDatabase) {
     private val dao = database.measurements()
 
-    suspend fun save(captureId: String, floor: Double, zoneSize: String, server: String): SavedCapture =
+    suspend fun save(
+        captureId: String,
+        floor: Double,
+        zoneSize: String,
+        server: String,
+        connectionChoice: String? = null,
+    ): SavedCapture =
         database.withTransaction {
             val level = floorLevel(floor)
             if (zoneSize !in ZONE_SIZES) throw CaptureException("INVALID_ZONE")
+            if (connectionChoice != null && connectionChoice !in WIFI_CHOICES) {
+                throw CaptureException("INVALID_CLASSIFICATION")
+            }
             dao.find(captureId)?.let { previous ->
-                if (previous.floor != level || previous.zoneSize != zoneSize) {
+                if (previous.floor != level || previous.zoneSize != zoneSize ||
+                    (connectionChoice != null && (previous.connection != connectionChoice ||
+                        previous.classificationOrigin != originForChoice(connectionChoice)))) {
                     throw CaptureException("CAPTURE_ALREADY_SAVED")
                 }
                 return@withTransaction SavedCapture(previous, null)
             }
             val draft = CaptureDrafts.find(captureId) ?: throw CaptureException("CAPTURE_EXPIRED")
+            if (connectionChoice != null && draft.reading.signal.connection != "wifi_desconocida") {
+                throw CaptureException("INVALID_CLASSIFICATION")
+            }
             val consent = dao.consent()?.takeIf {
                 it.enabled && it.server == server && server.isNotEmpty() && draft.shareRevision == it.revision
             }
             val wake = if (consent != null && !dao.hasQueued(consent.revision)) consent.revision else null
             val measurement = draft.toMeasurement(level, zoneSize, if (consent != null) PENDING else LOCAL_ONLY)
+                .let { original ->
+                    if (connectionChoice == null) original else original.copy(
+                        connection = connectionChoice,
+                        classificationOrigin = originForChoice(connectionChoice),
+                    )
+                }
             dao.insert(measurement)
             if (consent != null) {
                 dao.enqueue(OutboxEntity(measurement.id, consent.revision, System.currentTimeMillis()))
@@ -75,3 +95,7 @@ internal class LocalRepository(private val database: FieldDatabase) {
             syncState = state,
         )
 }
+
+private val WIFI_CHOICES = setOf("wifi_publica", "wifi_privada", "wifi_desconocida")
+private fun originForChoice(connection: String) =
+    if (connection == "wifi_desconocida") "desconocido" else "manual"

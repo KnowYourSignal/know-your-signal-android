@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -17,6 +17,7 @@ import { NetworkBadge } from '../components/NetworkBadge';
 import { Reveal } from '../components/Motion';
 import {
   Button,
+  Chip,
   Dialog,
   ProgressSteps,
   ScreenTitle,
@@ -25,9 +26,14 @@ import {
 } from '../components/UI';
 import { parseFloor } from '../domain/CapturePolicy';
 import { errorCode } from '../domain/CaptureState';
-import { floorLabel, isMetric, type ZoneSize } from '../domain/Measurement';
+import {
+  ZONES,
+  floorLabel,
+  isMetric,
+  type ZoneSize,
+} from '../domain/Measurement';
 import { fieldwork } from '../services/LocalRepositoryAdapter';
-import type { SavedMeasurement } from '../specs/NativeFieldwork';
+import type { RecentRoom, SavedMeasurement } from '../specs/NativeFieldwork';
 import { useSettings } from '../state/SettingsContext';
 import type { RootParamList } from '../state/WizardState';
 import { COLORS } from '../theme/theme';
@@ -44,11 +50,39 @@ export function FloorScreen({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState<SavedMeasurement | null>(null);
+  const [recentRoom, setRecentRoom] = useState<RecentRoom | null>(null);
+  const [connectionChoice, setConnectionChoice] = useState<string | null>(null);
   const saving = useRef(false);
   const level = parseFloor(floor);
 
-  async function save() {
-    if (level === null || zone === null || saving.current || saved) {
+  useEffect(() => {
+    let active = true;
+    fieldwork()
+      .getRecentRoom()
+      .then(room => {
+        if (
+          active &&
+          room &&
+          ZONES.some(option => option.value === room.zoneSize)
+        ) {
+          setRecentRoom(room);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  async function save(room?: RecentRoom) {
+    const selectedLevel = room?.floor ?? level;
+    const selectedZone = room?.zoneSize ?? zone;
+    if (
+      selectedLevel === null ||
+      selectedZone === null ||
+      saving.current ||
+      saved
+    ) {
       return;
     }
     saving.current = true;
@@ -56,10 +90,15 @@ export function FloorScreen({
     setError(null);
     Keyboard.dismiss();
     try {
-      const measurement = await fieldwork().saveMeasurement(
+      if (room) {
+        setFloor(String(room.floor));
+        setZone(room.zoneSize as ZoneSize);
+      }
+      const measurement = await fieldwork().saveMeasurementWithClassification(
         capture.id,
-        level,
-        zone,
+        selectedLevel,
+        selectedZone,
+        connectionChoice,
       );
       setSaved(measurement);
       refresh();
@@ -115,6 +154,55 @@ export function FloorScreen({
                 Precisión de ubicación ±{capture.accuracyM.toFixed(1)} m
               </Text>
             </View>
+            {capture.connection === 'wifi_desconocida' && (
+              <View style={g.card}>
+                <Text style={g.sectionTitle}>
+                  ¿Esta Wi-Fi tiene contraseña?
+                </Text>
+                <Text style={g.caption}>
+                  Android no pudo identificarla. Puedes declararlo o dejarla sin
+                  clasificar.
+                </Text>
+                <View style={s.choices}>
+                  {[
+                    { value: 'wifi_publica', label: 'No · abierta' },
+                    { value: 'wifi_privada', label: 'Sí · protegida' },
+                    { value: null, label: 'No lo sé' },
+                  ].map(option => (
+                    <Chip
+                      key={option.value ?? 'unknown'}
+                      label={option.label}
+                      selected={connectionChoice === option.value}
+                      disabled={busy || !!saved}
+                      onPress={() => setConnectionChoice(option.value)}
+                    />
+                  ))}
+                </View>
+              </View>
+            )}
+            {recentRoom && !saved && (
+              <View style={g.card}>
+                <Text style={g.sectionTitle}>¿Sigues en el mismo recinto?</Text>
+                <Text style={g.body}>
+                  {floorLabel(recentRoom.floor)} ·{' '}
+                  {
+                    ZONES.find(option => option.value === recentRoom.zoneSize)
+                      ?.label
+                  }
+                </Text>
+                <Text style={g.caption}>
+                  Confirma estos datos solo si corresponden al lugar de esta
+                  captura.
+                </Text>
+                <Button
+                  label="Confirmar y guardar aquí"
+                  kind="secondary"
+                  icon="check"
+                  disabled={busy}
+                  onPress={() => save(recentRoom)}
+                />
+              </View>
+            )}
             <View style={g.card}>
               <FloorSelector
                 value={floor}
@@ -138,7 +226,7 @@ export function FloorScreen({
               icon="check"
               busy={busy}
               disabled={level === null || zone === null || !!saved}
-              onPress={save}
+              onPress={() => save()}
             />
             <Button
               label="Volver a Medir"
@@ -177,5 +265,6 @@ export function FloorScreen({
 
 const s = StyleSheet.create({
   layout: { gap: 14 },
+  choices: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   error: { color: COLORS.danger, fontSize: 13 },
 });

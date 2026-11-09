@@ -1,6 +1,7 @@
 package com.knowyoursignal.data
 
 import androidx.room.Entity
+import androidx.room.ColumnInfo
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
@@ -23,4 +24,6 @@ internal data class MeasurementEntity(
     val zoneSize: String,
     val capturedAt: String,
     val syncState: String,
+    @ColumnInfo(defaultValue = "'sistema'")
+    val classificationOrigin: String = if (connection == "wifi_desconocida") "desconocido" else "sistema",
 )

@@ -9,6 +9,7 @@ import React, {
 } from 'react';
 import type { FieldStatus } from '../specs/NativeFieldwork';
 import { fieldwork } from '../services/LocalRepositoryAdapter';
+import { useAppForeground } from '../services/useAppForeground';
 
 type Settings = {
   status: FieldStatus | null;
@@ -21,9 +22,11 @@ type Settings = {
 const SettingsContext = createContext<Settings | null>(null);
 
 export function SettingsProvider({ children }: React.PropsWithChildren) {
+  const foreground = useAppForeground();
   const [status, setStatus] = useState<FieldStatus | null>(null);
   const [loadError, setLoadError] = useState(false);
   const generation = useRef(0);
+  const waiting = !!status && (status.pending > 0 || status.consentPending);
 
   const refresh = useCallback(async () => {
     const request = ++generation.current;
@@ -41,11 +44,16 @@ export function SettingsProvider({ children }: React.PropsWithChildren) {
   }, []);
 
   useEffect(() => {
+    if (!foreground) {
+      return;
+    }
     refresh();
+    const timer = waiting ? setInterval(refresh, 4_000) : undefined;
     return () => {
       generation.current += 1;
+      if (timer) clearInterval(timer);
     };
-  }, [refresh]);
+  }, [foreground, waiting, refresh]);
 
   const setConsent = useCallback(async (enabled: boolean) => {
     ++generation.current;

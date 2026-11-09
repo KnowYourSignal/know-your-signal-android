@@ -31,4 +31,5 @@ export const telemetry = {
   stop: () => NativeTelemetry?.stopReading(),
   freeze: () => native().freezeCapture(),
   locate: () => native().locate(),
+  stopLocating: () => NativeTelemetry?.stopLocating(),
 };

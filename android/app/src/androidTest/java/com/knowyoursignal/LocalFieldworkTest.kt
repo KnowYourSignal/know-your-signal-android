@@ -14,6 +14,7 @@ import com.knowyoursignal.sync.BatchReceipt
 import com.knowyoursignal.sync.PublicPayloadBuilder
 import com.knowyoursignal.telemetry.CaptureDraft
 import com.knowyoursignal.telemetry.CaptureDrafts
+import com.knowyoursignal.telemetry.CaptureException
 import com.knowyoursignal.telemetry.Position
 import com.knowyoursignal.telemetry.Reading
 import com.knowyoursignal.telemetry.Signal
@@ -155,11 +156,43 @@ class LocalFieldworkTest {
         }
     }
 
-    private fun capture(shareRevision: Long? = null): String {
+    @Test fun manualWifiClassificationIsHonestDurableAndIdempotent(): Unit = runBlocking {
+        val granted = privacy.choose(true, server)
+        val id = capture(granted.revision, "wifi_desconocida")
+        val saved = history.save(id, 2.0, "grande", server, "wifi_publica").measurement
+        CaptureDrafts.forget(id)
+        assertEquals("wifi_publica", saved.connection)
+        assertEquals("manual", saved.classificationOrigin)
+        assertEquals(saved, history.save(id, 2.0, "grande", server, "wifi_publica").measurement)
+        val sample = PublicPayloadBuilder.build(database.measurements().nextBatch(granted.revision))
+            .getJSONArray("mediciones").getJSONObject(0)
+        assertEquals("manual", sample.getString("origen_clasificacion"))
+        assertEquals("wifi_publica", sample.getString("tipo_conexion"))
+        assertEquals(2, database.measurements().recentRoom()?.floor)
+        assertEquals("grande", database.measurements().recentRoom()?.zoneSize)
+        assertThrows(CaptureException::class.java) {
+            runBlocking { history.save(id, 2.0, "grande", server, "wifi_privada") }
+        }
+        assertEquals(1, database.measurements().counts().total)
+    }
+
+    @Test fun unknownWifiStaysUnknownAndSystemReadingsCannotBeReclassified(): Unit = runBlocking {
+        val id = capture(connection = "wifi_desconocida")
+        val saved = history.save(id, 0.0, "mediano", server).measurement
+        assertEquals("wifi_desconocida", saved.connection)
+        assertEquals("desconocido", saved.classificationOrigin)
+        val system = capture()
+        assertThrows(CaptureException::class.java) {
+            runBlocking { history.save(system, 0.0, "mediano", server, "wifi_publica") }
+        }
+        assertNull(database.measurements().find(system))
+    }
+
+    private fun capture(shareRevision: Long? = null, connection: String = "wifi_privada"): String {
         val id = UUID.randomUUID().toString()
         CaptureDrafts.put(CaptureDraft(
             id, Reading(Position(-33.45, -70.65, 7.1, 100),
-                Signal(-68, "wifi_rssi", "wifi", "wifi_privada", 100)),
+                Signal(-68, "wifi_rssi", "wifi", connection, 100)),
             "2026-11-06T15:00:00.000Z",
             shareRevision,
         ))

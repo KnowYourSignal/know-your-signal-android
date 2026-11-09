@@ -1,6 +1,7 @@
 import {
   cachedCells,
   MAP_CACHE_MS,
+  MAP_REQUEST_TIMEOUT_MS,
   mapQuery,
   requestCells,
 } from '../../src/services/PublicMapService';
@@ -37,6 +38,64 @@ test('splits a viewport crossing the antimeridian and rejects overly wide areas'
   expect(split[0].max_lon).toBe(180);
   expect(split[1].min_lon).toBe(-180);
   expect(boundsFor({ ...START_REGION, latitudeDelta: 3 })).toEqual([]);
+});
+
+test.each([
+  [401, 'CONFIGURATION'],
+  [429, 'RATE_LIMITED'],
+  [503, 'SERVICE_UNAVAILABLE'],
+])('reports HTTP %i without exposing the server body', async (status, code) => {
+  const originalFetch = globalThis.fetch;
+  const body = jest.fn();
+  globalThis.fetch = jest
+    .fn()
+    .mockResolvedValue({ ok: false, status, json: body });
+  try {
+    const query = mapQuery(config, START_REGION, filter)!;
+    await expect(
+      requestCells(config, query, new AbortController().signal),
+    ).rejects.toMatchObject({ code });
+    expect(body).not.toHaveBeenCalled();
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+function waitForAbort(): typeof globalThis.fetch {
+  return jest.fn(
+    (_input, options) =>
+      new Promise<Response>((_resolve, reject) => {
+        options?.signal?.addEventListener('abort', () =>
+          reject(Object.assign(new Error('Cancelled'), { name: 'AbortError' })),
+        );
+      }),
+  );
+}
+
+test('bounds a slow first connection and distinguishes a timeout from cancellation', async () => {
+  const originalFetch = globalThis.fetch;
+  jest.useFakeTimers();
+  globalThis.fetch = waitForAbort();
+  try {
+    const query = mapQuery(config, START_REGION, filter)!;
+    const request = requestCells(
+      config,
+      query,
+      new AbortController().signal,
+    ).catch(error => error);
+    jest.advanceTimersByTime(MAP_REQUEST_TIMEOUT_MS);
+    await expect(request).resolves.toMatchObject({ code: 'TIMEOUT' });
+
+    const controller = new AbortController();
+    const cancelled = requestCells(config, query, controller.signal).catch(
+      error => error,
+    );
+    controller.abort();
+    await expect(cancelled).resolves.toMatchObject({ name: 'AbortError' });
+  } finally {
+    globalThis.fetch = originalFetch;
+    jest.useRealTimers();
+  }
 });
 
 test('nearby camera moves share a buffered query that covers both viewports', () => {

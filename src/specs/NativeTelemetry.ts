@@ -29,6 +29,7 @@ export interface Spec extends TurboModule {
   stopReading(): void;
   freezeCapture(): Promise<FrozenCapture>;
   locate(): Promise<Position>;
+  stopLocating(): void;
 }
 
 export default TurboModuleRegistry.get<Spec>('NativeTelemetry');

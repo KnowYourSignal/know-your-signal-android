@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import {
   floorLabel,
@@ -6,8 +6,7 @@ import {
   metricLabel,
   networkLabel,
 } from '../domain/Measurement';
-import type { SavedMeasurement } from '../specs/NativeFieldwork';
-import { fitRegion } from '../state/MapFilters';
+import type { EvidenceSnapshot } from '../domain/Evidence';
 import { COLORS } from '../theme/theme';
 import { globalStyles as g } from '../theme/globalStyles';
 import { GeoPlane } from './GeoPlane';
@@ -15,14 +14,18 @@ import { SignalLegend } from './HeatmapLayer';
 import { Icon } from './Icon';
 
 export function EvidenceCard({
-  measurements,
+  snapshot,
   cardRef,
-  onReady,
+  onReadyChange,
 }: {
-  measurements: ReadonlyArray<SavedMeasurement>;
+  snapshot: EvidenceSnapshot;
   cardRef: React.RefObject<React.ComponentRef<typeof View> | null>;
-  onReady: () => void;
+  onReadyChange: (ready: boolean) => void;
 }) {
+  const [mapWidth, setMapWidth] = useState(0);
+  const markReady = useCallback(() => onReadyChange(true), [onReadyChange]);
+  const mapHeight = mapWidth > 0 ? mapWidth * snapshot.aspectRatio : 210;
+  const { measurements } = snapshot;
   const newest = measurements[0];
   const oldest = measurements[measurements.length - 1];
   const firstDay = formatDate(oldest.capturedAt);
@@ -53,16 +56,38 @@ export function EvidenceCard({
           ? '1 medición'
           : measurements.length + ' mediciones'}
       </Text>
-      <GeoPlane
-        points={measurements}
-        region={fitRegion(measurements)}
-        metric={newest.metric}
-        height={210}
-        onReady={onReady}
-      />
+      <View style={s.summary}>
+        <Text style={s.power}>
+          Mediana {snapshot.medianDbm.toLocaleString('es-CL')} dBm
+        </Text>
+        <Text style={g.caption}>
+          Rango {snapshot.minDbm} a {snapshot.maxDbm} dBm
+        </Text>
+      </View>
+      <View
+        onLayout={event => {
+          const next = event.nativeEvent.layout.width;
+          if (next !== mapWidth) {
+            onReadyChange(false);
+            setMapWidth(next);
+          }
+        }}
+        style={{ height: mapHeight }}
+      >
+        {mapWidth > 0 && (
+          <GeoPlane
+            points={measurements}
+            region={snapshot.region}
+            metric={newest.metric}
+            height={mapHeight}
+            onReady={markReady}
+          />
+        )}
+      </View>
       <SignalLegend />
       <Text style={g.caption}>
-        Plano de mediciones locales. La ubicación de referencia es aproximada.
+        Capturas de la vista seleccionada. La ubicación de referencia es
+        aproximada.
       </Text>
     </View>
   );
@@ -88,4 +113,6 @@ const s = StyleSheet.create({
   brandTitle: { fontSize: 15, fontWeight: '800', color: COLORS.navy },
   copy: { flex: 1 },
   title: { fontSize: 20, color: COLORS.navy, fontWeight: '800' },
+  summary: { gap: 2, paddingVertical: 4 },
+  power: { fontSize: 15, color: COLORS.navy, fontWeight: '700' },
 });

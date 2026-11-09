@@ -5,6 +5,7 @@ export type Region = Coordinate & {
   latitudeDelta: number;
   longitudeDelta: number;
 };
+export type MapLayout = { width: number; height: number };
 export type Bounds = {
   min_lon: number;
   min_lat: number;
@@ -126,6 +127,14 @@ export function containsCoordinate(
       point.latitude <= area.max_lat &&
       point.longitude >= area.min_lon &&
       point.longitude <= area.max_lon,
+  );
+}
+
+export function isVisible(region: Region, point: Coordinate): boolean {
+  return (
+    Math.abs(point.latitude - region.latitude) <= region.latitudeDelta / 2 &&
+    Math.abs(wrapLongitude(point.longitude - region.longitude)) <=
+      region.longitudeDelta / 2
   );
 }
 

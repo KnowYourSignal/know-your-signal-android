@@ -1,10 +1,4 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -37,12 +31,17 @@ import {
   networkLabel,
 } from '../domain/Measurement';
 import { shareEvidence } from '../services/EvidenceService';
+import {
+  createEvidenceSnapshot,
+  type EvidenceSnapshot,
+} from '../domain/Evidence';
 import { fieldwork } from '../services/LocalRepositoryAdapter';
 import type { HistoryLayer, SavedMeasurement } from '../specs/NativeFieldwork';
 import {
   fitRegion,
   zoomRegion,
   type Filters,
+  type MapLayout,
   type Region,
 } from '../state/MapFilters';
 import { useSettings } from '../state/SettingsContext';
@@ -79,11 +78,10 @@ export function PersonalMapScreen({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [reload, setReload] = useState(0);
   const [failure, setFailure] = useState(false);
-  const [preview, setPreview] =
-    useState<ReadonlyArray<SavedMeasurement> | null>(null);
+  const [preview, setPreview] = useState<EvidenceSnapshot | null>(null);
+  const [mapLayout, setMapLayout] = useState<MapLayout | null>(null);
   const [exporting, setExporting] = useState(false);
   const [previewReady, setPreviewReady] = useState(false);
-  const markPreviewReady = useCallback(() => setPreviewReady(true), []);
   const [exportError, setExportError] = useState(false);
   const cardRef = useRef<React.ComponentRef<typeof View>>(null);
   const sharing = useRef(false);
@@ -140,7 +138,7 @@ export function PersonalMapScreen({
     return () => {
       active = false;
     };
-  }, [focused, params, reload]);
+  }, [focused, params, reload, settings?.total]);
 
   const floor = filters?.floor;
   const metric = filters?.metric;
@@ -165,12 +163,27 @@ export function PersonalMapScreen({
     return () => {
       active = false;
     };
-  }, [focused, floor, metric, key, reload, params?.savedId]);
+  }, [
+    focused,
+    floor,
+    metric,
+    key,
+    reload,
+    params?.savedId,
+    settings?.total,
+    settings?.pending,
+    settings?.synced,
+    settings?.failed,
+  ]);
 
   const current = result?.key === key ? result : null;
   const points = current?.points ?? EMPTY;
   const naturalRegion = useMemo(() => fitRegion(points), [points]);
   const viewRegion = region ?? naturalRegion;
+  const evidence = useMemo(
+    () => mapLayout && createEvidenceSnapshot(points, viewRegion, mapLayout),
+    [points, viewRegion, mapLayout],
+  );
   const selected = points.find(point => point.id === selectedId);
   const floors = useMemo(
     () => Array.from(new Set(layers?.map(layer => layer.floor) ?? [])),
@@ -304,7 +317,8 @@ export function PersonalMapScreen({
                 <StatusPill
                   label={
                     current
-                      ? points.length + (points.length === 1 ? ' medición' : ' mediciones')
+                      ? points.length +
+                        (points.length === 1 ? ' medición' : ' mediciones')
                       : 'Cargando'
                   }
                 />
@@ -324,6 +338,7 @@ export function PersonalMapScreen({
                   height={mapHeight}
                   onChange={setRegion}
                   onSelect={setSelectedId}
+                  onReady={setMapLayout}
                   selected={selected}
                 />
               )}
@@ -389,13 +404,24 @@ export function PersonalMapScreen({
             <Button
               label="Preparar evidencia PNG"
               icon="share"
-              disabled={points.length === 0}
+              disabled={!evidence}
               onPress={() => {
                 setExportError(false);
                 setPreviewReady(false);
-                setPreview(points);
+                setPreview(evidence);
               }}
             />
+            {current && mapLayout && (
+              <Text style={g.caption}>
+                {evidence
+                  ? 'La evidencia incluirá ' +
+                    evidence.measurements.length +
+                    (evidence.measurements.length === 1
+                      ? ' captura visible en este plano.'
+                      : ' capturas visibles en este plano.')
+                  : 'Ajusta la vista para incluir capturas en la evidencia.'}
+              </Text>
+            )}
             {points.length > 0 && (
               <View style={g.card}>
                 <Text style={g.sectionTitle}>Capturas recientes</Text>
@@ -429,9 +455,9 @@ export function PersonalMapScreen({
       >
         {preview && (
           <EvidenceCard
-            measurements={preview}
+            snapshot={preview}
             cardRef={cardRef}
-            onReady={markPreviewReady}
+            onReadyChange={setPreviewReady}
           />
         )}
         <View style={g.row}>

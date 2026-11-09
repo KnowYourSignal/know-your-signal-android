@@ -1,6 +1,7 @@
 package com.knowyoursignal.data
 
 import android.content.Context
+import androidx.room.withTransaction
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
@@ -46,11 +47,29 @@ internal class FieldworkModule(private val context: ReactApplicationContext) : N
         null
     }
 
-    override fun saveMeasurement(captureId: String, floor: Double, zoneSize: String, promise: Promise) = run(promise) {
-        val saved = repository.save(captureId, floor, zoneSize, config?.server.orEmpty())
+    override fun saveMeasurement(captureId: String, floor: Double, zoneSize: String, promise: Promise) =
+        save(captureId, floor, zoneSize, null, promise)
+
+    override fun saveMeasurementWithClassification(
+        captureId: String, floor: Double, zoneSize: String, connectionChoice: String?, promise: Promise,
+    ) = save(captureId, floor, zoneSize, connectionChoice, promise)
+
+    private fun save(
+        captureId: String, floor: Double, zoneSize: String, connectionChoice: String?, promise: Promise,
+    ) = run(promise) {
+        val saved = repository.save(captureId, floor, zoneSize, config?.server.orEmpty(), connectionChoice)
         CaptureDrafts.forget(captureId)
         saved.wakeRevision?.let { schedule(it) }
         saved.measurement.toMap()
+    }
+
+    override fun getRecentRoom(promise: Promise) = run(promise) {
+        dao.recentRoom()?.let { room ->
+            Arguments.createMap().apply {
+                putInt("floor", room.floor)
+                putString("zoneSize", room.zoneSize)
+            }
+        }
     }
 
     override fun listLayers(promise: Promise) = run(promise) {
@@ -103,22 +122,24 @@ internal class FieldworkModule(private val context: ReactApplicationContext) : N
         false
     }
 
-    private suspend fun status() = Arguments.createMap().apply {
+    private suspend fun status() = database.withTransaction {
         val consent = dao.consent()
         val counts = dao.counts()
-        putString("choice", when (consent?.enabled) {
-            true -> "community"
-            false -> "local"
-            null -> "undecided"
-        })
-        putBoolean("consentPending", consent?.remotePending == true)
-        putBoolean("technicalMode", preferences.getBoolean("technicalMode", false))
-        putBoolean("syncAvailable", config != null)
-        putString("syncProblem", consent?.lastProblem)
-        putInt("total", counts.total)
-        putInt("pending", counts.pending)
-        putInt("synced", counts.synced)
-        putInt("failed", counts.failed)
+        Arguments.createMap().apply {
+            putString("choice", when (consent?.enabled) {
+                true -> "community"
+                false -> "local"
+                null -> "undecided"
+            })
+            putBoolean("consentPending", consent?.remotePending == true)
+            putBoolean("technicalMode", preferences.getBoolean("technicalMode", false))
+            putBoolean("syncAvailable", config != null)
+            putString("syncProblem", consent?.lastProblem)
+            putInt("total", counts.total)
+            putInt("pending", counts.pending)
+            putInt("synced", counts.synced)
+            putInt("failed", counts.failed)
+        }
     }
 
     private fun run(promise: Promise, block: suspend () -> Any?) {
@@ -150,6 +171,7 @@ private fun MeasurementEntity.toMap() = Arguments.createMap().apply {
     putString("metric", metric)
     putString("technology", technology)
     putString("connection", connection)
+    putString("classificationOrigin", classificationOrigin)
     putString("capturedAt", capturedAt)
     putInt("floor", floor)
     putString("zoneSize", zoneSize)

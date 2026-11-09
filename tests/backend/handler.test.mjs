@@ -74,6 +74,18 @@ test('floor zero is valid and a batch uses one scoped RPC', async () => {
   assert.equal(calls[0].token, 'test-user-token');
   assert.equal(calls[0].payload.mediciones[0].piso_nivel, 0);
 });
+test('manual Wi-Fi declarations and unclassified readings retain their origin', async () => {
+  const { send, calls } = fixture();
+  const readings = [
+    { tipo_conexion: 'wifi_publica', origen_clasificacion: 'manual' },
+    { tipo_conexion: 'wifi_privada', origen_clasificacion: 'manual' },
+    { tipo_conexion: 'wifi_desconocida', origen_clasificacion: 'desconocido' },
+  ].map((declaration) => ({ ...measurement(), ...declaration }));
+  const result = await send(envelope(readings));
+  assert.equal(result.status, 200);
+  assert.equal(result.body.aceptadas.length, 3);
+  assert.deepEqual(calls[0].payload.mediciones, readings);
+});
 for (const [label, change, code] of [
   ['latitude', { latitud: 91 }, 'INVALID_COORDINATES'],
   ['numeric string', { latitud: '-33' }, 'INVALID_COORDINATES'],

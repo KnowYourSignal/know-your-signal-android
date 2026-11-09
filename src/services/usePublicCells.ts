@@ -8,10 +8,12 @@ import {
 } from '../state/MapFilters';
 import {
   VIEWPORT_DEBOUNCE_MS,
+  MapRequestError,
   cachedCells,
   mapQuery,
   requestCells,
   type PublicCell,
+  type MapErrorCode,
   type WifiConnection,
 } from './PublicMapService';
 
@@ -22,7 +24,7 @@ type Result = {
   cells: ReadonlyArray<PublicCell>;
   loading: boolean;
   cached: boolean;
-  error: boolean;
+  error: MapErrorCode | null;
 };
 
 export function usePublicCells(
@@ -53,7 +55,7 @@ export function usePublicCells(
         cells: existing.cells,
         loading: false,
         cached: true,
-        error: false,
+        error: null,
       });
       return;
     }
@@ -63,7 +65,7 @@ export function usePublicCells(
       cells: previous?.key === query.key ? previous.cells : EMPTY,
       loading: true,
       cached: false,
-      error: false,
+      error: null,
     }));
     const timer = setTimeout(
       async () => {
@@ -79,17 +81,17 @@ export function usePublicCells(
               cells: response.cells,
               loading: false,
               cached: false,
-              error: false,
+              error: null,
             });
           }
-        } catch {
+        } catch (error) {
           if (!controller.signal.aborted) {
             setResult(previous => ({
               key: query.key,
               cells: previous?.key === query.key ? previous.cells : EMPTY,
               loading: false,
               cached: false,
-              error: true,
+              error: error instanceof MapRequestError ? error.code : 'NETWORK',
             }));
           }
         }

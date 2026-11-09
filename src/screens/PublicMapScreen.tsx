@@ -24,7 +24,6 @@ import {
   StatusPill,
 } from '../components/UI';
 import { parseFloor } from '../domain/CapturePolicy';
-import { captureMessage, errorCode } from '../domain/CaptureState';
 import {
   METRICS,
   METRIC_LABELS,
@@ -34,12 +33,13 @@ import {
   signalWeight,
 } from '../domain/Measurement';
 import { fieldwork } from '../services/LocalRepositoryAdapter';
-import { requestLocation, telemetry } from '../services/NativeTelemetryAdapter';
 import {
   WIFI_CONNECTIONS,
+  type MapErrorCode,
   type WifiConnection,
 } from '../services/PublicMapService';
 import { useAppForeground } from '../services/useAppForeground';
+import { useMapLocation } from '../services/useMapLocation';
 import { usePublicCells } from '../services/usePublicCells';
 import type { MapConfiguration } from '../specs/NativeFieldwork';
 import {
@@ -57,6 +57,36 @@ const noConfig: MapConfiguration = {
   url: '',
   publishableKey: '',
   mapTiles: false,
+};
+const mapErrors: Record<MapErrorCode, { title: string; body: string }> = {
+  NETWORK: {
+    title: 'No pudimos conectar con el mapa',
+    body: 'Revisa tu conexión y vuelve a intentarlo.',
+  },
+  TIMEOUT: {
+    title: 'Esta consulta está tardando demasiado',
+    body: 'Vuelve a intentarlo cuando la conexión sea más estable.',
+  },
+  RATE_LIMITED: {
+    title: 'El mapa está recibiendo muchas consultas',
+    body: 'Espera un momento antes de volver a consultar esta zona.',
+  },
+  SERVICE_UNAVAILABLE: {
+    title: 'El mapa está temporalmente ocupado',
+    body: 'Podrás volver a consultar esta zona en unos momentos.',
+  },
+  CONFIGURATION: {
+    title: 'El servicio necesita una actualización',
+    body: 'El equipo debe revisar la configuración de esta instalación. Puedes consultar tus capturas en Mi historial.',
+  },
+  FILTERS: {
+    title: 'Revisa los filtros de esta zona',
+    body: 'Prueba con otro piso o acércate al área que deseas consultar.',
+  },
+  INVALID_RESPONSE: {
+    title: 'No pudimos actualizar el mapa',
+    body: 'El servicio devolvió una consulta incompleta. Inténtalo de nuevo más tarde.',
+  },
 };
 export function PublicMapScreen() {
   const focused = useIsFocused();
@@ -80,10 +110,7 @@ export function PublicMapScreen() {
   const [connectionPicker, setConnectionPicker] = useState(false);
   const [floorEdit, setFloorEdit] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [locating, setLocating] = useState(false);
-  const [locationError, setLocationError] = useState<string | null>(null);
   const map = useRef<MapView>(null);
-  const locatingRef = useRef(false);
   const { hasViewport, current, cells, loading, reload } = usePublicCells(
     configuration,
     region,
@@ -108,6 +135,7 @@ export function PublicMapScreen() {
   }, []);
 
   const selected = cells.find(cell => cell.id === selectedId);
+  const mapError = current?.error ? mapErrors[current.error] : null;
   const resolution = cells.length
     ? Math.max(...cells.map(cell => cell.resolutionM))
     : null;
@@ -130,36 +158,20 @@ export function PublicMapScreen() {
     }
   }
 
-  async function locate() {
-    if (locatingRef.current) {
-      return;
-    }
-    locatingRef.current = true;
-    setLocating(true);
-    setLocationError(null);
-    try {
-      if (!(await requestLocation(false))) {
-        setLocationError(
-          'Permite la ubicación para centrar el mapa en tu zona.',
-        );
-        return;
-      }
-      const position = await telemetry.locate();
-      // Public queries need an area, not the precise position of the phone.
-      center(
-        shiftRegion(
-          START_REGION,
-          Math.round(position.latitude * 1_000) / 1_000,
-          Math.round(position.longitude * 1_000) / 1_000,
-        ),
-      );
-    } catch (error) {
-      setLocationError(captureMessage(errorCode(error)));
-    } finally {
-      locatingRef.current = false;
-      setLocating(false);
-    }
-  }
+  const {
+    locate,
+    locating,
+    error: locationError,
+  } = useMapLocation(focused && foreground, position => {
+    // Public queries need an area, not the precise position of the phone.
+    center(
+      shiftRegion(
+        START_REGION,
+        Math.round(position.latitude * 1_000) / 1_000,
+        Math.round(position.longitude * 1_000) / 1_000,
+      ),
+    );
+  });
 
   const floor = floorEdit === null ? null : parseFloor(floorEdit);
 
@@ -320,13 +332,23 @@ export function PublicMapScreen() {
           <View style={g.card}>
             <StatePanel
               icon="refresh"
-              title="No se pudo consultar esta zona"
+              title={mapError?.title ?? 'No se pudo consultar esta zona'}
               body={
                 cells.length
                   ? 'Conservamos las celdas de la última consulta de esta zona. Intenta actualizar cuando vuelva la conexión.'
-                  : 'Revisa tu conexión y vuelve a intentarlo.'
+                  : mapError?.body ??
+                    'Revisa tu conexión y vuelve a intentarlo.'
               }
-              action={{ label: 'Reintentar', onPress: reload }}
+              action={
+                current.error === 'CONFIGURATION'
+                  ? undefined
+                  : current.error === 'FILTERS'
+                  ? {
+                      label: 'Cambiar piso',
+                      onPress: () => setFloorEdit(String(filters.floor)),
+                    }
+                  : { label: 'Reintentar', onPress: reload }
+              }
             />
           </View>
         ) : cells.length === 0 ? (

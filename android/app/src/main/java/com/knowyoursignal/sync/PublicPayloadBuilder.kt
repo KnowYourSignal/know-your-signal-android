@@ -20,7 +20,7 @@ internal object PublicPayloadBuilder {
                 .put("metrica", point.metric)
                 .put("tecnologia_radio", point.technology)
                 .put("tipo_conexion", point.connection)
-                .put("origen_clasificacion", if (point.connection == "wifi_desconocida") "desconocido" else "sistema")
+                .put("origen_clasificacion", point.classificationOrigin)
                 .put("piso_nivel", point.floor)
                 .put("tamano_zona", point.zoneSize)
                 .put("capturada_en", point.capturedAt)

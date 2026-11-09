@@ -59,7 +59,7 @@ jobs:
 
   native:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 45
     env:
       CMAKE_BUILD_PARALLEL_LEVEL: '2'
     steps:
@@ -102,7 +102,12 @@ jobs:
           )
           bash gradlew "${gradle_args[@]}" :app:testDebugUnitTest :app:assembleDebug :app:assembleDebugAndroidTest
           bash gradlew "${gradle_args[@]}" :app:assembleQa
+          bash gradlew "${gradle_args[@]}" -PkysTestBuildType=uitest :app:assembleUitest :app:assembleUitestAndroidTest
           git diff --exit-code -- app/schemas
+          if unzip -Z1 app/build/outputs/apk/qa/app-qa.apk | rg 'ui_test_ca|ui-test-key'; then
+            echo 'Test TLS fixtures must not be packaged in QA' >&2
+            exit 1
+          fi
       - name: Verify Room and the sync contract on Android
         working-directory: android
         run: |
@@ -122,12 +127,42 @@ jobs:
           adb shell input keyevent 82
           adb install app/build/outputs/apk/debug/app-debug.apk
           adb install app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
-          timeout 120 adb shell am instrument -w com.knowyoursignal.test/androidx.test.runner.AndroidJUnitRunner | tee "$RUNNER_TEMP/kys-instrumentation.log"
+          timeout 300 adb shell am instrument -w com.knowyoursignal.test/androidx.test.runner.AndroidJUnitRunner | tee "$RUNNER_TEMP/kys-instrumentation.log"
           awk '/^OK \([0-9]+ tests?\)/ {passed=1} END {exit !passed}' "$RUNNER_TEMP/kys-instrumentation.log"
+          adb install app/build/outputs/apk/uitest/app-uitest.apk
+          adb install app/build/outputs/apk/androidTest/uitest/app-uitest-androidTest.apk
+          run_ui_phase() {
+            local phase="$1" class_name="$2"
+            shift 2
+            timeout 420 adb shell am instrument -w -e class "com.knowyoursignal.ui.$class_name" "$@" \
+              com.knowyoursignal.uitest.test/androidx.test.runner.AndroidJUnitRunner | tee "$RUNNER_TEMP/kys-ui-$phase.log"
+            awk '/^OK \([0-9]+ tests?\)/ {passed=1} END {exit !passed}' "$RUNNER_TEMP/kys-ui-$phase.log"
+          }
+          run_ui_phase capture CaptureJourneyTest
+          adb shell am force-stop com.knowyoursignal.uitest
+          adb shell svc wifi disable
+          adb shell svc data disable
+          run_ui_phase restore HistoryRestoreTest -e restorePhase true
+          adb shell am force-stop com.knowyoursignal.uitest
+          adb shell svc wifi enable
+          adb shell svc data enable
+          run_ui_phase community CommunityMapTest
+          adb pull /sdcard/Android/data/com.knowyoursignal.uitest/files/verification "$RUNNER_TEMP/kys-ui-verification"
           adb install app/build/outputs/apk/qa/app-qa.apk
           adb shell am start -n com.knowyoursignal.qa/com.knowyoursignal.MainActivity
           sleep 20
           adb shell pidof com.knowyoursignal.qa
+      - name: Keep synthetic UI evidence and test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-ui-verification-api29
+          path: |
+            ${{ runner.temp }}/kys-ui-verification
+            ${{ runner.temp }}/kys-ui-*.log
+            ${{ runner.temp }}/kys-instrumentation.log
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Show emulator log on failure
         if: failure()
         run: if test -f "$RUNNER_TEMP/kys-emulator.log"; then tail -80 "$RUNNER_TEMP/kys-emulator.log"; fi

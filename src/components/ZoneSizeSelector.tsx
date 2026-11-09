@@ -23,6 +23,7 @@ export function ZoneSizeSelector({
             <Pressable
               key={zone.value}
               accessibilityRole="radio"
+              accessibilityLabel={zone.label + '. ' + zone.description}
               accessibilityState={{ checked, disabled }}
               disabled={disabled}
               onPress={() => onChange(zone.value)}

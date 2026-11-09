@@ -100,6 +100,7 @@ export function Button({
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={label}
       accessibilityState={{ disabled: blocked, busy }}
       disabled={blocked}
       onPress={onPress}
@@ -130,15 +131,19 @@ export function Chip({
   label,
   selected,
   onPress,
+  disabled = false,
 }: {
   label: string;
   selected: boolean;
   onPress: () => void;
+  disabled?: boolean;
 }) {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityState={{ selected }}
+      accessibilityLabel={label}
+      accessibilityState={{ selected, disabled }}
+      disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => [
         s.chip,
@@ -222,6 +227,7 @@ export function ChoiceTile({
   return (
     <Pressable
       accessibilityRole="radio"
+      accessibilityLabel={label + '. ' + detail}
       accessibilityState={{ checked: selected, disabled }}
       disabled={disabled}
       onPress={onPress}

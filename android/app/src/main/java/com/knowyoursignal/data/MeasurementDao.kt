@@ -7,6 +7,7 @@ import androidx.room.Query
 
 internal data class HistoryLayer(val floor: Int, val metric: String, val count: Int)
 internal data class HistoryCounts(val total: Int, val pending: Int, val synced: Int, val failed: Int)
+internal data class RecentRoom(val floor: Int, val zoneSize: String)
 
 @Dao
 internal interface MeasurementDao {
@@ -18,6 +19,9 @@ internal interface MeasurementDao {
 
     @Query("SELECT * FROM measurements WHERE id = :id")
     suspend fun find(id: String): MeasurementEntity?
+
+    @Query("SELECT floor, zoneSize FROM measurements ORDER BY capturedAt DESC, id DESC LIMIT 1")
+    suspend fun recentRoom(): RecentRoom?
 
     @Query("SELECT floor, metric, COUNT(*) AS count FROM measurements GROUP BY floor, metric ORDER BY floor, metric")
     suspend fun layers(): List<HistoryLayer>
