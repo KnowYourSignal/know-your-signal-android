@@ -21,6 +21,7 @@ const captureMessages: Record<string, string> = {
   SENSOR_UNAVAILABLE:
     'No pudimos leer los sensores. Intenta iniciar otra lectura.',
   CAPTURE_EXPIRED: 'Vuelve a Medir para obtener una muestra nueva.',
+  READING_CANCELLED: 'La lectura se pausó. Espera una muestra nueva.',
 };
 
 export function errorCode(error: unknown): string {

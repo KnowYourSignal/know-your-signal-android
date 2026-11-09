@@ -1,36 +1,76 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { captureMessage, errorCode } from '../domain/CaptureState';
 import { requestLocation, telemetry } from './NativeTelemetryAdapter';
 
 type Position = { latitude: number; longitude: number };
 
 export function useMapLocation(
-  active: boolean,
+  focused: boolean,
+  foreground: boolean,
   onLocated: (position: Position) => void,
 ) {
   const [locating, setLocating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const generation = useRef(0);
-  const pending = useRef(false);
-  const enabled = useRef(active);
+  const phase = useRef<'idle' | 'permission' | 'waiting' | 'reading'>('idle');
+  const visible = useRef({ focused, foreground });
   const callback = useRef(onLocated);
-  enabled.current = active;
+  visible.current = { focused, foreground };
   callback.current = onLocated;
 
+  const cancel = useCallback(() => {
+    generation.current += 1;
+    phase.current = 'idle';
+    telemetry.stopLocating();
+    setLocating(false);
+  }, []);
+
+  const read = useCallback(async (request: number) => {
+    const valid = () =>
+      generation.current === request &&
+      visible.current.focused &&
+      visible.current.foreground;
+    if (!valid()) return;
+    phase.current = 'reading';
+    try {
+      const position = await telemetry.locate();
+      if (valid()) callback.current(position);
+    } catch (problem) {
+      if (valid()) setError(captureMessage(errorCode(problem)));
+    } finally {
+      if (generation.current === request) {
+        phase.current = 'idle';
+        setLocating(false);
+      }
+    }
+  }, []);
+
   useEffect(() => {
-    if (!active) setLocating(false);
-    return () => {
+    if (!focused || (!foreground && phase.current === 'reading')) cancel();
+    else if (foreground && phase.current === 'waiting')
+      read(generation.current);
+  }, [focused, foreground, cancel, read]);
+
+  useEffect(
+    () => () => {
       generation.current += 1;
-      pending.current = false;
+      phase.current = 'idle';
       telemetry.stopLocating();
-    };
-  }, [active]);
+    },
+    [],
+  );
 
   async function locate() {
-    if (!enabled.current || pending.current) return;
+    if (
+      !visible.current.focused ||
+      !visible.current.foreground ||
+      phase.current !== 'idle'
+    )
+      return;
     const current = ++generation.current;
-    const valid = () => enabled.current && generation.current === current;
-    pending.current = true;
+    const valid = () =>
+      visible.current.focused && generation.current === current;
+    phase.current = 'permission';
     setLocating(true);
     setError(null);
     try {
@@ -40,13 +80,15 @@ export function useMapLocation(
         setError('Permite la ubicación para centrar el mapa en tu zona.');
         return;
       }
-      const position = await telemetry.locate();
-      if (valid()) callback.current(position);
+      // The Android permission activity can temporarily pause this app. Resume
+      // this explicit request when it returns, without starting GPS in the background.
+      if (!visible.current.foreground) phase.current = 'waiting';
+      else await read(current);
     } catch (problem) {
       if (valid()) setError(captureMessage(errorCode(problem)));
     } finally {
-      if (valid()) {
-        pending.current = false;
+      if (valid() && phase.current !== 'waiting') {
+        phase.current = 'idle';
         setLocating(false);
       }
     }

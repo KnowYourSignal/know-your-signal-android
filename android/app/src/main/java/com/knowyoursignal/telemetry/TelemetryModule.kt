@@ -3,6 +3,7 @@ package com.knowyoursignal.telemetry
 import android.net.Network
 import android.os.SystemClock
 import com.facebook.react.bridge.Arguments
+import com.facebook.react.bridge.LifecycleEventListener
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.WritableMap
@@ -44,7 +45,7 @@ internal object CaptureDrafts {
     }
 }
 
-internal class TelemetryModule(context: ReactApplicationContext) : NativeTelemetrySpec(context) {
+internal class TelemetryModule(context: ReactApplicationContext) : NativeTelemetrySpec(context), LifecycleEventListener {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val app = context.applicationContext
     private val location = LocationReader(app)
@@ -57,6 +58,15 @@ internal class TelemetryModule(context: ReactApplicationContext) : NativeTelemet
     private var pendingRead: Job? = null
     private var pendingLocate: Job? = null
     private var latest: Observation? = null
+
+    init { context.addLifecycleEventListener(this) }
+
+    override fun onHostResume() = Unit
+    override fun onHostPause() {
+        stopReading()
+        stopLocating()
+    }
+    override fun onHostDestroy() = onHostPause()
 
     override fun readSensors(promise: Promise) {
         synchronized(lock) {
@@ -193,6 +203,7 @@ internal class TelemetryModule(context: ReactApplicationContext) : NativeTelemet
     }
 
     override fun invalidate() {
+        reactApplicationContext.removeLifecycleEventListener(this)
         stopReading()
         stopLocating()
         scope.cancel()

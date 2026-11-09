@@ -70,8 +70,9 @@ internal class UiTestDriver {
     private fun scrollDown() = scroll(down = true)
 
     private fun scroll(down: Boolean) {
-        val bounds = device.findObjects(By.pkg(context.packageName).scrollable(true))
-            .map { it.visibleBounds }.lastOrNull { it.height() > 150 } ?: return
+        val bounds = device.findObjects(By.pkg(context.packageName).clazz("android.widget.ScrollView").scrollable(true))
+            .map { it.visibleBounds }.filter { it.height() > 150 }
+            .minByOrNull { it.width().toLong() * it.height() } ?: return
         val x = bounds.right - 3
         val upper = bounds.top + bounds.height() / 3
         val lower = bounds.top + bounds.height() * 3 / 4
@@ -88,23 +89,32 @@ internal class UiTestDriver {
         output.listFiles()?.forEach { it.delete() }
     }
 
+    fun mockGps(accuracy: Float = 5f): AutoCloseable =
+        mockPosition(LocationManager.GPS_PROVIDER, accuracy, true, -33.45012, -70.65012)
+
+    fun mockApproximatePosition(): AutoCloseable =
+        mockPosition(LocationManager.NETWORK_PROVIDER, 150f, false, -18.4783, -70.3126)
+
     @Suppress("DEPRECATION")
-    fun mockGps(accuracy: Float = 5f): AutoCloseable {
-        listOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION).forEach {
-            instrumentation.uiAutomation.grantRuntimePermission(context.packageName, it)
+    private fun mockPosition(
+        provider: String, accuracyM: Float, grantPrecise: Boolean, latitudeValue: Double, longitudeValue: Double,
+    ): AutoCloseable {
+        if (grantPrecise) {
+            listOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION).forEach {
+                instrumentation.uiAutomation.grantRuntimePermission(context.packageName, it)
+            }
         }
         device.executeShellCommand("appops set ${context.packageName} android:mock_location allow")
         val manager = context.getSystemService(LocationManager::class.java)
-        val provider = LocationManager.GPS_PROVIDER
         manager.addTestProvider(provider, false, false, false, false, true, true, true, 1, 1)
         manager.setTestProviderEnabled(provider, true)
         val running = AtomicBoolean(true)
         val thread = Thread {
             while (running.get()) {
                 manager.setTestProviderLocation(provider, Location(provider).apply {
-                    latitude = -33.45012
-                    longitude = -70.65012
-                    this.accuracy = accuracy
+                    latitude = latitudeValue
+                    longitude = longitudeValue
+                    accuracy = accuracyM
                     time = System.currentTimeMillis()
                     elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
                 })
@@ -118,15 +128,24 @@ internal class UiTestDriver {
         }
     }
 
-    fun verifyExportedPng(): File {
+    fun evidenceFiles(): Set<String> = File(context.cacheDir, "evidence").listFiles()?.map { it.name }?.toSet().orEmpty()
+
+    fun waitForShareSheet() {
+        val end = SystemClock.elapsedRealtime() + 15_000
+        while (device.currentPackageName == context.packageName && SystemClock.elapsedRealtime() < end) SystemClock.sleep(100)
+        assertTrue("The PNG must open the Android share sheet", device.currentPackageName != context.packageName)
+    }
+
+    fun verifyExportedPng(existing: Set<String>, name: String = "evidence-synthetic"): File {
         val end = SystemClock.elapsedRealtime() + 60_000
         var exported: File? = null
         while (exported == null && SystemClock.elapsedRealtime() < end) {
             exported = File(context.cacheDir, "evidence").listFiles()
-                ?.filter { it.extension == "png" }?.maxByOrNull { it.lastModified() }
+                ?.filter { it.extension == "png" && it.name !in existing }?.maxByOrNull { it.lastModified() }
             if (exported == null) SystemClock.sleep(200)
         }
         val source = requireNotNull(exported) { "No PNG produced by the share flow" }
+        val target = source.copyTo(File(output, "$name.png"), overwrite = true)
         val bitmap = requireNotNull(BitmapFactory.decodeFile(source.path))
         assertTrue("Export must include the complete evidence card", bitmap.width >= 200 && bitmap.height >= 350)
         // All three categories must remain readable in the exported legend.
@@ -160,10 +179,10 @@ internal class UiTestDriver {
             }
         }
         assertTrue("The actual SVG signal must be present inside the exported map", signalPixels >= 8)
-        File(output, "export-metadata.json").writeText(
+        File(output, "$name-metadata.json").writeText(
             "{\"width\":${bitmap.width},\"height\":${bitmap.height},\"bytes\":${source.length()},\"synthetic\":true}",
         )
         bitmap.recycle()
-        return source.copyTo(File(output, "evidence-synthetic.png"), overwrite = true)
+        return target
     }
 }

@@ -15,6 +15,8 @@ const problemText: Record<string, string> = {
   RATE_LIMITED: 'La cola continuará cuando el servidor acepte más capturas.',
   SERVICE_UNAVAILABLE:
     'El servicio está temporalmente ocupado. Reintentaremos automáticamente.',
+  INVALID_RESPONSE:
+    'El servicio no confirmó todas las capturas. Siguen en cola y volveremos a intentarlo.',
   SESSION_EXPIRED:
     'La sesión de aporte necesita atención. Puedes seguir usando el historial.',
   SESSION_STORAGE: 'La sesión de aporte no se pudo leer en este teléfono.',

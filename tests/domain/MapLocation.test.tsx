@@ -13,8 +13,14 @@ jest.mock('../../src/services/NativeTelemetryAdapter', () => ({
 let location!: ReturnType<typeof useMapLocation>;
 let root: ReactTestRenderer.ReactTestRenderer | undefined;
 const centered = jest.fn();
-function Harness({ active }: { active: boolean }) {
-  location = useMapLocation(active, centered);
+function Harness({
+  active,
+  foreground = true,
+}: {
+  active: boolean;
+  foreground?: boolean;
+}) {
+  location = useMapLocation(active, foreground, centered);
   return null;
 }
 function deferred<T>() {
@@ -64,7 +70,7 @@ test('backgrounding cancels GPS and ignores late results before allowing another
     request = location.locate();
   });
   expect(location.locating).toBe(true);
-  await act(async () => root!.update(<Harness active={false} />));
+  await act(async () => root!.update(<Harness active foreground={false} />));
   expect(mockStop).toHaveBeenCalled();
   await act(async () => {
     position.resolve({ latitude: 1, longitude: 2 });
@@ -79,6 +85,29 @@ test('backgrounding cancels GPS and ignores late results before allowing another
     latitude: -33.45,
     longitude: -70.65,
   });
+  expect(location.locating).toBe(false);
+});
+
+test('granting permission while the Android dialog pauses the app resumes the first request on return', async () => {
+  const permission = deferred<boolean>();
+  mockPermission.mockReturnValueOnce(permission.promise);
+  await act(async () => {
+    root = ReactTestRenderer.create(<Harness active />);
+  });
+  let request!: Promise<void>;
+  await act(async () => {
+    request = location.locate();
+  });
+  await act(async () => root!.update(<Harness active foreground={false} />));
+  await act(async () => {
+    permission.resolve(true);
+    await request;
+  });
+  expect(mockLocate).not.toHaveBeenCalled();
+  expect(location.locating).toBe(true);
+  await act(async () => root!.update(<Harness active />));
+  expect(mockLocate).toHaveBeenCalledTimes(1);
+  expect(centered).toHaveBeenCalledTimes(1);
   expect(location.locating).toBe(false);
 });
 

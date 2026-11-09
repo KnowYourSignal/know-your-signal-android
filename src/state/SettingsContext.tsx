@@ -26,7 +26,15 @@ export function SettingsProvider({ children }: React.PropsWithChildren) {
   const [status, setStatus] = useState<FieldStatus | null>(null);
   const [loadError, setLoadError] = useState(false);
   const generation = useRef(0);
-  const waiting = !!status && (status.pending > 0 || status.consentPending);
+  const blocked = [
+    'SESSION_EXPIRED',
+    'SESSION_STORAGE',
+    'CONSENT_BLOCKED',
+    'SERVER_REJECTED',
+    'CONFIG_CHANGED',
+  ].includes(status?.syncProblem ?? '');
+  const waiting =
+    !!status && !blocked && (status.pending > 0 || status.consentPending);
 
   const refresh = useCallback(async () => {
     const request = ++generation.current;

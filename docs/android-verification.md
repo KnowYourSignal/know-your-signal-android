@@ -26,6 +26,8 @@ adb shell am instrument -w -e class com.knowyoursignal.ui.CaptureJourneyTest \
 
 El recorrido elige uso personal sin preseleccionar el consentimiento, activa los sensores, inyecta ubicación de prueba mediante las API de Android, registra piso y tamaño, consulta Room, abre la evidencia y genera un PNG a través del menú nativo. Después confirma expresamente el último recinto en otra captura. La prueba comprueba dimensiones y píxeles del PNG, incluida la señal dentro del plano.
 
+El flujo automático también ejecuta `AccessibilityJourneyTest`, con texto al 150 %, giro y modo técnico; `CaptureQualityTest`, con precisión de 15 m que impide capturar y recuperación a 5 m; y `PermissionsJourneyTest`, con denegación real del permiso de ubicación y acceso al historial conservado. Esta última fase requiere revocar ambos permisos desde `adb`, después de detener la instalación de pruebas. `MapPermissionJourneyTest` concede solo ubicación aproximada y comprueba que el primer toque de «Mi zona» centre el mapa después del diálogo de Android. Los errores guardan capturas y la jerarquía de la pantalla para poder revisarlos.
+
 La recuperación se comprueba en **otro proceso**, después de la captura:
 
 ```sh

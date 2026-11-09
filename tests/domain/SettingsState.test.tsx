@@ -69,6 +69,28 @@ test('receipts update shared history state and stop polling when the queue settl
   expect(mockGetStatus).toHaveBeenCalledTimes(requests);
 });
 
+test('a blocked queue waits for user retry without polling the disk indefinitely', async () => {
+  mockGetStatus.mockResolvedValue({
+    ...waiting,
+    syncProblem: 'CONSENT_BLOCKED',
+  });
+  await act(async () => {
+    root = ReactTestRenderer.create(<Harness />);
+  });
+  const requests = mockGetStatus.mock.calls.length;
+  await act(async () => jest.advanceTimersByTime(120_000));
+  expect(mockGetStatus).toHaveBeenCalledTimes(requests);
+  expect(settings.status?.pending).toBe(1);
+
+  mockGetStatus.mockResolvedValue(waiting);
+  await act(async () => {
+    await settings.refresh();
+  });
+  mockGetStatus.mockResolvedValue(finished);
+  await act(async () => jest.advanceTimersByTime(4_000));
+  expect(settings.status?.synced).toBe(1);
+});
+
 test('backgrounding drops an old status response and foregrounding reads the current queue', async () => {
   await act(async () => {
     root = ReactTestRenderer.create(<Harness />);

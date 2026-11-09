@@ -60,6 +60,10 @@ jobs:
   native:
     runs-on: ubuntu-24.04
     timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        api_level: [29, 35]
     env:
       CMAKE_BUILD_PARALLEL_LEVEL: '2'
     steps:
@@ -91,7 +95,7 @@ jobs:
         run: |
           (set +o pipefail; yes | sdkmanager --licenses >/dev/null)
           sdkmanager 'platforms;android-37.0' 'build-tools;37.0.0' 'ndk;27.1.12297006' \
-            'cmake;3.22.1' 'platform-tools' 'emulator' 'system-images;android-29;default;x86_64'
+            'cmake;3.22.1' 'platform-tools' 'emulator' 'system-images;android-${{ matrix.api_level }};default;x86_64'
       - name: Build and run JVM tests
         working-directory: android
         run: |
@@ -115,14 +119,28 @@ jobs:
           mkdir -p "$ANDROID_AVD_HOME"
           accel=off
           if test -c /dev/kvm; then sudo chmod a+rw /dev/kvm; accel=on; fi
-          printf 'no\n' | avdmanager create avd --name KysCi --package 'system-images;android-29;default;x86_64' \
+          printf 'no\n' | avdmanager create avd --name KysCi --package 'system-images;android-${{ matrix.api_level }};default;x86_64' \
             --device pixel_4 --path "$ANDROID_AVD_HOME/KysCi.avd" --force
           test -f "$ANDROID_AVD_HOME/KysCi.ini"
           adb start-server
           emulator -avd KysCi -accel "$accel" -no-window -no-audio -gpu swiftshader_indirect \
             -feature -Vulkan -no-snapshot -no-boot-anim -memory 1536 -cores 1 > "$RUNNER_TEMP/kys-emulator.log" 2>&1 &
           emulator_pid=$!
-          trap 'kill "$emulator_pid" 2>/dev/null || true' EXIT
+          cleanup() {
+            local result=$?
+            if timeout 10 adb get-state >/dev/null 2>&1; then
+              timeout 20 adb pull /sdcard/Android/data/com.knowyoursignal.uitest/files/verification "$RUNNER_TEMP/kys-ui-verification" || true
+              if test "$result" -ne 0; then
+                mkdir -p "$RUNNER_TEMP/kys-ui-verification"
+                timeout 15 adb exec-out screencap -p > "$RUNNER_TEMP/kys-ui-verification/failure-screen.png" || true
+                timeout 15 adb shell uiautomator dump /sdcard/kys-window.xml || true
+                timeout 10 adb pull /sdcard/kys-window.xml "$RUNNER_TEMP/kys-ui-verification/failure-window.xml" || true
+              fi
+            fi
+            kill "$emulator_pid" 2>/dev/null || true
+            exit "$result"
+          }
+          trap cleanup EXIT
           timeout 300 bash -c 'until [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d "\r")" = 1 ]; do kill -0 "$1" || exit 1; sleep 3; done' _ "$emulator_pid"
           adb shell input keyevent 82
           adb install app/build/outputs/apk/debug/app-debug.apk
@@ -147,7 +165,16 @@ jobs:
           adb shell svc wifi enable
           adb shell svc data enable
           run_ui_phase community CommunityMapTest
-          adb pull /sdcard/Android/data/com.knowyoursignal.uitest/files/verification "$RUNNER_TEMP/kys-ui-verification"
+          adb shell am force-stop com.knowyoursignal.uitest
+          run_ui_phase accessibility AccessibilityJourneyTest
+          adb shell am force-stop com.knowyoursignal.uitest
+          run_ui_phase quality CaptureQualityTest
+          adb shell am force-stop com.knowyoursignal.uitest
+          adb shell pm revoke com.knowyoursignal.uitest android.permission.ACCESS_FINE_LOCATION
+          adb shell pm revoke com.knowyoursignal.uitest android.permission.ACCESS_COARSE_LOCATION
+          run_ui_phase permissions PermissionsJourneyTest
+          adb shell am force-stop com.knowyoursignal.uitest
+          run_ui_phase map-permission MapPermissionJourneyTest
           adb install app/build/outputs/apk/qa/app-qa.apk
           adb shell am start -n com.knowyoursignal.qa/com.knowyoursignal.MainActivity
           sleep 20
@@ -156,7 +183,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: android-ui-verification-api29
+          name: android-ui-verification-api${{ matrix.api_level }}
           path: |
             ${{ runner.temp }}/kys-ui-verification
             ${{ runner.temp }}/kys-ui-*.log

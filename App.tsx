@@ -1,5 +1,11 @@
 import React from 'react';
-import { StatusBar, StyleSheet, View } from 'react-native';
+import {
+  StatusBar,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -52,9 +58,19 @@ const tabIcons = {
   Ajustes: tabIcon('settings'),
 };
 
+function tabLabel({ color, children }: { color: string; children: string }) {
+  return (
+    <Text numberOfLines={2} style={[styles.tabLabel, { color }]}>
+      {children}
+    </Text>
+  );
+}
+
 function MainTabs() {
   const reduced = useReducedMotion();
   const { bottom } = useSafeAreaInsets();
+  const { fontScale } = useWindowDimensions();
+  const tabHeight = 64 + Math.max(0, fontScale - 1) * 28;
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -62,8 +78,9 @@ function MainTabs() {
         animation: reduced ? 'none' : 'fade',
         tabBarActiveTintColor: COLORS.primary,
         tabBarInactiveTintColor: COLORS.textMuted,
-        tabBarStyle: [styles.tabBar, { height: 62 + bottom }],
-        tabBarLabelStyle: styles.tabLabel,
+        tabBarStyle: [styles.tabBar, { height: tabHeight + bottom }],
+        tabBarLabelPosition: 'below-icon',
+        tabBarLabel: tabLabel,
         tabBarIcon: tabIcons[route.name],
       })}
     >
@@ -177,5 +194,12 @@ const styles = StyleSheet.create({
     borderRadius: 11,
   },
   tabIconActive: { backgroundColor: COLORS.assistantGlow },
-  tabLabel: { fontSize: 11, fontWeight: '700', paddingBottom: 2 },
+  tabLabel: {
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: '700',
+    paddingBottom: 2,
+    textAlign: 'center',
+    maxWidth: '100%',
+  },
 });

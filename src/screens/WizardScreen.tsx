@@ -12,7 +12,7 @@ import { AccuracyIndicator } from '../components/AccuracyIndicator';
 import { CaptureButton } from '../components/CaptureButton';
 import { Icon } from '../components/Icon';
 import { NetworkBadge } from '../components/NetworkBadge';
-import { Reveal } from '../components/Motion';
+import { RadarPulse, Reveal } from '../components/Motion';
 import {
   Button,
   Dialog,
@@ -34,7 +34,8 @@ type Props = CompositeScreenProps<
 
 export function WizardScreen({ navigation }: Props) {
   const { status: settings } = useSettings();
-  const session = useCaptureSession(useIsFocused());
+  const focused = useIsFocused();
+  const session = useCaptureSession(focused);
   const [guide, setGuide] = useState(false);
   const ready = session.status === 'ready';
   const needsSettings =
@@ -74,7 +75,16 @@ export function WizardScreen({ navigation }: Props) {
         <ProgressSteps count={2} current={0} />
 
         <View style={s.hero}>
-          <View style={s.heroArt} pointerEvents="none">
+          <View
+            style={s.heroArt}
+            pointerEvents="none"
+            importantForAccessibility="no-hide-descendants"
+          >
+            <RadarPulse
+              active={
+                focused && session.enabled && session.status === 'reading'
+              }
+            />
             <Svg width={132} height={132} viewBox="0 0 132 132">
               <Path
                 d="M66 4v124 M4 66h124"

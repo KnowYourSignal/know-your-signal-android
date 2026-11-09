@@ -58,6 +58,13 @@ class CommunityMapTest {
             val renderedAt = SystemClock.elapsedRealtime()
             assertEquals("wifi_rssi", lastMetric.get())
             assertTrue(requests.get() >= 1)
+            java.io.File(ui.output, "map-render-benchmark.json").writeText(JSONObject()
+                .put("synthetic", true).put("cells", 1000)
+                .put("tap_to_accessible_result_ms", accessibleAt - started)
+                .put("tap_to_screenshot_ms", renderedAt - started)
+                .put("device", android.os.Build.MODEL)
+                .put("api", android.os.Build.VERSION.SDK_INT)
+                .put("physical_network_sla_verified", false).toString(2))
 
             nextFailure.set(503)
             ui.action("Actualizar zona")
@@ -65,6 +72,7 @@ class CommunityMapTest {
             ui.screenshot("07-community-retained-after-error")
             ui.action("Reintentar")
             ui.find(By.text("50 m por celda"))
+            ui.scrollToTop()
             ui.action("4G LTE")
             ui.find(By.text("50 m por celda"))
             // Wait for the actual filter request, rather than accepting the previous status label.
@@ -73,13 +81,6 @@ class CommunityMapTest {
             assertEquals("lte_rsrp", lastMetric.get())
             ui.find(By.text("50 m por celda"))
             ui.screenshot("08-community-mobile-layer")
-            java.io.File(ui.output, "map-render-benchmark.json").writeText(JSONObject()
-                .put("synthetic", true).put("cells", 1000)
-                .put("tap_to_accessible_result_ms", accessibleAt - started)
-                .put("tap_to_screenshot_ms", renderedAt - started)
-                .put("device", android.os.Build.MODEL)
-                .put("api", android.os.Build.VERSION.SDK_INT)
-                .put("physical_network_sla_verified", false).toString(2))
         } finally { server.shutdown() }
     }
 

@@ -162,7 +162,7 @@ export function PublicMapScreen() {
     locate,
     locating,
     error: locationError,
-  } = useMapLocation(focused && foreground, position => {
+  } = useMapLocation(focused, foreground, position => {
     // Public queries need an area, not the precise position of the phone.
     center(
       shiftRegion(

@@ -48,7 +48,19 @@ expresiones generadas, índices y los SRID 4326 y 6933. Las RPC ya
 incluyen `extensions` en su search_path. Confirmar la ventana y el procedimiento
 de reconexión de Data API antes de realizar el traslado.
 
-No se envió ninguna solicitud ni se modificaron objetos del proveedor.
+La solicitud se registró en Supabase el 4 de noviembre de 2026 y quedó pendiente
+de coordinación por correo sobre el procedimiento y la ventana. Ese es el estado
+confirmado en el registro de la sesión de ese día. No se ha comprobado en esta
+ronda una respuesta posterior de Soporte. No se modificaron objetos del proveedor.
+
+## Revisión del 9 de noviembre de 2026
+
+La consulta de solo lectura sigue mostrando PostgreSQL 17.11, PostGIS 3.3.7 en
+`public`, tres mediciones y cero consentimientos. Los advisors mantienen los
+avisos de los objetos administrados por Supabase. El rol disponible carece de
+grant option sobre las funciones `st_estimatedextent`, cuyo propietario es
+`supabase_admin`. La solicitud registrada no demuestra que el traslado se haya
+ejecutado. Esta ronda no envió otra solicitud ni alteró la infraestructura.
 
 ## Verificación después del traslado
 
