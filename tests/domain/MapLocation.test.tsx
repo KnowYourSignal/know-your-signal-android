@@ -120,6 +120,45 @@ test('denying location leaves the map usable and does not read sensors', async (
     await location.locate();
   });
   expect(location.error).toContain('Permite la ubicación');
+  expect(location.problem).toBe('PERMISSION_DENIED');
   expect(mockLocate).not.toHaveBeenCalled();
+  expect(location.locating).toBe(false);
+});
+
+test('map location errors ask for approximate location and keep manual exploration available', async () => {
+  mockLocate.mockRejectedValueOnce({ code: 'PERMISSION_DENIED' });
+  await act(async () => {
+    root = ReactTestRenderer.create(<Harness active />);
+  });
+  await act(async () => {
+    await location.locate();
+  });
+  expect(location.problem).toBe('PERMISSION_DENIED');
+  expect(location.error).toContain('ubicación aproximada');
+  expect(location.error).toContain('manualmente');
+  expect(location.error).not.toContain('precisa');
+  expect(location.locating).toBe(false);
+  expect(centered).not.toHaveBeenCalled();
+
+  await act(async () => {
+    await location.locate();
+  });
+  expect(location.problem).toBeNull();
+  expect(location.error).toBeNull();
+  expect(centered).toHaveBeenCalledTimes(1);
+});
+
+test('disabled location offers the correct recovery without changing the current map', async () => {
+  mockLocate.mockRejectedValueOnce({ code: 'LOCATION_DISABLED' });
+  await act(async () => {
+    root = ReactTestRenderer.create(<Harness active />);
+  });
+  await act(async () => {
+    await location.locate();
+  });
+  expect(location.problem).toBe('LOCATION_DISABLED');
+  expect(location.error).toContain('Activa la ubicación');
+  expect(location.error).toContain('manualmente');
+  expect(centered).not.toHaveBeenCalled();
   expect(location.locating).toBe(false);
 });

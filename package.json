@@ -47,6 +47,11 @@
     "react-test-renderer": "19.3.0",
     "typescript": "^6.0.3"
   },
+  "overrides": {
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "11.0.1"
+    }
+  },
   "engines": {
     "node": ">= 22.11.0"
   },

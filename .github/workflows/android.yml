@@ -172,11 +172,13 @@ jobs:
           adb shell am force-stop com.knowyoursignal.uitest
           adb shell pm revoke com.knowyoursignal.uitest android.permission.ACCESS_FINE_LOCATION
           adb shell pm revoke com.knowyoursignal.uitest android.permission.ACCESS_COARSE_LOCATION
-          run_ui_phase permissions PermissionsJourneyTest
-          adb shell am force-stop com.knowyoursignal.uitest
-          adb shell pm clear-permission-flags com.knowyoursignal.uitest android.permission.ACCESS_FINE_LOCATION user-set user-fixed
-          adb shell pm clear-permission-flags com.knowyoursignal.uitest android.permission.ACCESS_COARSE_LOCATION user-set user-fixed
+          # Grant approximate location before testing denial: API 29 does not
+          # support clear-permission-flags, and denial must not taint this case.
           run_ui_phase map-permission MapPermissionJourneyTest
+          adb shell am force-stop com.knowyoursignal.uitest
+          adb shell pm revoke com.knowyoursignal.uitest android.permission.ACCESS_FINE_LOCATION
+          adb shell pm revoke com.knowyoursignal.uitest android.permission.ACCESS_COARSE_LOCATION
+          run_ui_phase permissions PermissionsJourneyTest
           adb install app/build/outputs/apk/qa/app-qa.apk
           adb shell am start -n com.knowyoursignal.qa/com.knowyoursignal.MainActivity
           sleep 20

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Linking,
   ScrollView,
   StyleSheet,
   Text,
@@ -165,6 +166,7 @@ export function PublicMapScreen() {
     locate,
     locating,
     error: locationError,
+    problem: locationProblem,
     located,
   } = useMapLocation(focused, foreground, position => {
     // Public queries need an area, not the precise position of the phone.
@@ -308,9 +310,32 @@ export function PublicMapScreen() {
             />
           </View>
           {locationError && (
-            <Text accessibilityLiveRegion="polite" style={s.error}>
-              {locationError}
-            </Text>
+            <View style={s.locationFeedback}>
+              <Text accessibilityLiveRegion="polite" style={s.error}>
+                {locationError}
+              </Text>
+              {(locationProblem === 'PERMISSION_DENIED' ||
+                locationProblem === 'LOCATION_DISABLED') && (
+                <Button
+                  label={
+                    locationProblem === 'LOCATION_DISABLED'
+                      ? 'Ajustes de ubicación'
+                      : 'Permisos de la app'
+                  }
+                  kind="quiet"
+                  icon="settings"
+                  onPress={() => {
+                    const open =
+                      locationProblem === 'LOCATION_DISABLED'
+                        ? Linking.sendIntent(
+                            'android.settings.LOCATION_SOURCE_SETTINGS',
+                          )
+                        : Linking.openSettings();
+                    open.catch(() => {});
+                  }}
+                />
+              )}
+            </View>
           )}
           {located && !locationError && (
             <Text style={g.caption}>
@@ -458,6 +483,7 @@ export function PublicMapScreen() {
 }
 
 const s = StyleSheet.create({
+  locationFeedback: { gap: 4 },
   layout: { gap: 14 },
   filters: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   mapCard: { padding: 11, gap: 7 },
