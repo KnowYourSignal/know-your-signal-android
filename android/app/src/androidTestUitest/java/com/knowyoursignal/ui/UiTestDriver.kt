@@ -9,6 +9,7 @@ import android.os.SystemClock
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.BySelector
+import androidx.test.uiautomator.Configurator
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
@@ -21,15 +22,17 @@ import org.junit.Assert.assertTrue
 /** Runs only against a separate application ID; all fixtures stay on the emulator. */
 internal class UiTestDriver {
     val instrumentation = InstrumentationRegistry.getInstrumentation()
-    val context = instrumentation.targetContext
+    val context = instrumentation.targetContext.also {
+        check(it.packageName == "com.knowyoursignal.uitest") {
+            "UI fixtures must never run in an installation containing personal history"
+        }
+    }
     val device = UiDevice.getInstance(instrumentation)
     val database = FieldDatabase.open(context)
     val output = File(context.getExternalFilesDir(null), "verification")
 
     init {
-        check(context.packageName == "com.knowyoursignal.uitest") {
-            "UI fixtures must never run in an installation containing personal history"
-        }
+        Configurator.getInstance().setWaitForIdleTimeout(500)
         output.mkdirs()
     }
 
@@ -38,7 +41,13 @@ internal class UiTestDriver {
     }
 
     fun find(selector: BySelector, timeout: Long = 60_000): UiObject2 =
-        requireNotNull(device.wait(Until.findObject(selector), timeout)) { "Missing UI element: $selector" }
+        device.wait(Until.findObject(selector), timeout) ?: missing("Missing UI element: $selector")
+
+    private fun missing(message: String): Nothing {
+        runCatching { device.takeScreenshot(File(output, "failure-during-test.png")) }
+        runCatching { device.dumpWindowHierarchy(File(output, "failure-during-test.xml")) }
+        error(message)
+    }
 
     fun action(label: String, timeout: Long = 60_000) {
         val end = SystemClock.elapsedRealtime() + timeout
@@ -52,7 +61,7 @@ internal class UiTestDriver {
             if (node == null) scrollDown()
             SystemClock.sleep(150)
         }
-        error("Missing or disabled action: $label")
+        missing("Missing or disabled action: $label")
     }
 
     fun scrollToTop() {

@@ -193,3 +193,23 @@ export function horizontalScale(region: Region, width: number) {
     label: distance >= 1_000 ? distance / 1_000 + ' km' : distance + ' m',
   };
 }
+
+export function nearestPoint<T extends Coordinate>(
+  points: ReadonlyArray<T>,
+  pixel: { x: number; y: number },
+  region: Region,
+  layout: MapLayout,
+): T | null {
+  if (layout.width <= 0 || layout.height <= 0) return null;
+  let nearest: T | null = null;
+  let distance = 24 ** 2;
+  for (const point of points) {
+    const position = project(point, region, layout.width, layout.height);
+    const squared = (position.x - pixel.x) ** 2 + (position.y - pixel.y) ** 2;
+    if (squared < distance) {
+      nearest = point;
+      distance = squared;
+    }
+  }
+  return nearest;
+}

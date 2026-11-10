@@ -49,8 +49,9 @@ class CommunityMapTest {
         try {
             ui.launch()
             ui.find(By.text("Medir señal"))
+            val tab = ui.find(By.descStartsWith("Comunidad"))
             val started = SystemClock.elapsedRealtime()
-            ui.find(By.descStartsWith("Comunidad")).click()
+            tab.click()
             ui.find(By.text("50 m por celda"), 120_000)
             val accessibleAt = SystemClock.elapsedRealtime()
             ui.device.waitForIdle(2_000)
@@ -58,8 +59,11 @@ class CommunityMapTest {
             val renderedAt = SystemClock.elapsedRealtime()
             assertEquals("wifi_rssi", lastMetric.get())
             assertTrue(requests.get() >= 1)
+            ui.reveal(By.textStartsWith("1000 celdas agrupadas."))
             java.io.File(ui.output, "map-render-benchmark.json").writeText(JSONObject()
                 .put("synthetic", true).put("cells", 1000)
+                .put("visible_cells_verified", 1000)
+                .put("uiautomator_idle_timeout_ms", 500)
                 .put("tap_to_accessible_result_ms", accessibleAt - started)
                 .put("tap_to_screenshot_ms", renderedAt - started)
                 .put("device", android.os.Build.MODEL)
@@ -85,16 +89,17 @@ class CommunityMapTest {
     }
 
     private fun cells(filters: JSONObject): String {
-        val minLat = filters.getDouble("min_lat")
-        val minLon = filters.getDouble("min_lon")
-        val latSpan = filters.getDouble("max_lat") - minLat
-        val lonSpan = filters.getDouble("max_lon") - minLon
+        // Keep every fixture inside the visible START_REGION, not its RPC buffer.
+        val minLat = -33.4568 - 0.014 / 2
+        val minLon = -70.6548 - 0.018 / 2
+        val latSpan = 0.014
+        val lonSpan = 0.018
         val metric = filters.getString("metrica_filtro")
         return JSONArray().apply {
             repeat(1000) { index ->
                 put(JSONObject().put("celda_id", "synthetic-$metric-$index")
-                    .put("latitud_centro", minLat + latSpan * ((index / 40) + 0.5) / 25)
-                    .put("longitud_centro", minLon + lonSpan * ((index % 40) + 0.5) / 40)
+                    .put("latitud_centro", minLat + latSpan * ((index / 35) + 0.5) / 29)
+                    .put("longitud_centro", minLon + lonSpan * ((index % 35) + 0.5) / 35)
                     .put("mediana_potencia", if (metric == "wifi_rssi") -45 - index % 50 else -80 - index % 45)
                     .put("total_contribuyentes", 5 + index % 7)
                     .put("resolucion_m", 50)

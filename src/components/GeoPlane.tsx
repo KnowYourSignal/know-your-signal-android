@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import {
   horizontalScale,
-  project,
+  nearestPoint,
   shiftRegion,
   type MapLayout,
   type Region,
@@ -33,7 +33,7 @@ export function GeoPlane({
   height: number;
   selected?: HeatPoint | null;
   onChange?: (region: Region) => void;
-  onSelect?: (id: string) => void;
+  onSelect?: (id: string | null) => void;
   onReady?: (layout: MapLayout) => void;
 }) {
   const [width, setWidth] = useState(0);
@@ -70,19 +70,8 @@ export function GeoPlane({
   }, [width, height, onReady]);
 
   function select(x: number, y: number) {
-    let best = 22 ** 2;
-    let match: HeatPoint | undefined;
-    for (const point of points) {
-      const pixel = project(point, region, width, height);
-      const distance = (pixel.x - x) ** 2 + (pixel.y - y) ** 2;
-      if (distance < best) {
-        best = distance;
-        match = point;
-      }
-    }
-    if (match) {
-      onSelect?.(match.id);
-    }
+    const match = nearestPoint(points, { x, y }, region, { width, height });
+    onSelect?.(match?.id ?? null);
   }
 
   return (

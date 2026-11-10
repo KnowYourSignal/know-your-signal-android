@@ -174,6 +174,8 @@ jobs:
           adb shell pm revoke com.knowyoursignal.uitest android.permission.ACCESS_COARSE_LOCATION
           run_ui_phase permissions PermissionsJourneyTest
           adb shell am force-stop com.knowyoursignal.uitest
+          adb shell pm clear-permission-flags com.knowyoursignal.uitest android.permission.ACCESS_FINE_LOCATION user-set user-fixed
+          adb shell pm clear-permission-flags com.knowyoursignal.uitest android.permission.ACCESS_COARSE_LOCATION user-set user-fixed
           run_ui_phase map-permission MapPermissionJourneyTest
           adb install app/build/outputs/apk/qa/app-qa.apk
           adb shell am start -n com.knowyoursignal.qa/com.knowyoursignal.MainActivity
@@ -193,3 +195,60 @@ jobs:
       - name: Show emulator log on failure
         if: failure()
         run: if test -f "$RUNNER_TEMP/kys-emulator.log"; then tail -80 "$RUNNER_TEMP/kys-emulator.log"; fi
+
+  qa-arm64:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      KYS_SUPABASE_URL: https://oefdpaqezvksxjgruufv.supabase.co
+      # Publishable client key shipped in the APK; never use a service-role or secret key.
+      KYS_SUPABASE_PUBLISHABLE_KEY: sb_publishable_0W31t9KmyJpBoSckNfSnrw_OY4uPZ0W
+      CMAKE_BUILD_PARALLEL_LEVEL: '2'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      - run: npm ci --no-audit --no-fund
+      - name: Install the pinned Android build tools
+        run: |
+          sdk="$RUNNER_TEMP/kys-qa-sdk"
+          tools="$RUNNER_TEMP/android-command-tools.zip"
+          curl --fail --location --retry 2 --output "$tools" https://dl.google.com/android/repository/commandlinetools-linux-13114758_latest.zip
+          printf '%s  %s\n' 7ec965280a073311c339e571cd5de778b9975026cfcbe79f2b1cdcb1e15317ee "$tools" | sha256sum --check
+          mkdir -p "$sdk/cmdline-tools"
+          unzip -q "$tools" -d "$sdk/cmdline-tools"
+          mv "$sdk/cmdline-tools/cmdline-tools" "$sdk/cmdline-tools/latest"
+          (set +o pipefail; yes | "$sdk/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$sdk" --licenses >/dev/null)
+          "$sdk/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$sdk" 'platforms;android-37.0' 'build-tools;37.0.0' 'ndk;27.1.12297006' 'cmake;3.22.1' 'platform-tools'
+          echo "ANDROID_HOME=$sdk" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$sdk" >> "$GITHUB_ENV"
+      - name: Build configured ARM64 QA
+        working-directory: android
+        run: |
+          bash gradlew --no-daemon --max-workers=1 -PreactNativeArchitectures=arm64-v8a \
+            '-Dorg.gradle.jvmargs=-Xmx1400m -XX:MaxMetaspaceSize=640m' \
+            -Pkotlin.compiler.execution.strategy=in-process :app:assembleQa
+      - name: Verify and package the internal test delivery
+        run: |
+          delivery="$RUNNER_TEMP/kys-qa-delivery"
+          apk="android/app/build/outputs/apk/qa/app-qa.apk"
+          tools="$ANDROID_HOME/build-tools/37.0.0"
+          mkdir -p "$delivery"
+          "$tools/apksigner" verify --print-certs "$apk" > "$delivery/verification.txt"
+          "$tools/zipalign" -c -P 16 4 "$apk" >> "$delivery/verification.txt"
+          "$tools/aapt" dump badging "$apk" | head -6 >> "$delivery/verification.txt"
+          if unzip -Z1 "$apk" | rg 'ui_test_ca|ui-test-key'; then exit 1; fi
+          cp "$apk" "$delivery/KnowYourSignal-QA-arm64.apk"
+          sha256sum "$delivery/KnowYourSignal-QA-arm64.apk" > "$delivery/sha256.txt"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: KnowYourSignal-QA-arm64
+          path: ${{ runner.temp }}/kys-qa-delivery
+          retention-days: 14

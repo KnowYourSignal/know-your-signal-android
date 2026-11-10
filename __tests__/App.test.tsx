@@ -29,7 +29,7 @@ jest.mock(
 jest.mock('react-native-maps', () => ({
   __esModule: true,
   default: 'MapView',
-  Heatmap: 'Heatmap',
+  Circle: 'Circle',
   PROVIDER_GOOGLE: 'google',
 }));
 

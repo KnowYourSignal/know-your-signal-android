@@ -8,10 +8,11 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
-import MapView, { Heatmap, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
 
 import { FloorSelector } from '../components/FloorSelector';
 import { GeoPlane } from '../components/GeoPlane';
+import { PublicCellLayer } from '../components/PublicCellLayer';
 import { SignalLegend } from '../components/HeatmapLayer';
 import { Icon } from '../components/Icon';
 import { Reveal, useReducedMotion } from '../components/Motion';
@@ -30,7 +31,7 @@ import {
   floorLabel,
   formatSignal,
   networkLabel,
-  signalWeight,
+  signalQuality,
 } from '../domain/Measurement';
 import { fieldwork } from '../services/LocalRepositoryAdapter';
 import {
@@ -44,9 +45,12 @@ import { usePublicCells } from '../services/usePublicCells';
 import type { MapConfiguration } from '../specs/NativeFieldwork';
 import {
   START_REGION,
+  nearestPoint,
+  project,
   shiftRegion,
   zoomRegion,
   type Filters,
+  type MapLayout,
   type Region,
 } from '../state/MapFilters';
 import { useSettings } from '../state/SettingsContext';
@@ -110,6 +114,7 @@ export function PublicMapScreen() {
   const [connectionPicker, setConnectionPicker] = useState(false);
   const [floorEdit, setFloorEdit] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [mapLayout, setMapLayout] = useState<MapLayout | null>(null);
   const map = useRef<MapView>(null);
   const { hasViewport, current, cells, loading, reload } = usePublicCells(
     configuration,
@@ -139,15 +144,13 @@ export function PublicMapScreen() {
   const resolution = cells.length
     ? Math.max(...cells.map(cell => cell.resolutionM))
     : null;
-  const weights = useMemo(
-    () =>
-      cells.map(cell => ({
-        latitude: cell.latitude,
-        longitude: cell.longitude,
-        weight: Math.max(0.04, signalWeight(cell.powerDbm, filters.metric)),
-      })),
-    [cells, filters.metric],
-  );
+  const qualityCounts = useMemo(() => {
+    const counts = { good: 0, fair: 0, weak: 0 };
+    cells.forEach(cell => {
+      counts[signalQuality(cell.powerDbm, filters.metric)] += 1;
+    });
+    return counts;
+  }, [cells, filters.metric]);
 
   function center(next: Region) {
     setSelectedId(null);
@@ -162,6 +165,7 @@ export function PublicMapScreen() {
     locate,
     locating,
     error: locationError,
+    located,
   } = useMapLocation(focused, foreground, position => {
     // Public queries need an area, not the precise position of the phone.
     center(
@@ -237,7 +241,10 @@ export function PublicMapScreen() {
             />
           </View>
           {configuration?.mapTiles ? (
-            <View style={[s.mapFrame, { height: mapHeight }]}>
+            <View
+              style={[s.mapFrame, { height: mapHeight }]}
+              onLayout={event => setMapLayout(event.nativeEvent.layout)}
+            >
               <MapView
                 ref={map}
                 style={StyleSheet.absoluteFill}
@@ -247,19 +254,24 @@ export function PublicMapScreen() {
                 rotateEnabled={false}
                 pitchEnabled={false}
                 onRegionChangeComplete={setRegion}
+                onPress={event => {
+                  if (!mapLayout) return;
+                  const pixel = project(
+                    event.nativeEvent.coordinate,
+                    region,
+                    mapLayout.width,
+                    mapLayout.height,
+                  );
+                  setSelectedId(
+                    nearestPoint(cells, pixel, region, mapLayout)?.id ?? null,
+                  );
+                }}
               >
-                {!!weights.length && (
-                  <Heatmap
-                    points={weights}
-                    radius={26}
-                    opacity={0.64}
-                    gradient={{
-                      colors: ['#B13B45', '#F2BB50', '#31A76E'],
-                      startPoints: [0.07, 0.45, 0.83],
-                      colorMapSize: 256,
-                    }}
-                  />
-                )}
+                <PublicCellLayer
+                  cells={cells}
+                  metric={filters.metric}
+                  selectedId={selectedId}
+                />
               </MapView>
             </View>
           ) : (
@@ -273,7 +285,7 @@ export function PublicMapScreen() {
               selected={selected}
             />
           )}
-          <SignalLegend />
+          <SignalLegend counts={cells.length ? qualityCounts : undefined} />
           <View style={s.tools}>
             <Button
               label="Mi zona"
@@ -298,6 +310,12 @@ export function PublicMapScreen() {
           {locationError && (
             <Text accessibilityLiveRegion="polite" style={s.error}>
               {locationError}
+            </Text>
+          )}
+          {located && !locationError && (
+            <Text style={g.caption}>
+              Centro aproximado con una ubicación de los últimos 10 minutos.
+              Puedes ajustar el área del mapa.
             </Text>
           )}
         </View>
@@ -360,20 +378,23 @@ export function PublicMapScreen() {
             />
           </View>
         ) : selected ? (
-          <View style={g.card}>
+          <Reveal key={selected.id} style={g.card}>
             <Text style={g.sectionTitle}>
-              Mediana{' '}
-              {formatSignal(
-                selected.powerDbm,
-                filters.metric,
-                settings?.technicalMode ?? false,
-              )}
+              {settings?.technicalMode
+                ? 'Mediana ' +
+                  formatSignal(selected.powerDbm, filters.metric, true)
+                : 'Señal ' +
+                  formatSignal(
+                    selected.powerDbm,
+                    filters.metric,
+                    false,
+                  ).toLocaleLowerCase('es-CL')}
             </Text>
             <Text style={g.body}>
               {networkLabel(selected.connection)} · {selected.contributors}{' '}
-              contribuyentes · {selected.resolutionM} m
+              cuentas contribuyentes · {selected.resolutionM} m
             </Text>
-          </View>
+          </Reveal>
         ) : (
           <View style={[g.card, g.row]}>
             <Icon name="shield" size={20} />

@@ -11,6 +11,7 @@ export function useMapLocation(
 ) {
   const [locating, setLocating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [located, setLocated] = useState(false);
   const generation = useRef(0);
   const phase = useRef<'idle' | 'permission' | 'waiting' | 'reading'>('idle');
   const visible = useRef({ focused, foreground });
@@ -34,7 +35,10 @@ export function useMapLocation(
     phase.current = 'reading';
     try {
       const position = await telemetry.locate();
-      if (valid()) callback.current(position);
+      if (valid()) {
+        callback.current(position);
+        setLocated(true);
+      }
     } catch (problem) {
       if (valid()) setError(captureMessage(errorCode(problem)));
     } finally {
@@ -94,5 +98,5 @@ export function useMapLocation(
     }
   }
 
-  return { locate, locating, error };
+  return { locate, locating, error, located };
 }

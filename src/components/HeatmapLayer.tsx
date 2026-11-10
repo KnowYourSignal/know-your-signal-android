@@ -14,7 +14,11 @@ const legend = [
   { quality: 'weak', label: 'Débil' },
 ] as const;
 
-export function SignalLegend() {
+export function SignalLegend({
+  counts,
+}: {
+  counts?: Record<'good' | 'fair' | 'weak', number>;
+}) {
   return (
     <View style={styles.legend}>
       {legend.map(item => (
@@ -25,7 +29,20 @@ export function SignalLegend() {
               { backgroundColor: SIGNAL_COLORS[item.quality] },
             ]}
           />
-          <Text style={g.caption}>{item.label}</Text>
+          <Text
+            style={g.caption}
+            accessibilityLabel={
+              counts
+                ? item.label +
+                  ': ' +
+                  counts[item.quality] +
+                  (counts[item.quality] === 1 ? ' celda' : ' celdas')
+                : undefined
+            }
+          >
+            {item.label}
+            {counts ? ' · ' + counts[item.quality].toLocaleString('es-CL') : ''}
+          </Text>
         </View>
       ))}
     </View>

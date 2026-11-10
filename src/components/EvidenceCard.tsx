@@ -50,6 +50,11 @@ export function EvidenceCard({
         {floorLabel(newest.floor)} · {metricLabel(newest.metric)}
       </Text>
       <Text style={g.body}>{connections}</Text>
+      {measurements.some(point => point.classificationOrigin === 'manual') && (
+        <Text style={g.caption}>
+          Incluye clasificación Wi-Fi declarada manualmente.
+        </Text>
+      )}
       <Text style={g.caption}>
         {dates} ·{' '}
         {measurements.length === 1

@@ -17,6 +17,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
 
 internal class CaptureException(val code: String) : Exception(code)
+private const val MAX_MAP_LOCATION_AGE_MS = 10 * 60 * 1_000L
 
 internal class LocationReader(private val context: Context) {
     private val manager = context.getSystemService(LocationManager::class.java)
@@ -33,9 +34,13 @@ internal class LocationReader(private val context: Context) {
             .filter { manager.isProviderEnabled(it) }
         if (providers.isEmpty()) throw CaptureException("LOCATION_DISABLED")
 
-        val cached = providers.mapNotNull { manager.getLastKnownLocation(it) }
-            .filter { it.hasAccuracy() && SystemClock.elapsedRealtime() - it.elapsedMs in 0..1_500 }
-            .minByOrNull { it.accuracy }
+        // Approximate location may be throttled. This only centers the map;
+        // the stricter capture precision and freshness requirements are retained.
+        val cacheAge = if (requirePrecise) 1_500L else MAX_MAP_LOCATION_AGE_MS
+        val candidates = providers.mapNotNull { manager.getLastKnownLocation(it) }
+            .filter { it.hasAccuracy() && SystemClock.elapsedRealtime() - it.elapsedMs in 0..cacheAge }
+        val cached = if (requirePrecise) candidates.minByOrNull { it.accuracy }
+            else candidates.maxByOrNull { it.elapsedMs }
         if (cached != null && (!requirePrecise || cached.accuracy < MAX_ACCURACY_M)) {
             return cached.toPosition()
         }
@@ -75,7 +80,8 @@ internal class LocationReader(private val context: Context) {
             }
         }
         val location = fresh ?: best.get() ?: throw CaptureException("LOCATION_TIMEOUT")
-        if (SystemClock.elapsedRealtime() - location.elapsedMs !in 0 until MAX_READING_AGE_MS) {
+        val maxAge = if (requirePrecise) MAX_READING_AGE_MS else MAX_MAP_LOCATION_AGE_MS
+        if (SystemClock.elapsedRealtime() - location.elapsedMs !in 0 until maxAge) {
             throw CaptureException("STALE_READING")
         }
         return location.toPosition()
