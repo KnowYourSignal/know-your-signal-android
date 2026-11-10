@@ -58,9 +58,9 @@ class CaptureJourneyTest {
 
             // Repeating a room still requires a visible, explicit confirmation.
             ui.find(By.descStartsWith("Medir")).click()
-            ui.action("Activar sensores")
             ui.action("Registrar señal", 120_000)
-            ui.reveal(By.text("¿Sigues en el mismo recinto?"))
+            ui.scrollToTop()
+            ui.find(By.text("Completar captura"))
             ui.action("Confirmar y guardar aquí")
             ui.find(By.text("Medición guardada"))
             assertEquals(2, ui.database.measurements().counts().total)

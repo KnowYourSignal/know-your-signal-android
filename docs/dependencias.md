@@ -5,7 +5,7 @@ Revisión del 9 de noviembre de 2026, con Node 24 y el archivo de bloqueo del pr
 | Comprobación                                | Resultado                                             |
 | ------------------------------------------- | ----------------------------------------------------- |
 | Instalación limpia con npm ci               | Aprobada.                                             |
-| TypeScript, ESLint y pruebas tras el ajuste | Aprobados; 26 pruebas del cliente.                    |
+| TypeScript, ESLint y pruebas tras el ajuste | Aprobados; 27 pruebas del cliente.                    |
 | npm audit completo antes                    | 9 avisos bajos y 6 moderados; ninguno alto o crítico. |
 | npm audit completo después                  | 9 avisos bajos; ninguno moderado, alto o crítico.     |
 

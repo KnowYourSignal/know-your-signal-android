@@ -139,3 +139,60 @@ test('panning within one query keeps its request and a different layer cancels i
     jest.useRealTimers();
   }
 });
+
+test('a capture keeps the explicit session and resumes a fresh reading only on returning from the room form', async () => {
+  jest.useFakeTimers();
+  jest.mocked(telemetry.read).mockClear().mockResolvedValue(ready);
+  jest.mocked(telemetry.stop).mockClear();
+  const draft = {
+    id: 'captured-draft',
+    accuracyM: 6,
+    powerDbm: -68,
+    metric: 'wifi_rssi',
+    technology: 'wifi',
+    connection: 'wifi_privada',
+    capturedAt: '2026-11-09T17:00:00.000Z',
+  };
+  jest.mocked(telemetry.freeze).mockResolvedValueOnce(draft);
+  let root: ReactTestRenderer.ReactTestRenderer | undefined;
+  let session!: ReturnType<typeof useCaptureSession>;
+  function Capture({ active }: { active: boolean }) {
+    session = useCaptureSession(active);
+    return null;
+  }
+  try {
+    await act(async () => {
+      root = ReactTestRenderer.create(<Capture active />);
+    });
+    await act(async () => {
+      await session.start();
+    });
+    expect(session.canRecord).toBe(true);
+    let captured;
+    await act(async () => {
+      captured = await session.capture();
+    });
+    expect(captured).toEqual(draft);
+    expect(session.enabled).toBe(true);
+    expect(session.canRecord).toBe(false);
+    expect(session.reading).toBeNull();
+    expect(telemetry.stop).toHaveBeenCalled();
+
+    await act(async () => root!.update(<Capture active={false} />));
+    const reads = jest.mocked(telemetry.read).mock.calls.length;
+    await act(async () => jest.advanceTimersByTime(10_000));
+    expect(telemetry.read).toHaveBeenCalledTimes(reads);
+
+    await act(async () => root!.update(<Capture active />));
+    expect(telemetry.read).toHaveBeenCalledTimes(reads + 1);
+    expect(session.canRecord).toBe(true);
+    await act(async () => session.pause());
+    await act(async () => root!.update(<Capture active={false} />));
+    await act(async () => root!.update(<Capture active />));
+    expect(session.enabled).toBe(false);
+    expect(telemetry.read).toHaveBeenCalledTimes(reads + 1);
+  } finally {
+    await act(async () => root?.unmount());
+    jest.useRealTimers();
+  }
+});

@@ -154,6 +154,28 @@ export function FloorScreen({
                 Precisión de ubicación ±{capture.accuracyM.toFixed(1)} m
               </Text>
             </View>
+            {recentRoom && !saved && (
+              <View style={g.card}>
+                <Text style={g.sectionTitle}>¿Sigues en el mismo recinto?</Text>
+                <Text style={g.body}>
+                  {floorLabel(recentRoom.floor)} ·{' '}
+                  {
+                    ZONES.find(option => option.value === recentRoom.zoneSize)
+                      ?.label
+                  }
+                </Text>
+                <Text style={g.caption}>
+                  Confirma el piso y el tamaño para esta nueva captura.
+                </Text>
+                <Button
+                  label="Confirmar y guardar aquí"
+                  kind="secondary"
+                  icon="check"
+                  busy={busy}
+                  onPress={() => save(recentRoom)}
+                />
+              </View>
+            )}
             {capture.connection === 'wifi_desconocida' && (
               <View style={g.card}>
                 <Text style={g.sectionTitle}>
@@ -178,29 +200,6 @@ export function FloorScreen({
                     />
                   ))}
                 </View>
-              </View>
-            )}
-            {recentRoom && !saved && (
-              <View style={g.card}>
-                <Text style={g.sectionTitle}>¿Sigues en el mismo recinto?</Text>
-                <Text style={g.body}>
-                  {floorLabel(recentRoom.floor)} ·{' '}
-                  {
-                    ZONES.find(option => option.value === recentRoom.zoneSize)
-                      ?.label
-                  }
-                </Text>
-                <Text style={g.caption}>
-                  Confirma estos datos solo si corresponden al lugar de esta
-                  captura.
-                </Text>
-                <Button
-                  label="Confirmar y guardar aquí"
-                  kind="secondary"
-                  icon="check"
-                  disabled={busy}
-                  onPress={() => save(recentRoom)}
-                />
               </View>
             )}
             <View style={g.card}>

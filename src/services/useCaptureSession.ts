@@ -127,7 +127,13 @@ export function useCaptureSession(focused: boolean) {
         return null;
       }
       // The draft is held natively while the user completes the floor form.
-      pause();
+      // Keep the explicit session enabled so returning to Medir starts a fresh
+      // reading. Focus/foreground cleanup keeps sensors off while editing a room.
+      session.current += 1;
+      telemetry.stop();
+      setReading(null);
+      setProblem(null);
+      setStatus('reading');
       return saved;
     } catch (error) {
       if (captureSession === session.current) {

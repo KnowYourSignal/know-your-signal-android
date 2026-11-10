@@ -32,6 +32,8 @@ Las celdas se seleccionan con un área de toque de 48 dp y tocar un espacio vac�
 
 Los errores de «Mi zona» explican cómo continuar moviendo el mapa manualmente. Si falta permiso o la ubicación está desactivada, ofrecen el ajuste de Android correspondiente; no piden ubicación precisa para una consulta aproximada. Un reintento limpia el error anterior y un fallo no cambia la zona visible.
 
+Tras congelar una captura, la sesión conserva la activación explícita del usuario. Las lecturas se detienen durante el formulario de recinto y empiezan con una muestra nueva al regresar a Medir. El atajo del último recinto permite entonces registrar y confirmar en dos acciones. Pausar manualmente desactiva la sesión hasta una nueva activación; cambiar de pantalla o poner la app en segundo plano sigue deteniendo los sensores.
+
 ## Verificación
 
 - npm run typecheck comprueba los tipos de las pantallas y los contratos nativos.
