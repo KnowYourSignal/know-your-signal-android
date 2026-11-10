@@ -95,7 +95,8 @@ internal class UiTestDriver {
     fun resetFixtures() {
         database.clearAllTables()
         context.getSharedPreferences("fieldwork_ui", 0).edit().clear().commit()
-        output.listFiles()?.forEach { it.delete() }
+        // Keep evidence from independent phases already run in this installation.
+        // CI installs into a fresh emulator; each phase overwrites its own outputs.
     }
 
     fun mockGps(accuracy: Float = 5f): AutoCloseable =

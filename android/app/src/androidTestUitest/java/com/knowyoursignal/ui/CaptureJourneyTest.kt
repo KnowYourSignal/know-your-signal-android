@@ -51,8 +51,8 @@ class CaptureJourneyTest {
             ui.screenshot("03-export-preview")
             val existing = ui.evidenceFiles()
             ui.action("Compartir PNG")
-            ui.verifyExportedPng(existing)
             ui.waitForShareSheet()
+            ui.verifyExportedPng(existing)
             ui.screenshot("04-android-share")
             ui.device.pressBack()
 

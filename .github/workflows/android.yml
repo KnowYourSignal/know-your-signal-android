@@ -156,6 +156,11 @@ jobs:
               com.knowyoursignal.uitest.test/androidx.test.runner.AndroidJUnitRunner | tee "$RUNNER_TEMP/kys-ui-$phase.log"
             awk '/^OK \([0-9]+ tests?\)/ {passed=1} END {exit !passed}' "$RUNNER_TEMP/kys-ui-$phase.log"
           }
+          # This independent scenario must not be blocked by an export assertion.
+          run_ui_phase map-permission MapPermissionJourneyTest
+          adb shell am force-stop com.knowyoursignal.uitest
+          adb shell pm revoke com.knowyoursignal.uitest android.permission.ACCESS_FINE_LOCATION
+          adb shell pm revoke com.knowyoursignal.uitest android.permission.ACCESS_COARSE_LOCATION
           run_ui_phase capture CaptureJourneyTest
           adb shell am force-stop com.knowyoursignal.uitest
           adb shell svc wifi disable
@@ -169,12 +174,6 @@ jobs:
           run_ui_phase accessibility AccessibilityJourneyTest
           adb shell am force-stop com.knowyoursignal.uitest
           run_ui_phase quality CaptureQualityTest
-          adb shell am force-stop com.knowyoursignal.uitest
-          adb shell pm revoke com.knowyoursignal.uitest android.permission.ACCESS_FINE_LOCATION
-          adb shell pm revoke com.knowyoursignal.uitest android.permission.ACCESS_COARSE_LOCATION
-          # Grant approximate location before testing denial: API 29 does not
-          # support clear-permission-flags, and denial must not taint this case.
-          run_ui_phase map-permission MapPermissionJourneyTest
           adb shell am force-stop com.knowyoursignal.uitest
           adb shell pm revoke com.knowyoursignal.uitest android.permission.ACCESS_FINE_LOCATION
           adb shell pm revoke com.knowyoursignal.uitest android.permission.ACCESS_COARSE_LOCATION
