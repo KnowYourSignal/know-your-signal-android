@@ -116,7 +116,10 @@ internal class UiTestDriver {
         }
         device.executeShellCommand("appops set ${context.packageName} android:mock_location allow")
         val manager = context.getSystemService(LocationManager::class.java)
-        manager.addTestProvider(provider, false, false, false, false, true, true, true, 1, 1)
+        val network = provider == LocationManager.NETWORK_PROVIDER
+        manager.addTestProvider(provider, network, !network, network, false,
+            !network, !network, !network, android.location.Criteria.POWER_LOW,
+            if (network) android.location.Criteria.ACCURACY_COARSE else android.location.Criteria.ACCURACY_FINE)
         manager.setTestProviderEnabled(provider, true)
         val running = AtomicBoolean(true)
         val thread = Thread {

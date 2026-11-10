@@ -1,49 +1,55 @@
 # Entrega de Know Your Signal al equipo
 
-El [PR #11](https://github.com/KnowYourSignal/know-your-signal-android/pull/11) reúne el cliente Android que integra los issues #1 a #6 y #9 con el backend de los issues #7 y #8. La navegación, los colores y el recorrido guiado vienen de la base de QuilPalta. El trabajo del grupo 11 define qué datos se pueden enviar y qué resultados se publican en Comunidad.
+El [PR #11](https://github.com/KnowYourSignal/know-your-signal-android/pull/11) integra **todos los issues #1 a #9**. Mantiene la navegación, la identidad visual y el asistente de QuilPalta, y conecta esa base con el backend del grupo 11. El código está disponible en la rama del PR; la aceptación en teléfono sigue pendiente.
 
-## Qué está implementado
+## Qué quedó hecho
 
-| Parte | Lo que se puede hacer |
-| --- | --- |
-| Medición y recinto · #1 y #5 | Leer señal y ubicación, esperar una muestra válida y guardarla con piso y tamaño. La app cancela la lectura al salir de Medir y vuelve a pedir una muestra si cambia la red. |
-| Historial y sincronización · #2 y #3 | Guardar y consultar capturas sin internet. Las capturas autorizadas entran en una cola que se recupera tras reabrir la app. Android programa el envío cuando la cola recibe trabajo. |
-| Privacidad · #4 | Elegir uso personal o aporte comunitario. Revocar retira los pendientes y conserva el historial. Una captura congelada con una decisión anterior se queda en el historial personal. |
-| Evidencia · #6 | Revisar la tarjeta con plano, escala, piso, red y fechas antes de generar el PNG y abrir el menú de compartir. |
-| Backend · #7 y #8 | Usar sesión anónima, consentimiento, ingesta por lotes y mapa agregado según el contrato de Supabase. |
-| Mapas · #9 | Ver el plano personal sin teselas. Consultar celdas públicas por piso, tecnología y tipo de Wi-Fi. Los desplazamientos pequeños reutilizan el área consultada y cambiar de capa cancela la consulta anterior. |
+| Issues                 | Resultado                                                                                                                                                                                                                                                                              |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| #1 · Señal y ubicación | Lecturas nativas de Wi-Fi o señal móvil y ubicación. Se comprueban precisión, antigüedad y cambios de red. Los sensores se detienen al salir de Medir, durante el formulario y en segundo plano. La Wi-Fi que Android no reconoce admite una declaración manual identificada como tal. |
+| #2 · Historial local   | Capturas disponibles sin internet. Historial y cola se guardan juntos; repetir un guardado no duplica la medición. La actualización de la base conserva capturas, consentimiento y pendientes.                                                                                         |
+| #3 · Sincronización    | Cola recuperable al reabrir, reintentos, renovación de sesión y confirmación por captura. Un recibo incompleto conserva los pendientes. Los contadores se actualizan aunque Ajustes esté cerrado.                                                                                      |
+| #4 · Privacidad        | Elección explícita de uso personal o aporte. Revocar retira los pendientes y conserva el historial. Activar el aporte no publica capturas privadas anteriores.                                                                                                                         |
+| #5 · Captura guiada    | Piso y tamaño obligatorios, piso 0 válido y precisión menor a 10 m. Volver a Medir retoma la sesión activada con una lectura nueva. Repetir un recinto permite registrar y confirmar; pausar manualmente desactiva esa reanudación.                                                    |
+| #6 · Evidencia PNG     | Vista previa del encuadre elegido, conservado al girar. La imagen incluye escala, leyenda, piso, red, fechas, mediana, rango y aviso de clasificación manual. Se espera al dibujo real antes de abrir Compartir.                                                                       |
+| #7 y #8 · Backend      | El cliente usa el consentimiento, la ingesta y los agregados del backend ya desplegado. Se comprobaron recibos, duplicados y revocación en pruebas aisladas. Esta revisión no cambió datos del proyecto alojado.                                                                       |
+| #9 · Mapas             | Plano personal offline y Comunidad por piso, tecnología y tipo de Wi-Fi. Colores estables según intensidad, leyenda con cantidades, selección, caché y reintento conservando la última vista. «Mi zona» acepta ubicación aproximada y ofrece ayuda útil ante errores.                  |
 
-La APK de prueba se instala como **Know Your Signal QA**. Su historial queda separado del de la app principal. El [README](../README.md) explica cómo compilarla y configurar el servicio.
+La interfaz conserva la identidad azul. Incorpora estados de carga, vacío y error, transiciones breves, respuesta visual de botones y una pulsación suave durante la búsqueda. Respeta movimiento reducido y adapta pestañas y controles al texto ampliado.
 
-La APK ARM64 entregada usa el proyecto Supabase actual y la firma de desarrollo para pruebas internas. Incluye JavaScript y ocupa aproximadamente 27 MiB. Su compilación, firma y alineación de las bibliotecas nativas para páginas de 16 KiB se verificaron.
+## Qué se verificó
 
-## Qué se comprobó en esta ronda
+| Comprobación                            | Resultado                                                                                                                                         |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| TypeScript, ESLint y cliente JavaScript | Sin errores; 27 pruebas aprobadas.                                                                                                                |
+| Backend                                 | 69 pruebas funcionales y diez escenarios nativos por cada configuración PostGIS. Incluyen concurrencia, privacidad y 100.000 muestras.            |
+| Android 10 y 15, API 29 y 35            | Cuatro pruebas JVM y 15 instrumentadas aprobadas en ambas versiones. La repetición del recorrido aproximado y la matriz completa sigue pendiente. |
+| APK QA ARM64 1.1                        | Compilada; firma, integridad, configuración y alineación de 16 KiB verificadas.                                                                   |
+| Dependencias                            | Corregido el aviso moderado de las herramientas de análisis. El aviso bajo pendiente del proveedor está en [mantenimiento](dependencias.md).      |
 
-| Verificación | Resultado |
-| --- | --- |
-| TypeScript y ESLint | Sin errores. |
-| Cliente JavaScript | 8 pruebas aprobadas. |
-| Validador Kotlin | 4 pruebas aprobadas. |
-| Room en Android API 29 | 7 pruebas aprobadas. |
-| Regresiones del backend | 68 pruebas aprobadas. |
-| APK QA | Compilación ARM64 y x86_64 aprobada. |
+Los recorridos de interfaz comprueban PNG real, recuperación en otro proceso sin red, texto al 150 %, giro, precisión insuficiente, permisos y 1.000 celdas dentro del viewport. Usan datos sintéticos y HTTPS local; no certifican señal física ni el tiempo total con red móvil.
 
-Las pruebas de Room cubren el guardado transaccional, los duplicados, la reversión ante fallo de cola, la revocación y la recuperación del historial desde un archivo cerrado y reabierto. También verifican que una captura privada no herede un consentimiento posterior.
+Última ejecución diagnosticada: [Android](https://github.com/KnowYourSignal/know-your-signal-android/actions/runs/42743599156) · [Backend](https://github.com/KnowYourSignal/know-your-signal-android/actions/runs/42743599135).
 
-El [flujo de integración automática](../.github/workflows/android.yml) vuelve a compilar el cliente, ejecutar las pruebas y comprobar el arranque de QA. El resultado de su última ejecución se consulta desde el PR.
+La última corrección de las pruebas se puede seguir en [Android client](https://github.com/KnowYourSignal/know-your-signal-android/actions/workflows/android.yml). El código de la APK disponible no cambió con esos ajustes de automatización.
 
-## Prueba corta en un teléfono
+## Cómo probarlo
 
-1. Abre la APK y elige **Solo uso personal**. Activa los sensores desde Medir, toma una muestra válida y guárdala en el piso 0 con un tamaño de recinto.
-2. Activa el modo avión, cierra la app y vuelve a abrirla. Comprueba que la muestra aparece en Mi historial con el mismo piso y valor.
-3. Abre **Preparar evidencia PNG**, revisa el plano y comprueba que el menú de compartir entrega una imagen legible. Puedes guardarla localmente.
-4. Repite la lectura con datos móviles para comprobar el tipo de red y la unidad. Usa Ajustes para revisar el estado de privacidad.
-5. Con internet, abre Comunidad y prueba piso, tecnología y tipo de Wi-Fi. Mide el tiempo desde que abres una zona hasta que el mapa la muestra. Anota si la zona estaba en caché, el equipo y el tipo de conexión.
+La APK se instala como **Know Your Signal QA 1.1**, con historial separado, JavaScript incluido y firma de desarrollo para pruebas internas. Usa el proyecto Supabase actual y el plano propio. Google Maps es opcional y requiere su clave. El [README](../README.md) explica cómo compilar o descargar la APK del flujo automático.
 
-Para probar el aporte y la revocación de extremo a extremo, usa una instalación que apunte a un proyecto de pruebas. Revisa que las capturas privadas sigan locales y que el servidor confirme los aportes autorizados.
+1. Elige uso personal, activa sensores y registra una muestra con piso y tamaño.
+2. Activa modo avión, cierra y reabre: la muestra debe conservarse.
+3. Ajusta el plano y comparte el PNG; revisa encuadre, texto y leyenda.
+4. Repite con Wi-Fi y datos móviles, permisos denegados, giro y texto ampliado.
+5. Prueba Comunidad con diferentes filtros y registra el tiempo de una zona nueva y otra en caché.
 
-## Qué queda por validar
+## Qué falta para aceptar la entrega
 
-La revisión en teléfono debe cubrir la señal Wi-Fi y móvil real, el ciclo de aporte y revocación con red intermitente, y la carga de Comunidad con datos representativos. El objetivo del issue #9 es mostrar la zona en menos de tres segundos, contando red, consulta y dibujo. El [seguimiento de PostGIS](../supabase/POSTGIS_REVIEW.md) sigue como tarea de infraestructura.
+- **Verificación automática:** completar la nueva ejecución del recorrido aproximado. Android 15 centró el mapa, pero el caso esperaba un diálogo; Android 10 no recibió la posición del proveedor simulado. Se ajustaron esas condiciones de prueba y todavía no se declara aprobada la matriz final.
+- **Teléfonos reales:** comprobar GPS, Wi-Fi y LTE/NR disponibles, cambios de red y permisos.
+- **Aporte completo:** enviar, interrumpir la conexión y revocar en un proyecto de pruebas, comprobando servidor e historial local.
+- **Rendimiento:** medir red, consulta y dibujo juntos para acreditar menos de tres segundos.
+- **Primera captura:** acordar con la contraparte qué acciones cuenta la FDR; todavía requiere declarar piso y tamaño.
+- **PostGIS:** continuar la solicitud ya recibida por Soporte. El [seguimiento](../supabase/POSTGIS_REVIEW.md) conserva el estado y las comprobaciones necesarias.
 
-La última consulta de lectura al mapa respondió HTTP 200 con una zona vacía y tardó 8,5 segundos desde este entorno. Queda medir y resolver el rendimiento completo en las condiciones del teléfono. Una celda comunitaria requiere al menos cinco cuentas técnicas contribuyentes en la capa consultada.
+La [hoja de pruebas de campo](pruebas-campo.md) permite registrar resultados y responsables. El PR permanece en borrador para revisión y aceptación; el cierre de un issue no sustituye esas pruebas.

@@ -2,6 +2,7 @@ package com.knowyoursignal.ui
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
+import androidx.test.uiautomator.Until
 import com.knowyoursignal.data.ConsentRepository
 import java.util.regex.Pattern
 import kotlinx.coroutines.runBlocking
@@ -22,9 +23,12 @@ class MapPermissionJourneyTest {
         ui.find(By.descStartsWith("Comunidad")).click()
         ui.find(By.text("Mapa comunitario"))
         ui.mockApproximatePosition().use {
+            val permissionBefore = androidx.core.content.ContextCompat.checkSelfPermission(ui.context, android.Manifest.permission.ACCESS_COARSE_LOCATION)
             ui.action("Mi zona")
             ui.screenshot("15-before-approximate-permission")
-            ui.find(By.res(Pattern.compile(".*:id/permission_allow_(foreground_only_)?button"))).click()
+            // A granted permission correctly skips the dialog on some test images.
+            val allow = ui.device.wait(Until.findObject(By.res(Pattern.compile(".*:id/permission_allow_(foreground_only_)?button"))), 3_000)
+            allow?.click()
             ui.screenshot("16-after-approximate-permission")
             assertEquals(android.content.pm.PackageManager.PERMISSION_GRANTED,
                 androidx.core.content.ContextCompat.checkSelfPermission(ui.context, android.Manifest.permission.ACCESS_COARSE_LOCATION))
@@ -36,6 +40,8 @@ class MapPermissionJourneyTest {
             val cached = runCatching { manager.getLastKnownLocation(android.location.LocationManager.NETWORK_PROVIDER) }.getOrNull()
             java.io.File(ui.output, "map-permission-state.json").writeText(org.json.JSONObject()
                 .put("synthetic", true)
+                .put("coarse_before", permissionBefore)
+                .put("permission_prompt_observed", allow != null)
                 .put("coarse", androidx.core.content.ContextCompat.checkSelfPermission(ui.context, android.Manifest.permission.ACCESS_COARSE_LOCATION))
                 .put("fine", androidx.core.content.ContextCompat.checkSelfPermission(ui.context, android.Manifest.permission.ACCESS_FINE_LOCATION))
                 .put("provider_enabled", manager.isProviderEnabled(android.location.LocationManager.NETWORK_PROVIDER))
