@@ -16,9 +16,13 @@ La guía nunca pulsa los controles, rellena el recinto, activa sensores ni cambi
 
 La guía automática espera a que la app esté en primer plano. En el formulario no interrumpe a quien ya empezó a interactuar; el botón Guía sigue disponible. El movimiento del globo y sus fundidos se ejecutan en el hilo de interfaz, mientras el resaltado mantiene sus propias medidas. Si un control desaparece durante una transición, el recorrido vuelve a buscarlo y ofrece reintentar u omitir si no lo encuentra en un plazo acotado.
 
+Los botones de avance se habilitan cuando el globo termina de ubicarse y aparecer. Así se evitan toques perdidos sobre un control que todavía se desplaza. El recorte redondeado sigue el borde del elemento y la sombra permanece discreta. Cambiar el tamaño de fuente de Android actualiza el diseño sin reiniciar la actividad ni perder el recorrido o el formulario abierto.
+
 La preferencia de haber visto cada recorrido se guarda solamente en `SharedPreferences`, en las claves `guide_overview_v1` y `guide_room_v1`. No modifica el esquema de Room ni el proyecto Supabase. Si no se pueden leer esas preferencias, la app sigue funcionando y permite abrir la guía manualmente.
 
 Las animaciones se detienen en segundo plano y respetan la opción de reducir movimiento. Durante la guía, el lector de pantalla accede al globo y sus acciones; el contenido de fondo queda fuera del foco. El texto explicativo se puede desplazar en un globo que no quepa completo, y sus controles permanecen separados de ese desplazamiento. Los diálogos de privacidad y exportación bloquean el cierre mientras se completa una operación.
+
+Las acciones de cada diálogo se habilitan al finalizar su entrada; el foco accesible se envía entonces al título. Una segunda pulsación rápida no puede confirmar una ventana que todavía está apareciendo.
 
 Los permisos y el menú de compartir pertenecen a Android y conservan su presentación del sistema.
 

@@ -1,5 +1,6 @@
 package com.knowyoursignal.ui
 
+import android.graphics.Bitmap
 import android.os.SystemClock
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
@@ -30,6 +31,7 @@ class GuideJourneyTest {
             ui.action("Anterior")
             anchoredStep(ui, "Una ubicación precisa")
             ui.action("Siguiente")
+            anchoredStep(ui, "La red que estás midiendo")
             ui.action("Siguiente")
             anchoredStep(ui, "Tú inicias la medición")
             ui.screenshot("21-guide-capture")
@@ -111,6 +113,24 @@ class GuideJourneyTest {
                 val missing = ui.device.hasObject(By.textStartsWith("No pudimos señalar este control"))
                 if (missing) ui.screenshot("guide-unresolved-target")
                 assertFalse("The tour must measure and highlight the actual control: $title", missing)
+                val captured = requireNotNull(ui.instrumentation.uiAutomation.takeScreenshot())
+                val bitmap = try {
+                    requireNotNull(captured.copy(Bitmap.Config.ARGB_8888, false))
+                } finally {
+                    captured.recycle()
+                }
+                var highlightPixels = 0
+                try {
+                    for (y in 0 until bitmap.height step 2) {
+                        for (x in 0 until bitmap.width step 2) {
+                            if (bitmap.getPixel(x, y) == 0xFFA5C2FF.toInt()) highlightPixels++
+                        }
+                    }
+                } finally {
+                    bitmap.recycle()
+                }
+                if (highlightPixels < 12) ui.screenshot("guide-missing-highlight")
+                assertTrue("The highlighted control must actually be visible: $title", highlightPixels >= 12)
                 return
             }
             SystemClock.sleep(100)

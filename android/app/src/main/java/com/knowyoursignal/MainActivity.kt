@@ -1,8 +1,10 @@
 package com.knowyoursignal
 
+import android.content.res.Configuration
 import android.os.Bundle
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
+import com.facebook.react.bridge.LifecycleEventListener
 import com.facebook.react.defaults.DefaultReactActivityDelegate
 import com.swmansion.rnscreens.fragment.restoration.RNScreensFragmentFactory
 
@@ -11,6 +13,14 @@ class MainActivity : ReactActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     supportFragmentManager.fragmentFactory = RNScreensFragmentFactory()
     super.onCreate(savedInstanceState)
+  }
+
+  override fun onConfigurationChanged(newConfig: Configuration) {
+    super.onConfigurationChanged(newConfig)
+    // Preserve the current form/tour while RN updates text layout. Also refresh
+    // the fontScale delivered to JavaScript without waiting for another resume.
+    val deviceInfo = reactHost?.currentReactContext?.getNativeModule("DeviceInfo")
+    (deviceInfo as? LifecycleEventListener)?.onHostResume()
   }
 
   /**

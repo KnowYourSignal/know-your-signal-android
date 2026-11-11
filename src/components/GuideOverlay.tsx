@@ -3,6 +3,7 @@ import {
   AccessibilityInfo,
   Animated,
   BackHandler,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -10,6 +11,7 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   guideCardLayout,
@@ -27,6 +29,22 @@ import { nextGuideFrame } from './GuideTarget';
 import { useReducedMotion } from './Motion';
 import { Button } from './UI';
 import { MOTION, useAnimatedPresence } from './useAnimatedPresence';
+
+const GUIDE_DIM = 'rgba(15, 30, 55, 0.76)';
+
+function SpotlightCorner({
+  style,
+}: {
+  style: React.ComponentProps<typeof Animated.View>['style'];
+}) {
+  return (
+    <Animated.View style={[s.corner, style]}>
+      <Svg width={12} height={12} viewBox="0 0 12 12">
+        <Path d="M0 0H12A12 12 0 0 0 0 12Z" fill={GUIDE_DIM} />
+      </Svg>
+    </Animated.View>
+  );
+}
 
 export function GuideSurface({ children }: React.PropsWithChildren) {
   const root = useRef<React.ComponentRef<typeof View>>(null);
@@ -68,6 +86,8 @@ function GuideOverlay({
   const [missing, setMissing] = useState(false);
   const [retry, setRetry] = useState(0);
   const [cardReady, setCardReady] = useState(false);
+  const [revealed, setRevealed] = useState(false);
+  const [moving, setMoving] = useState(false);
   const cardProgress = useRef(new Animated.Value(0)).current;
   const copyProgress = useRef(new Animated.Value(0)).current;
   const travelProgress = useRef(new Animated.Value(1)).current;
@@ -89,12 +109,16 @@ function GuideOverlay({
   );
 
   useLayoutEffect(() => {
-    if (run) copyProgress.setValue(reduced ? 1 : 0);
+    if (run) {
+      copyProgress.setValue(reduced ? 1 : 0);
+      setRevealed(false);
+    }
   }, [run, reduced, copyProgress]);
 
   useEffect(() => {
     if (!present) {
       setCardReady(false);
+      setRevealed(false);
       setRect(null);
       setWorking(true);
       cardProgress.setValue(0);
@@ -104,6 +128,7 @@ function GuideOverlay({
     if (reduced || !foreground) {
       cardProgress.setValue(1);
       copyProgress.setValue(1);
+      setRevealed(true);
       return;
     }
     const animation = Animated.parallel([
@@ -122,8 +147,14 @@ function GuideOverlay({
         isInteraction: false,
       }),
     ]);
-    animation.start();
-    return () => animation.stop();
+    let cancelled = false;
+    animation.start(({ finished }) => {
+      if (finished && !cancelled) setRevealed(true);
+    });
+    return () => {
+      cancelled = true;
+      animation.stop();
+    };
   }, [
     present,
     cardReady,
@@ -202,6 +233,7 @@ function GuideOverlay({
   useEffect(() => {
     if (!present) {
       hadTarget.current = false;
+      setMoving(false);
       return;
     }
     // The balloon travels on the UI thread. Geometry-only dimmer panels use
@@ -223,9 +255,11 @@ function GuideOverlay({
       values.forEach(([value, next]) => value.setValue(next));
       hadTarget.current = !!rect;
       travelProgress.setValue(1);
+      setMoving(false);
       return;
     }
     travelProgress.setValue(0);
+    setMoving(true);
     const animation = Animated.parallel([
       Animated.timing(travelProgress, {
         toValue: 1,
@@ -244,8 +278,14 @@ function GuideOverlay({
         }),
       ),
     ]);
-    animation.start();
-    return () => animation.stop();
+    let cancelled = false;
+    animation.start(({ finished }) => {
+      if (finished && !cancelled) setMoving(false);
+    });
+    return () => {
+      cancelled = true;
+      animation.stop();
+    };
   }, [
     present,
     reduced,
@@ -262,21 +302,19 @@ function GuideOverlay({
   ]);
 
   useEffect(() => {
-    if (!run || working) return;
-    const timer = setTimeout(
-      () => {
-        if (title.current)
-          AccessibilityInfo.sendAccessibilityEvent(title.current, 'focus');
-      },
-      reduced ? 0 : MOTION.travel,
-    );
-    return () => clearTimeout(timer);
-  }, [run, working, reduced]);
+    if (!run || working || moving || !revealed) return;
+    const frame = requestAnimationFrame(() => {
+      if (title.current)
+        AccessibilityInfo.sendAccessibilityEvent(title.current, 'focus');
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [run, working, moving, revealed]);
 
   if (!present || !displayed || !step) return null;
   const count = GUIDE_STEPS[displayed.scope].length;
   const right = Animated.add(spotlight.x, spotlight.width);
   const bottom = Animated.add(spotlight.y, spotlight.height);
+  const controlsReady = !working && !moving && revealed;
   return (
     <Animated.View
       style={[s.overlay, { opacity: progress }]}
@@ -320,6 +358,28 @@ function GuideOverlay({
             ]}
           />
           <Animated.View style={[s.dim, s.dimBottom, { top: bottom }]} />
+          <SpotlightCorner style={{ left: spotlight.x, top: spotlight.y }} />
+          <SpotlightCorner
+            style={[
+              s.cornerRight,
+              { left: Animated.subtract(right, 12), top: spotlight.y },
+            ]}
+          />
+          <SpotlightCorner
+            style={[
+              s.cornerBottom,
+              {
+                left: Animated.subtract(right, 12),
+                top: Animated.subtract(bottom, 12),
+              },
+            ]}
+          />
+          <SpotlightCorner
+            style={[
+              s.cornerLeft,
+              { left: spotlight.x, top: Animated.subtract(bottom, 12) },
+            ]}
+          />
           <Animated.View
             style={[
               s.outline,
@@ -433,7 +493,7 @@ function GuideOverlay({
               <Button
                 label="Anterior"
                 kind="secondary"
-                disabled={working}
+                disabled={!controlsReady}
                 onPress={() => move(-1)}
                 style={s.footerButton}
               />
@@ -442,7 +502,7 @@ function GuideOverlay({
               label={
                 displayed.index === count - 1 ? 'Finalizar guía' : 'Siguiente'
               }
-              busy={working}
+              busy={!controlsReady}
               onPress={() => move(1)}
               style={s.footerButton}
             />
@@ -460,7 +520,11 @@ const s = StyleSheet.create({
   dimLeft: { left: 0 },
   dimRight: { right: 0 },
   dimBottom: { left: 0, right: 0, bottom: 0 },
-  dim: { position: 'absolute', backgroundColor: 'rgba(15, 30, 55, 0.76)' },
+  dim: { position: 'absolute', backgroundColor: GUIDE_DIM },
+  corner: { position: 'absolute', width: 12, height: 12 },
+  cornerRight: { transform: [{ rotate: '90deg' }] },
+  cornerBottom: { transform: [{ rotate: '180deg' }] },
+  cornerLeft: { transform: [{ rotate: '270deg' }] },
   outline: {
     position: 'absolute',
     borderWidth: 2,
@@ -492,8 +556,9 @@ const s = StyleSheet.create({
     borderColor: '#B8CBF5',
     padding: 17,
     gap: 12,
-    elevation: 16,
-    boxShadow: '0 12px 36px rgba(10, 27, 57, 0.24)',
+    elevation:
+      Platform.OS === 'android' && Number(Platform.Version) < 28 ? 8 : 0,
+    boxShadow: '0 8px 24px rgba(10, 27, 57, 0.16)',
   },
   header: {
     flexDirection: 'row',
