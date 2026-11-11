@@ -1,0 +1,416 @@
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import {
+  AccessibilityInfo,
+  Animated,
+  BackHandler,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  guideCardLayout,
+  localGuideRect,
+  type GuideRect,
+} from '../domain/GuideLayout';
+import { useAppForeground } from '../services/useAppForeground';
+import { measureGuideView, useGuide } from '../state/GuideContext';
+import { GUIDE_STEPS } from '../state/GuideSteps';
+import { COLORS } from '../theme/theme';
+import { globalStyles as g } from '../theme/globalStyles';
+import { Icon } from './Icon';
+import { nextGuideFrame } from './GuideTarget';
+import { useReducedMotion } from './Motion';
+import { Button } from './UI';
+import { MOTION, useAnimatedPresence } from './useAnimatedPresence';
+
+export function GuideSurface({ children }: React.PropsWithChildren) {
+  const root = useRef<React.ComponentRef<typeof View>>(null);
+  const { active } = useGuide();
+  return (
+    <View ref={root} collapsable={false} style={s.root}>
+      <View
+        style={s.root}
+        accessibilityElementsHidden={active}
+        importantForAccessibility={active ? 'no-hide-descendants' : 'auto'}
+      >
+        {children}
+      </View>
+      <GuideOverlay root={root} />
+    </View>
+  );
+}
+
+function GuideOverlay({
+  root,
+}: {
+  root: React.RefObject<React.ComponentRef<typeof View> | null>;
+}) {
+  const { run, anchor, move, finish } = useGuide();
+  const reduced = useReducedMotion();
+  const foreground = useAppForeground();
+  const { width, height, fontScale } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const { present, progress } = useAnimatedPresence(!!run);
+  const retained = useRef(run);
+  useLayoutEffect(() => {
+    if (run) retained.current = run;
+  }, [run]);
+  const displayed = run ?? retained.current;
+  const step = displayed ? GUIDE_STEPS[displayed.scope][displayed.index] : null;
+  const [rect, setRect] = useState<GuideRect | null>(null);
+  const [cardHeight, setCardHeight] = useState(260);
+  const [working, setWorking] = useState(true);
+  const [missing, setMissing] = useState(false);
+  const [retry, setRetry] = useState(0);
+  const title = useRef<React.ComponentRef<typeof Text>>(null);
+  const contentScroll = useRef<React.ComponentRef<typeof ScrollView>>(null);
+  const position = useRef(new Animated.ValueXY({ x: 16, y: 120 })).current;
+  const spotlight = useRef({
+    x: new Animated.Value(16),
+    y: new Animated.Value(120),
+    width: new Animated.Value(0),
+    height: new Animated.Value(0),
+  }).current;
+  const hadTarget = useRef(false);
+  const layout = guideCardLayout(
+    rect,
+    { x: 0, y: 0, width, height, top: insets.top, bottom: insets.bottom },
+    cardHeight,
+  );
+
+  useEffect(() => {
+    if (!run) return;
+    const subscription = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => {
+        finish();
+        return true;
+      },
+    );
+    return () => subscription.remove();
+  }, [run, finish]);
+
+  useEffect(() => {
+    if (!run || !foreground) return;
+    let cancelled = false;
+    setWorking(true);
+    setMissing(false);
+    const targetId = GUIDE_STEPS[run.scope][run.index].target;
+    async function locate() {
+      // A tab may mount lazily. Wait for its anchor and native navigation to settle.
+      for (let attempt = 0; attempt < 75 && !cancelled; attempt += 1) {
+        await nextGuideFrame();
+        const target = anchor(targetId);
+        if (!target || attempt < 10) continue;
+        await target.reveal();
+        if (cancelled) return;
+        const [targetRect, rootRect] = await Promise.all([
+          target.measure(),
+          measureGuideView(root.current),
+        ]);
+        if (cancelled) return;
+        const next =
+          targetRect && rootRect ? localGuideRect(targetRect, rootRect) : null;
+        if (!next) continue;
+        setRect(next);
+        setWorking(false);
+        contentScroll.current?.scrollTo({ y: 0, animated: false });
+        return;
+      }
+      if (!cancelled) {
+        setRect(null);
+        setMissing(true);
+        setWorking(false);
+      }
+    }
+    locate();
+    return () => {
+      cancelled = true;
+    };
+  }, [run, foreground, width, height, fontScale, retry, anchor, root]);
+
+  useEffect(() => {
+    if (!present) {
+      hadTarget.current = false;
+      return;
+    }
+    const values: [Animated.Value, number][] = [
+      [position.x, layout.x],
+      [position.y, layout.y],
+      [spotlight.x, rect?.x ?? 0],
+      [spotlight.y, rect?.y ?? 0],
+      [spotlight.width, rect?.width ?? 0],
+      [spotlight.height, rect?.height ?? 0],
+    ];
+    if (reduced || !hadTarget.current || !foreground) {
+      values.forEach(([value, next]) => value.setValue(next));
+      hadTarget.current = !!rect;
+      return;
+    }
+    const animation = Animated.parallel(
+      values.map(([value, next]) =>
+        Animated.timing(value, {
+          toValue: next,
+          duration: MOTION.travel,
+          easing: MOTION.easing,
+          useNativeDriver: false,
+          isInteraction: false,
+        }),
+      ),
+    );
+    animation.start();
+    return () => animation.stop();
+  }, [
+    present,
+    reduced,
+    foreground,
+    rect,
+    layout.x,
+    layout.y,
+    position,
+    spotlight,
+  ]);
+
+  useEffect(() => {
+    if (!run || working) return;
+    const timer = setTimeout(
+      () => {
+        if (title.current)
+          AccessibilityInfo.sendAccessibilityEvent(title.current, 'focus');
+      },
+      reduced ? 0 : MOTION.travel,
+    );
+    return () => clearTimeout(timer);
+  }, [run, working, reduced]);
+
+  if (!present || !displayed || !step) return null;
+  const count = GUIDE_STEPS[displayed.scope].length;
+  const right = Animated.add(spotlight.x, spotlight.width);
+  const bottom = Animated.add(spotlight.y, spotlight.height);
+  return (
+    <Animated.View
+      style={[s.overlay, { opacity: progress }]}
+      accessibilityViewIsModal
+      importantForAccessibility="yes"
+      pointerEvents={run ? 'auto' : 'none'}
+    >
+      <Pressable
+        style={StyleSheet.absoluteFill}
+        accessible={false}
+        importantForAccessibility="no-hide-descendants"
+        onPress={() => {}}
+      />
+      {rect ? (
+        <View
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+          importantForAccessibility="no-hide-descendants"
+        >
+          <Animated.View style={[s.dim, s.dimTop, { height: spotlight.y }]} />
+          <Animated.View
+            style={[
+              s.dim,
+              s.dimLeft,
+              {
+                top: spotlight.y,
+                width: spotlight.x,
+                height: spotlight.height,
+              },
+            ]}
+          />
+          <Animated.View
+            style={[
+              s.dim,
+              s.dimRight,
+              {
+                top: spotlight.y,
+                left: right,
+                height: spotlight.height,
+              },
+            ]}
+          />
+          <Animated.View style={[s.dim, s.dimBottom, { top: bottom }]} />
+          <Animated.View
+            style={[
+              s.outline,
+              {
+                top: spotlight.y,
+                left: spotlight.x,
+                width: spotlight.width,
+                height: spotlight.height,
+              },
+            ]}
+          />
+        </View>
+      ) : (
+        <View style={[StyleSheet.absoluteFill, s.dim]} pointerEvents="none" />
+      )}
+      <Animated.View
+        onLayout={event => {
+          const next = event.nativeEvent.layout.height;
+          if (Math.abs(cardHeight - next) > 1) setCardHeight(next);
+        }}
+        style={[
+          s.card,
+          {
+            width: layout.width,
+            maxHeight: layout.maxHeight,
+            transform: [
+              { translateX: position.x },
+              { translateY: position.y },
+              {
+                scale: progress.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.975, 1],
+                }),
+              },
+            ],
+          },
+        ]}
+      >
+        {layout.pointer && !working && (
+          <View
+            pointerEvents="none"
+            style={[
+              s.arrow,
+              { left: layout.arrowX - 7 },
+              layout.side === 'below' ? s.arrowTop : s.arrowBottom,
+            ]}
+          />
+        )}
+        <View style={s.header}>
+          <View style={s.guideIcon}>
+            <Icon name="info" size={19} />
+          </View>
+          <Text style={s.eyebrow}>
+            GUÍA · {displayed.index + 1} DE {count}
+          </Text>
+          <Button label="Omitir" kind="quiet" onPress={finish} style={s.skip} />
+        </View>
+        <ScrollView
+          ref={contentScroll}
+          style={s.copyScroll}
+          contentContainerStyle={s.copy}
+        >
+          <Text ref={title} accessibilityRole="header" style={s.title}>
+            {step.title}
+          </Text>
+          <Text style={g.body}>{step.body}</Text>
+          {working && (
+            <Text accessibilityLiveRegion="polite" style={g.caption}>
+              Ubicando el siguiente control…
+            </Text>
+          )}
+          {missing && (
+            <>
+              <Text style={g.caption}>
+                No pudimos señalar este control. Puedes reintentar o seguir el
+                recorrido.
+              </Text>
+              <Button
+                label="Volver a señalar"
+                kind="secondary"
+                onPress={() => setRetry(value => value + 1)}
+              />
+            </>
+          )}
+        </ScrollView>
+        <View style={s.footer}>
+          {displayed.index > 0 && (
+            <Button
+              label="Anterior"
+              kind="secondary"
+              disabled={working}
+              onPress={() => move(-1)}
+              style={s.footerButton}
+            />
+          )}
+          <Button
+            label={
+              displayed.index === count - 1 ? 'Finalizar guía' : 'Siguiente'
+            }
+            disabled={working}
+            onPress={() => move(1)}
+            style={s.footerButton}
+          />
+        </View>
+      </Animated.View>
+    </Animated.View>
+  );
+}
+
+const s = StyleSheet.create({
+  root: { flex: 1 },
+  overlay: { ...StyleSheet.absoluteFill, zIndex: 1000, elevation: 30 },
+  dimTop: { top: 0, left: 0, right: 0 },
+  dimLeft: { left: 0 },
+  dimRight: { right: 0 },
+  dimBottom: { left: 0, right: 0, bottom: 0 },
+  dim: { position: 'absolute', backgroundColor: 'rgba(15, 30, 55, 0.76)' },
+  outline: {
+    position: 'absolute',
+    borderWidth: 2,
+    borderColor: '#A5C2FF',
+    borderRadius: 12,
+  },
+  card: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    backgroundColor: COLORS.cardBg,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#B8CBF5',
+    padding: 17,
+    gap: 12,
+    elevation: 16,
+    boxShadow: '0 12px 36px rgba(10, 27, 57, 0.24)',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  guideIcon: {
+    width: 30,
+    height: 30,
+    borderRadius: 11,
+    backgroundColor: COLORS.assistantGlow,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  eyebrow: {
+    flex: 1,
+    fontSize: 11,
+    letterSpacing: 1.1,
+    fontWeight: '800',
+    color: COLORS.primary,
+  },
+  skip: { minHeight: 44, paddingHorizontal: 8, paddingVertical: 4 },
+  copyScroll: { flexGrow: 0, flexShrink: 1 },
+  copy: { gap: 8, paddingBottom: 2 },
+  title: {
+    fontSize: 20,
+    lineHeight: 25,
+    color: COLORS.navy,
+    fontWeight: '800',
+    letterSpacing: -0.4,
+  },
+  footer: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  footerButton: { flexGrow: 1, flexBasis: 110, paddingHorizontal: 10 },
+  arrow: {
+    position: 'absolute',
+    width: 14,
+    height: 14,
+    backgroundColor: COLORS.cardBg,
+    transform: [{ rotate: '45deg' }],
+    borderColor: '#B8CBF5',
+  },
+  arrowTop: { top: -8, borderTopWidth: 1, borderLeftWidth: 1 },
+  arrowBottom: { bottom: -8, borderBottomWidth: 1, borderRightWidth: 1 },
+});

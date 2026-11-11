@@ -15,6 +15,12 @@ class PermissionsJourneyTest {
         val before = ui.database.measurements().counts().total
         ui.launch()
         ui.find(By.text("Medir señal"))
+        assertEquals("This scenario starts with location denied", android.content.pm.PackageManager.PERMISSION_DENIED,
+            androidx.core.content.ContextCompat.checkSelfPermission(ui.context, android.Manifest.permission.ACCESS_FINE_LOCATION))
+        java.io.File(ui.output, "permission-denial-state.json").writeText(org.json.JSONObject()
+            .put("synthetic", true)
+            .put("fine_before", androidx.core.content.ContextCompat.checkSelfPermission(ui.context, android.Manifest.permission.ACCESS_FINE_LOCATION))
+            .put("coarse_before", androidx.core.content.ContextCompat.checkSelfPermission(ui.context, android.Manifest.permission.ACCESS_COARSE_LOCATION)).toString(2))
         ui.action("Activar sensores")
         ui.find(By.res(Pattern.compile(".*:id/permission_deny_button"))).click()
         ui.find(By.desc("Activar sensores"))

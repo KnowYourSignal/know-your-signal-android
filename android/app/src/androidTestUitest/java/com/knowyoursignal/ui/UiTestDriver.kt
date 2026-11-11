@@ -36,7 +36,13 @@ internal class UiTestDriver {
         output.mkdirs()
     }
 
-    fun launch() {
+    fun launch(showGuides: Boolean = false) {
+        if (!showGuides) {
+            // Independent capture/map/export phases exercise their own responsibilities.
+            // GuideJourneyTest deliberately enables and walks both production tours.
+            check(context.getSharedPreferences("fieldwork_ui", 0).edit()
+                .putBoolean("guide_overview_v1", true).putBoolean("guide_room_v1", true).commit())
+        }
         context.startActivity(Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
 
@@ -124,13 +130,20 @@ internal class UiTestDriver {
         val running = AtomicBoolean(true)
         val thread = Thread {
             while (running.get()) {
-                manager.setTestProviderLocation(provider, Location(provider).apply {
+                val fix = Location(provider).apply {
                     latitude = latitudeValue
                     longitude = longitudeValue
                     accuracy = accuracyM
                     time = System.currentTimeMillis()
                     elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
-                })
+                }
+                if (network && android.os.Build.VERSION.SDK_INT <= 29) {
+                    // Android 10's coarse cache requires the network-only fix in
+                    // EXTRA_NO_GPS_LOCATION (AOSP LocationManagerService#getLastLocation).
+                    // This belongs only to the emulator fixture, not to production data.
+                    fix.extras = android.os.Bundle().apply { putParcelable("noGPSLocation", Location(fix)) }
+                }
+                manager.setTestProviderLocation(provider, fix)
                 SystemClock.sleep(250)
             }
         }.apply { isDaemon = true; start() }

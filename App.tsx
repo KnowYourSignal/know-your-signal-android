@@ -1,12 +1,17 @@
 import React from 'react';
 import {
+  Easing,
   StatusBar,
   StyleSheet,
   Text,
   View,
   useWindowDimensions,
 } from 'react-native';
-import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
+import {
+  DefaultTheme,
+  NavigationContainer,
+  createNavigationContainerRef,
+} from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import {
@@ -14,6 +19,8 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 
+import { GuideSurface } from './src/components/GuideOverlay';
+import { GuideProvider } from './src/state/GuideContext';
 import { Icon, type IconName } from './src/components/Icon';
 import { MotionProvider, useReducedMotion } from './src/components/Motion';
 import { BrandHeader, StatePanel } from './src/components/UI';
@@ -28,6 +35,8 @@ import { PersonalMapScreen } from './src/screens/PersonalMapScreen';
 import { PublicMapScreen } from './src/screens/PublicMapScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
 import { fieldworkAvailable } from './src/services/LocalRepositoryAdapter';
+
+const navigationRef = createNavigationContainerRef<RootParamList>();
 
 const Stack = createNativeStackNavigator<RootParamList>();
 const Tab = createBottomTabNavigator<MainTabsParamList>();
@@ -76,6 +85,14 @@ function MainTabs() {
       screenOptions={({ route }) => ({
         header: BrandHeader,
         animation: reduced ? 'none' : 'fade',
+        transitionSpec: {
+          animation: 'timing',
+          config: {
+            duration: reduced ? 0 : 240,
+            easing: Easing.out(Easing.cubic),
+          },
+        },
+        sceneStyle: { backgroundColor: COLORS.surface },
         tabBarActiveTintColor: COLORS.primary,
         tabBarInactiveTintColor: COLORS.textMuted,
         tabBarStyle: [styles.tabBar, { height: tabHeight + bottom }],
@@ -142,26 +159,37 @@ function AppNavigator() {
   }
 
   return (
-    <NavigationContainer theme={navigationTheme}>
-      <Stack.Navigator
-        screenOptions={{
-          headerShown: false,
-          animation: reduced ? 'none' : 'fade_from_bottom',
+    <NavigationContainer ref={navigationRef} theme={navigationTheme}>
+      <GuideProvider
+        navigate={tab => {
+          if (navigationRef.isReady())
+            navigationRef.navigate('MainTabs', { screen: tab });
         }}
       >
-        {status.choice === 'undecided' ? (
-          <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-        ) : (
-          <>
-            <Stack.Screen name="MainTabs" component={MainTabs} />
-            <Stack.Screen
-              name="Floor"
-              component={FloorScreen}
-              options={{ headerShown: true, header: BrandHeader }}
-            />
-          </>
-        )}
-      </Stack.Navigator>
+        <GuideSurface>
+          <Stack.Navigator
+            screenOptions={{
+              headerShown: false,
+              animation: reduced ? 'none' : 'fade_from_bottom',
+              animationTypeForReplace: 'push',
+              contentStyle: { backgroundColor: COLORS.surface },
+            }}
+          >
+            {status.choice === 'undecided' ? (
+              <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+            ) : (
+              <>
+                <Stack.Screen name="MainTabs" component={MainTabs} />
+                <Stack.Screen
+                  name="Floor"
+                  component={FloorScreen}
+                  options={{ headerShown: true, header: BrandHeader }}
+                />
+              </>
+            )}
+          </Stack.Navigator>
+        </GuideSurface>
+      </GuideProvider>
     </NavigationContainer>
   );
 }

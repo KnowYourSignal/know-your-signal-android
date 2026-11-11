@@ -93,6 +93,7 @@ export function PrivacySettings() {
       <Dialog
         title={decision ? 'Aportar a la comunidad' : 'Detener aportes futuros'}
         visible={decision !== null}
+        dismissible={!busy}
         onClose={close}
       >
         <Text style={g.body}>

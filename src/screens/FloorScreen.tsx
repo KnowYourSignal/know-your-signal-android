@@ -1,9 +1,9 @@
+import { GuideScrollView, GuideTarget } from '../components/GuideTarget';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -34,6 +34,7 @@ import {
 } from '../domain/Measurement';
 import { fieldwork } from '../services/LocalRepositoryAdapter';
 import type { RecentRoom, SavedMeasurement } from '../specs/NativeFieldwork';
+import { useAutoGuide, useGuide } from '../state/GuideContext';
 import { useSettings } from '../state/SettingsContext';
 import type { RootParamList } from '../state/WizardState';
 import { COLORS } from '../theme/theme';
@@ -44,6 +45,7 @@ export function FloorScreen({
   route,
 }: NativeStackScreenProps<RootParamList, 'Floor'>) {
   const { status, refresh } = useSettings();
+  const guide = useGuide();
   const { capture } = route.params;
   const [floor, setFloor] = useState('');
   const [zone, setZone] = useState<ZoneSize | null>(null);
@@ -53,7 +55,10 @@ export function FloorScreen({
   const [recentRoom, setRecentRoom] = useState<RecentRoom | null>(null);
   const [connectionChoice, setConnectionChoice] = useState<string | null>(null);
   const saving = useRef(false);
+  const [savedVisible, setSavedVisible] = useState(false);
+  const destination = useRef<'measure' | 'history'>('measure');
   const level = parseFloor(floor);
+  useAutoGuide('room', !busy && !saved);
 
   useEffect(() => {
     let active = true;
@@ -101,6 +106,7 @@ export function FloorScreen({
         connectionChoice,
       );
       setSaved(measurement);
+      setSavedVisible(true);
       refresh();
     } catch (problem) {
       setError(
@@ -131,16 +137,27 @@ export function FloorScreen({
         style={g.screen}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView
+        <GuideScrollView
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={g.content}
         >
           <Reveal style={s.layout}>
-            <ScreenTitle
-              eyebrow="02 / 02 · RECINTO"
-              title="Completar captura"
-              subtitle="Indica dónde tomaste esta medición."
-            />
+            <View style={s.heading}>
+              <View style={s.grow}>
+                <ScreenTitle
+                  eyebrow="02 / 02 · RECINTO"
+                  title="Completar captura"
+                  subtitle="Indica dónde tomaste esta medición."
+                />
+              </View>
+              <Button
+                label="Guía"
+                kind="secondary"
+                icon="info"
+                disabled={busy || !!saved}
+                onPress={() => guide.start('room')}
+              />
+            </View>
             <ProgressSteps count={2} current={1} />
             <View style={g.card}>
               <StatusPill label="Muestra capturada" tone="green" />
@@ -203,30 +220,36 @@ export function FloorScreen({
               </View>
             )}
             <View style={g.card}>
-              <FloorSelector
-                value={floor}
-                onChange={setFloor}
-                editable={!busy && !saved}
-              />
+              <GuideTarget id="floor">
+                <FloorSelector
+                  value={floor}
+                  onChange={setFloor}
+                  editable={!busy && !saved}
+                />
+              </GuideTarget>
               <View style={g.divider} />
-              <ZoneSizeSelector
-                value={zone}
-                onChange={setZone}
-                disabled={busy || !!saved}
-              />
+              <GuideTarget id="zone">
+                <ZoneSizeSelector
+                  value={zone}
+                  onChange={setZone}
+                  disabled={busy || !!saved}
+                />
+              </GuideTarget>
             </View>
             {error && (
               <Text accessibilityLiveRegion="polite" style={s.error}>
                 {error}
               </Text>
             )}
-            <Button
-              label={busy ? 'Guardando captura' : 'Guardar medición'}
-              icon="check"
-              busy={busy}
-              disabled={level === null || zone === null || !!saved}
-              onPress={() => save()}
-            />
+            <GuideTarget id="save">
+              <Button
+                label={busy ? 'Guardando captura' : 'Guardar medición'}
+                icon="check"
+                busy={busy}
+                disabled={level === null || zone === null || !!saved}
+                onPress={() => save()}
+              />
+            </GuideTarget>
             <Button
               label="Volver a Medir"
               kind="quiet"
@@ -235,11 +258,15 @@ export function FloorScreen({
               onPress={() => navigation.goBack()}
             />
           </Reveal>
-        </ScrollView>
+        </GuideScrollView>
         <Dialog
           title="Medición guardada"
-          visible={saved !== null}
-          onClose={() => navigation.goBack()}
+          visible={savedVisible}
+          onClose={() => setSavedVisible(false)}
+          onAfterClose={() => {
+            if (destination.current === 'history') openHistory();
+            else navigation.goBack();
+          }}
         >
           <StatePanel
             icon="check"
@@ -250,11 +277,18 @@ export function FloorScreen({
                 : 'Tu captura quedó guardada en el historial de este teléfono.'
             }
           />
-          <Button label="Ver mi historial" icon="map" onPress={openHistory} />
+          <Button
+            label="Ver mi historial"
+            icon="map"
+            onPress={() => {
+              destination.current = 'history';
+              setSavedVisible(false);
+            }}
+          />
           <Button
             label="Medir otra vez"
             kind="secondary"
-            onPress={() => navigation.goBack()}
+            onPress={() => setSavedVisible(false)}
           />
         </Dialog>
       </KeyboardAvoidingView>
@@ -263,6 +297,8 @@ export function FloorScreen({
 }
 
 const s = StyleSheet.create({
+  heading: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
+  grow: { flex: 1 },
   layout: { gap: 14 },
   choices: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   error: { color: COLORS.danger, fontSize: 13 },

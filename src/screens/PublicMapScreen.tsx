@@ -1,8 +1,8 @@
+import { LoadingMark } from '../components/LoadingMark';
+import { GuideScrollView, GuideTarget } from '../components/GuideTarget';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   Linking,
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -182,7 +182,7 @@ export function PublicMapScreen() {
   const floor = floorEdit === null ? null : parseFloor(floorEdit);
 
   return (
-    <ScrollView
+    <GuideScrollView
       style={g.screen}
       contentContainerStyle={g.content}
       nestedScrollEnabled
@@ -193,7 +193,7 @@ export function PublicMapScreen() {
           title="Mapa comunitario"
           subtitle="Explora niveles de señal agrupados por zona y piso."
         />
-        <View style={s.filters}>
+        <GuideTarget id="community" style={s.filters}>
           <Chip
             label={floorLabel(filters.floor) + ' ▾'}
             selected
@@ -210,7 +210,7 @@ export function PublicMapScreen() {
               }}
             />
           ))}
-        </View>
+        </GuideTarget>
         {filters.metric === 'wifi_rssi' && (
           <View style={s.filters}>
             <Chip
@@ -347,7 +347,7 @@ export function PublicMapScreen() {
 
         {loading ? (
           <View style={[g.card, g.row]}>
-            <ActivityIndicator color={COLORS.primary} />
+            <LoadingMark icon="globe" label="Cargando celdas" />
             <View style={s.grow}>
               <Text style={g.sectionTitle}>Cargando celdas</Text>
               <Text style={g.caption}>
@@ -478,7 +478,7 @@ export function PublicMapScreen() {
           }}
         />
       </Dialog>
-    </ScrollView>
+    </GuideScrollView>
   );
 }
 

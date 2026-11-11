@@ -29,6 +29,19 @@ internal class FieldworkModule(private val context: ReactApplicationContext) : N
     private val preferences by lazy { context.getSharedPreferences("fieldwork_ui", Context.MODE_PRIVATE) }
     private val config = SyncConfig.load()
 
+    override fun getGuideStatus(promise: Promise) = run(promise) {
+        Arguments.createMap().apply {
+            putBoolean("overview", preferences.getBoolean("guide_overview_v1", false))
+            putBoolean("room", preferences.getBoolean("guide_room_v1", false))
+        }
+    }
+
+    override fun markGuideSeen(scope: String, promise: Promise) = run(promise) {
+        if (scope !in setOf("overview", "room")) throw CaptureException("INVALID_GUIDE")
+        check(preferences.edit().putBoolean("guide_${scope}_v1", true).commit())
+        null
+    }
+
     override fun getStatus(promise: Promise) = run(promise) { status() }
 
     override fun setConsent(enabled: Boolean, promise: Promise) = run(promise) {

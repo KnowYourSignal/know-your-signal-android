@@ -1,11 +1,13 @@
+import { GuideScrollView, GuideTarget } from '../components/GuideTarget';
 import React, { useCallback, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { StyleSheet, Switch, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Icon } from '../components/Icon';
 import { Reveal } from '../components/Motion';
 import { PrivacySettings } from '../components/PrivacySettings';
 import { Button, ScreenTitle, StatePanel, StatusPill } from '../components/UI';
 import { fieldwork } from '../services/LocalRepositoryAdapter';
+import { useGuide } from '../state/GuideContext';
 import { useSettings } from '../state/SettingsContext';
 import { COLORS } from '../theme/theme';
 import { globalStyles as g } from '../theme/globalStyles';
@@ -29,6 +31,7 @@ const problemText: Record<string, string> = {
 };
 
 export function SettingsScreen() {
+  const guide = useGuide();
   const { status, loadError, refresh, setTechnicalMode } = useSettings();
   const [updating, setUpdating] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -78,7 +81,7 @@ export function SettingsScreen() {
   }
 
   return (
-    <ScrollView style={g.screen} contentContainerStyle={g.content}>
+    <GuideScrollView style={g.screen} contentContainerStyle={g.content}>
       <Reveal style={s.layout}>
         <ScreenTitle
           eyebrow="PREFERENCIAS"
@@ -95,27 +98,30 @@ export function SettingsScreen() {
             />
           </View>
         )}
-        <View style={g.card}>
-          <View style={g.row}>
-            <Icon name="signal" size={23} />
-            <View style={s.copy}>
-              <Text style={g.sectionTitle}>Modo técnico</Text>
-              <Text style={g.caption}>
-                Muestra potencia en dBm en lugar de niveles de señal.
-              </Text>
+        <GuideTarget id="technical">
+          <View style={g.card}>
+            <View style={g.row}>
+              <Icon name="signal" size={23} />
+              <View style={s.copy}>
+                <Text style={g.sectionTitle}>Modo técnico</Text>
+                <Text style={g.caption}>
+                  Muestra potencia en dBm en lugar de niveles de señal.
+                </Text>
+              </View>
+              <Switch
+                accessibilityLabel="Modo técnico"
+                value={status?.technicalMode ?? false}
+                disabled={updating}
+                onValueChange={toggle}
+                trackColor={{ false: COLORS.border, true: COLORS.primary }}
+                thumbColor={COLORS.cardBg}
+              />
             </View>
-            <Switch
-              accessibilityLabel="Modo técnico"
-              value={status?.technicalMode ?? false}
-              disabled={updating}
-              onValueChange={toggle}
-              trackColor={{ false: COLORS.border, true: COLORS.primary }}
-              thumbColor={COLORS.cardBg}
-            />
           </View>
-        </View>
-
-        <PrivacySettings />
+        </GuideTarget>
+        <GuideTarget id="privacy">
+          <PrivacySettings />
+        </GuideTarget>
 
         <View style={g.card}>
           <View style={g.row}>
@@ -159,13 +165,28 @@ export function SettingsScreen() {
             />
           )}
         </View>
+        <View style={g.card}>
+          <View style={g.row}>
+            <Icon name="info" size={21} />
+            <Text style={g.sectionTitle}>Conoce la app</Text>
+          </View>
+          <Text style={g.body}>
+            Recorre las herramientas de medición, tus mapas y las opciones de
+            privacidad.
+          </Text>
+          <Button
+            label="Repetir guía interactiva"
+            kind="secondary"
+            onPress={() => guide.start('overview', 'Ajustes')}
+          />
+        </View>
         {feedback && (
           <Text accessibilityLiveRegion="polite" style={g.caption}>
             {feedback}
           </Text>
         )}
       </Reveal>
-    </ScrollView>
+    </GuideScrollView>
   );
 }
 

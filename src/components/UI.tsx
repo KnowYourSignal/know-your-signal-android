@@ -1,6 +1,10 @@
-import React from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Animated,
+  Easing,
+  KeyboardAvoidingView,
+  Platform,
   Modal,
   Pressable,
   ScrollView,
@@ -15,6 +19,10 @@ import { COLORS } from '../theme/theme';
 import { globalStyles as g } from '../theme/globalStyles';
 import { Icon, type IconName } from './Icon';
 import { Reveal, useReducedMotion } from './Motion';
+import { LoadingMark } from './LoadingMark';
+import { useAnimatedPresence } from './useAnimatedPresence';
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 type Tone = 'blue' | 'green' | 'amber' | 'red';
 const tones: Record<Tone, { text: string; fill: string }> = {
@@ -83,6 +91,22 @@ export function Button({
   const reduced = useReducedMotion();
   const filled = kind === 'primary' || kind === 'danger';
   const blocked = disabled || busy;
+  const pressed = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (blocked || reduced) pressed.setValue(0);
+    return () => pressed.stopAnimation();
+  }, [blocked, reduced, pressed]);
+  function press(toValue: number) {
+    if (reduced) return;
+    Animated.timing(pressed, {
+      toValue,
+      duration: toValue ? 90 : 170,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+      isInteraction: false,
+    }).start();
+  }
+  const borderColor = kind === 'secondary' ? COLORS.border : 'transparent';
   const backgroundColor = disabled
     ? COLORS.assistantGlow
     : kind === 'primary'
@@ -98,21 +122,31 @@ export function Button({
     ? COLORS.textLight
     : COLORS.primary;
   return (
-    <Pressable
+    <AnimatedPressable
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ disabled: blocked, busy }}
       disabled={blocked}
       onPress={onPress}
-      style={({ pressed }) => [
+      onPressIn={() => press(1)}
+      onPressOut={() => press(0)}
+      style={[
         s.button,
         {
           backgroundColor,
-          borderColor: kind === 'secondary' ? COLORS.border : 'transparent',
-        },
-        pressed && {
-          opacity: 0.86,
-          transform: [{ scale: reduced ? 1 : 0.985 }],
+          borderColor,
+          opacity: pressed.interpolate({
+            inputRange: [0, 1],
+            outputRange: [1, 0.86],
+          }),
+          transform: [
+            {
+              scale: pressed.interpolate({
+                inputRange: [0, 1],
+                outputRange: [1, 0.985],
+              }),
+            },
+          ],
         },
         style,
       ]}
@@ -123,7 +157,7 @@ export function Button({
         <Icon name={icon} color={foreground} size={19} />
       ) : null}
       <Text style={[s.buttonText, { color: foreground }]}>{label}</Text>
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 
@@ -187,13 +221,13 @@ export function StatePanel({
 }) {
   return (
     <Reveal style={s.statePanel}>
-      <View style={s.stateIcon}>
-        {busy ? (
-          <ActivityIndicator color={COLORS.primary} />
-        ) : (
+      {busy ? (
+        <LoadingMark icon={icon} label={title} />
+      ) : (
+        <View style={s.stateIcon}>
           <Icon name={icon} size={25} />
-        )}
-      </View>
+        </View>
+      )}
       <Text accessibilityLiveRegion="polite" style={[g.sectionTitle, s.center]}>
         {title}
       </Text>
@@ -257,55 +291,116 @@ export function Dialog({
   visible,
   title,
   onClose,
+  onAfterClose,
+  dismissible = true,
   children,
 }: React.PropsWithChildren<{
   visible: boolean;
   title: string;
   onClose: () => void;
+  onAfterClose?: () => void;
+  dismissible?: boolean;
 }>) {
-  const reduced = useReducedMotion();
   const insets = useSafeAreaInsets();
+  const [shown, setShown] = useState(false);
+  const { present, progress } = useAnimatedPresence(
+    visible,
+    onAfterClose,
+    shown,
+  );
+  useEffect(() => {
+    if (!present) setShown(false);
+  }, [present]);
+  // A parent's close can clear its selected item. Keep the last complete frame
+  // throughout the exit instead of flashing an empty dialog.
+  const retained = useRef({ title, children });
+  useLayoutEffect(() => {
+    if (visible) retained.current = { title, children };
+  }, [visible, title, children]);
+  const content = visible ? { title, children } : retained.current;
+  const close = () => {
+    if (visible && dismissible) onClose();
+  };
+  if (!present) return null;
   return (
     <Modal
-      visible={visible}
-      animationType={reduced ? 'none' : 'fade'}
+      visible
+      animationType="none"
       transparent
-      onRequestClose={onClose}
+      hardwareAccelerated
+      statusBarTranslucent
+      navigationBarTranslucent
+      onRequestClose={close}
+      onShow={() => setShown(true)}
     >
-      <View
-        style={[
-          s.scrim,
-          {
-            paddingTop: Math.max(20, insets.top),
-            paddingBottom: Math.max(20, insets.bottom),
-          },
-        ]}
-      >
-        <View accessibilityViewIsModal style={s.dialog}>
-          <View style={s.dialogHeader}>
-            <Text
-              accessibilityRole="header"
-              style={[g.sectionTitle, s.dialogTitle]}
-            >
-              {title}
-            </Text>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Cerrar"
-              onPress={onClose}
-              hitSlop={6}
-              style={s.close}
-            >
-              <Icon name="close" size={19} color={COLORS.textDark} />
-            </Pressable>
-          </View>
-          <ScrollView
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={s.dialogContent}
+      <View style={s.modalRoot}>
+        <Animated.View
+          pointerEvents="none"
+          style={[s.backdrop, { opacity: progress }]}
+        />
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={[
+            s.scrim,
+            s.clearScrim,
+            {
+              paddingTop: Math.max(20, insets.top),
+              paddingBottom: Math.max(20, insets.bottom),
+            },
+          ]}
+        >
+          <Animated.View
+            accessibilityViewIsModal
+            importantForAccessibility="yes"
+            pointerEvents={visible ? 'auto' : 'none'}
+            style={[
+              s.dialog,
+              {
+                opacity: progress,
+                transform: [
+                  {
+                    translateY: progress.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [10, 0],
+                    }),
+                  },
+                  {
+                    scale: progress.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0.975, 1],
+                    }),
+                  },
+                ],
+              },
+            ]}
           >
-            {children}
-          </ScrollView>
-        </View>
+            <View style={s.dialogHeader}>
+              <Text
+                accessibilityRole="header"
+                style={[g.sectionTitle, s.dialogTitle]}
+              >
+                {content.title}
+              </Text>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Cerrar"
+                accessibilityState={{ disabled: !dismissible }}
+                disabled={!dismissible}
+                onPress={close}
+                hitSlop={6}
+                style={[s.close, !dismissible && s.closeDisabled]}
+              >
+                <Icon name="close" size={19} color={COLORS.textDark} />
+              </Pressable>
+            </View>
+            <ScrollView
+              keyboardShouldPersistTaps="handled"
+              contentContainerStyle={s.dialogContent}
+            >
+              {content.children}
+            </ScrollView>
+          </Animated.View>
+        </KeyboardAvoidingView>
       </View>
     </Modal>
   );
@@ -334,6 +429,13 @@ export function ProgressSteps({
 }
 
 const s = StyleSheet.create({
+  modalRoot: { flex: 1 },
+  clearScrim: { backgroundColor: 'transparent' },
+  backdrop: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: COLORS.modalOverlay,
+  },
+  closeDisabled: { opacity: 0.35 },
   brand: {
     flexDirection: 'row',
     alignItems: 'center',

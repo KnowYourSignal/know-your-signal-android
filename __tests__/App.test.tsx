@@ -8,6 +8,8 @@ const mockSetConsent = jest.fn();
 jest.mock('../src/specs/NativeFieldwork', () => ({
   __esModule: true,
   default: {
+    getGuideStatus: async () => ({ overview: false, room: false }),
+    markGuideSeen: async () => {},
     getStatus: async () => ({
       choice: 'undecided',
       consentPending: false,

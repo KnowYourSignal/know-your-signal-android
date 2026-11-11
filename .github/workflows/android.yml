@@ -177,7 +177,13 @@ jobs:
           adb shell am force-stop com.knowyoursignal.uitest
           adb shell pm revoke com.knowyoursignal.uitest android.permission.ACCESS_FINE_LOCATION
           adb shell pm revoke com.knowyoursignal.uitest android.permission.ACCESS_COARSE_LOCATION
+          if [ '${{ matrix.api_level }}' -ge 30 ]; then
+            adb shell pm clear-permission-flags com.knowyoursignal.uitest android.permission.ACCESS_FINE_LOCATION user-set user-fixed
+            adb shell pm clear-permission-flags com.knowyoursignal.uitest android.permission.ACCESS_COARSE_LOCATION user-set user-fixed
+          fi
           run_ui_phase permissions PermissionsJourneyTest
+          adb shell am force-stop com.knowyoursignal.uitest
+          run_ui_phase guide GuideJourneyTest
           adb install app/build/outputs/apk/qa/app-qa.apk
           adb shell am start -n com.knowyoursignal.qa/com.knowyoursignal.MainActivity
           sleep 20

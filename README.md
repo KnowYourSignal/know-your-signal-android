@@ -28,10 +28,11 @@ Puedes usar x86_64 para generar una variante equivalente para un emulador. Si co
 
 La variante QA usa la firma de desarrollo del proyecto y está destinada a las pruebas internas del equipo. Para distribuir una versión de producción, configura la firma del equipo.
 
-La versión actual es **1.1 (código 2)**. El flujo [Android client](https://github.com/KnowYourSignal/know-your-signal-android/actions/workflows/android.yml) también construye la APK ARM64 y deja el artefacto `KnowYourSignal-QA-arm64`, con comprobación de firma, alineación de 16 KiB y SHA-256. Descarga el artefacto de una ejecución aprobada y descomprime el ZIP antes de instalar la APK. Las APK `uitest` corresponden exclusivamente a los recorridos automáticos con datos sintéticos.
+La versión actual es **1.2 (código 3)**. El flujo [Android client](https://github.com/KnowYourSignal/know-your-signal-android/actions/workflows/android.yml) también construye la APK ARM64 y deja el artefacto `KnowYourSignal-QA-arm64`, con comprobación de firma, alineación de 16 KiB y SHA-256. Descarga el artefacto de una ejecución aprobada y descomprime el ZIP antes de instalar la APK. Las APK `uitest` corresponden exclusivamente a los recorridos automáticos con datos sintéticos.
 
 ## Verificación y entrega
 
+- [Guía interactiva, animaciones y estados de lectura](docs/ux-polish.md).
 - [Resumen para el equipo y recorrido de prueba](docs/entrega-equipo.md).
 - [Diseño técnico y correspondencia con los issues](docs/architecture.md).
 - [Backend de Supabase, migraciones y contrato](supabase/README.md).

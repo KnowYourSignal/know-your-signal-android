@@ -36,7 +36,11 @@ export type MapConfiguration = {
   mapTiles: boolean;
 };
 
+export type GuideStatus = { overview: boolean; room: boolean };
+
 export interface Spec extends TurboModule {
+  getGuideStatus(): Promise<GuideStatus>;
+  markGuideSeen(scope: string): Promise<void>;
   getStatus(): Promise<FieldStatus>;
   setConsent(enabled: boolean): Promise<FieldStatus>;
   setTechnicalMode(enabled: boolean): Promise<void>;

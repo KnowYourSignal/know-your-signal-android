@@ -1,3 +1,4 @@
+import { GuideScrollView, GuideTarget } from '../components/GuideTarget';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ScrollView,
@@ -221,17 +222,19 @@ export function PersonalMapScreen({
   const mapHeight = Math.max(240, Math.min(365, height * 0.38));
 
   return (
-    <ScrollView
+    <GuideScrollView
       style={g.screen}
       contentContainerStyle={g.content}
       nestedScrollEnabled
     >
       <Reveal style={s.layout}>
-        <ScreenTitle
-          eyebrow="GUARDADO EN ESTE TELÉFONO"
-          title="Mi historial"
-          subtitle="Compara tus capturas por piso y tecnología, incluso sin conexión."
-        />
+        <GuideTarget id="history">
+          <ScreenTitle
+            eyebrow="GUARDADO EN ESTE TELÉFONO"
+            title="Mi historial"
+            subtitle="Compara tus capturas por piso y tecnología, incluso sin conexión."
+          />
+        </GuideTarget>
         {failure ? (
           <View style={g.card}>
             <StatePanel
@@ -449,6 +452,7 @@ export function PersonalMapScreen({
       <Dialog
         title="Vista previa de evidencia"
         visible={preview !== null}
+        dismissible={!exporting}
         onClose={() => {
           if (!sharing.current) setPreview(null);
         }}
@@ -485,7 +489,7 @@ export function PersonalMapScreen({
           onPress={sendEvidence}
         />
       </Dialog>
-    </ScrollView>
+    </GuideScrollView>
   );
 }
 
