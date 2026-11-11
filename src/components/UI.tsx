@@ -21,7 +21,7 @@ import { globalStyles as g } from '../theme/globalStyles';
 import { Icon, type IconName } from './Icon';
 import { Reveal, useReducedMotion } from './Motion';
 import { LoadingMark } from './LoadingMark';
-import { MOTION, useAnimatedPresence } from './useAnimatedPresence';
+import { useAnimatedPresence } from './useAnimatedPresence';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -303,10 +303,9 @@ export function Dialog({
   dismissible?: boolean;
 }>) {
   const insets = useSafeAreaInsets();
-  const reduced = useReducedMotion();
   const heading = useRef<React.ComponentRef<typeof Text>>(null);
   const [shown, setShown] = useState(false);
-  const { present, progress } = useAnimatedPresence(
+  const { present, progress, interactive } = useAnimatedPresence(
     visible,
     onAfterClose,
     shown,
@@ -315,16 +314,13 @@ export function Dialog({
     if (!present) setShown(false);
   }, [present]);
   useEffect(() => {
-    if (!shown || !visible) return;
-    const timer = setTimeout(
-      () => {
-        if (heading.current)
-          AccessibilityInfo.sendAccessibilityEvent(heading.current, 'focus');
-      },
-      reduced ? 0 : MOTION.enter,
-    );
-    return () => clearTimeout(timer);
-  }, [shown, visible, reduced]);
+    if (!shown || !visible || !interactive) return;
+    const frame = requestAnimationFrame(() => {
+      if (heading.current)
+        AccessibilityInfo.sendAccessibilityEvent(heading.current, 'focus');
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [shown, visible, interactive]);
   // A parent's close can clear its selected item. Keep the last complete frame
   // throughout the exit instead of flashing an empty dialog.
   const retained = useRef({ title, children });
@@ -366,8 +362,11 @@ export function Dialog({
         >
           <Animated.View
             accessibilityViewIsModal
-            importantForAccessibility="yes"
-            pointerEvents={visible ? 'auto' : 'none'}
+            accessibilityElementsHidden={!interactive}
+            importantForAccessibility={
+              interactive ? 'yes' : 'no-hide-descendants'
+            }
+            pointerEvents={interactive ? 'auto' : 'none'}
             style={[
               s.dialog,
               {

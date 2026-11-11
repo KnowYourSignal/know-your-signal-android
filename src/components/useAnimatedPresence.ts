@@ -19,6 +19,7 @@ export function useAnimatedPresence(
   const reduced = useReducedMotion();
   const foreground = useAppForeground();
   const [present, setPresent] = useState(visible);
+  const [entered, setEntered] = useState(false);
   const progress = useRef(new Animated.Value(0)).current;
   const shown = useRef(visible);
   const exited = useRef(onExited);
@@ -26,12 +27,18 @@ export function useAnimatedPresence(
 
   useEffect(() => {
     let cancelled = false;
+    setEntered(false);
     if (visible) {
       shown.current = true;
       setPresent(true);
     }
     const finish = () => {
-      if (cancelled || visible || !shown.current) return;
+      if (cancelled) return;
+      if (visible) {
+        setEntered(true);
+        return;
+      }
+      if (!shown.current) return;
       shown.current = false;
       setPresent(false);
       exited.current?.();
@@ -61,5 +68,5 @@ export function useAnimatedPresence(
     };
   }, [visible, reduced, foreground, progress, enterReady]);
 
-  return { present, progress };
+  return { present, progress, interactive: visible && entered && foreground };
 }

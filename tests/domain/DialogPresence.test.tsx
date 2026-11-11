@@ -68,8 +68,23 @@ test('closing retains the complete evidence until exit and only then invokes nav
     root = ReactTestRenderer.create(<Surface visible />);
   });
   expect(timing).not.toHaveBeenCalled();
+  const surfaces = () =>
+    root!.root.findAll(
+      node =>
+        node.props.accessibilityViewIsModal === true &&
+        node.props.pointerEvents,
+    );
+  expect(surfaces().every(node => node.props.pointerEvents === 'none')).toBe(
+    true,
+  );
   await act(async () => root!.root.findByType(Modal).props.onShow());
+  expect(surfaces().every(node => node.props.pointerEvents === 'none')).toBe(
+    true,
+  );
   await act(async () => completions.at(-1)!({ finished: true }));
+  expect(surfaces().some(node => node.props.pointerEvents === 'auto')).toBe(
+    true,
+  );
   await act(async () => root!.update(<Surface visible={false} name="" />));
   expect(root!.root.findAllByType(Modal)).toHaveLength(1);
   expect(
