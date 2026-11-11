@@ -7,6 +7,10 @@ import {
 } from '../../src/state/GuideContext';
 import { GUIDE_STEPS } from '../../src/state/GuideSteps';
 
+let mockForeground = true;
+jest.mock('../../src/services/useAppForeground', () => ({
+  useAppForeground: () => mockForeground,
+}));
 const mockSeen = jest.fn();
 const mockMark = jest.fn();
 jest.mock('../../src/specs/NativeFieldwork', () => ({
@@ -32,6 +36,7 @@ function Harness({ enabled = false }: { enabled?: boolean }) {
   );
 }
 beforeEach(() => {
+  mockForeground = true;
   jest.useFakeTimers();
   mockSeen.mockReset().mockResolvedValue({ overview: false, room: false });
   mockMark.mockReset().mockResolvedValue(undefined);
@@ -97,4 +102,33 @@ test('the room tour stays on the captured form and preference failures do not bl
   }
   expect(guide.active).toBe(false);
   expect(navigate).not.toHaveBeenCalled();
+});
+
+test('automatic guidance waits until the app is in the foreground', async () => {
+  mockForeground = false;
+  await act(async () => {
+    root = ReactTestRenderer.create(<Harness enabled />);
+  });
+  await act(async () => jest.advanceTimersByTime(3000));
+  expect(guide.active).toBe(false);
+  expect(mockMark).not.toHaveBeenCalled();
+  mockForeground = true;
+  await act(async () => root.update(<Harness enabled />));
+  await act(async () => jest.advanceTimersByTime(650));
+  expect(guide.active).toBe(true);
+});
+
+test('a delayed preference response preserves the guide opened in the meantime', async () => {
+  let resolve!: (value: { overview: boolean; room: boolean }) => void;
+  mockSeen.mockReturnValue(
+    new Promise(done => {
+      resolve = done;
+    }),
+  );
+  await act(async () => {
+    root = ReactTestRenderer.create(<Harness />);
+  });
+  await act(async () => guide.start('overview'));
+  await act(async () => resolve({ overview: false, room: true }));
+  expect(guide.seen).toEqual({ overview: true, room: true });
 });

@@ -1,5 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
+  AccessibilityInfo,
   ActivityIndicator,
   Animated,
   Easing,
@@ -20,7 +21,7 @@ import { globalStyles as g } from '../theme/globalStyles';
 import { Icon, type IconName } from './Icon';
 import { Reveal, useReducedMotion } from './Motion';
 import { LoadingMark } from './LoadingMark';
-import { useAnimatedPresence } from './useAnimatedPresence';
+import { MOTION, useAnimatedPresence } from './useAnimatedPresence';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -302,6 +303,8 @@ export function Dialog({
   dismissible?: boolean;
 }>) {
   const insets = useSafeAreaInsets();
+  const reduced = useReducedMotion();
+  const heading = useRef<React.ComponentRef<typeof Text>>(null);
   const [shown, setShown] = useState(false);
   const { present, progress } = useAnimatedPresence(
     visible,
@@ -311,12 +314,24 @@ export function Dialog({
   useEffect(() => {
     if (!present) setShown(false);
   }, [present]);
+  useEffect(() => {
+    if (!shown || !visible) return;
+    const timer = setTimeout(
+      () => {
+        if (heading.current)
+          AccessibilityInfo.sendAccessibilityEvent(heading.current, 'focus');
+      },
+      reduced ? 0 : MOTION.enter,
+    );
+    return () => clearTimeout(timer);
+  }, [shown, visible, reduced]);
   // A parent's close can clear its selected item. Keep the last complete frame
   // throughout the exit instead of flashing an empty dialog.
   const retained = useRef({ title, children });
   useLayoutEffect(() => {
     if (visible) retained.current = { title, children };
-  }, [visible, title, children]);
+    else if (!present) retained.current = { title: '', children: null };
+  }, [visible, title, children, present]);
   const content = visible ? { title, children } : retained.current;
   const close = () => {
     if (visible && dismissible) onClose();
@@ -376,6 +391,7 @@ export function Dialog({
           >
             <View style={s.dialogHeader}>
               <Text
+                ref={heading}
                 accessibilityRole="header"
                 style={[g.sectionTitle, s.dialogTitle]}
               >

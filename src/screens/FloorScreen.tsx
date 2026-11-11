@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useIsFocused } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FloorSelector } from '../components/FloorSelector';
@@ -46,6 +47,8 @@ export function FloorScreen({
 }: NativeStackScreenProps<RootParamList, 'Floor'>) {
   const { status, refresh } = useSettings();
   const guide = useGuide();
+  const focused = useIsFocused();
+  const [interacted, setInteracted] = useState(false);
   const { capture } = route.params;
   const [floor, setFloor] = useState('');
   const [zone, setZone] = useState<ZoneSize | null>(null);
@@ -58,7 +61,7 @@ export function FloorScreen({
   const [savedVisible, setSavedVisible] = useState(false);
   const destination = useRef<'measure' | 'history'>('measure');
   const level = parseFloor(floor);
-  useAutoGuide('room', !busy && !saved);
+  useAutoGuide('room', focused && !interacted && !busy && !saved);
 
   useEffect(() => {
     let active = true;
@@ -138,6 +141,7 @@ export function FloorScreen({
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <GuideScrollView
+          onTouchStart={() => setInteracted(true)}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={g.content}
         >
@@ -220,13 +224,12 @@ export function FloorScreen({
               </View>
             )}
             <View style={g.card}>
-              <GuideTarget id="floor">
-                <FloorSelector
-                  value={floor}
-                  onChange={setFloor}
-                  editable={!busy && !saved}
-                />
-              </GuideTarget>
+              <FloorSelector
+                value={floor}
+                onChange={setFloor}
+                editable={!busy && !saved}
+                guided
+              />
               <View style={g.divider} />
               <GuideTarget id="zone">
                 <ZoneSizeSelector

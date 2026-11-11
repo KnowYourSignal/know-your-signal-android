@@ -4,33 +4,39 @@ import { parseFloor } from '../domain/CapturePolicy';
 import { COLORS } from '../theme/theme';
 import { globalStyles as g } from '../theme/globalStyles';
 import { Chip } from './UI';
+import { GuideTarget } from './GuideTarget';
 
 export function FloorSelector({
   value,
   onChange,
   editable = true,
+  guided = false,
 }: {
   value: string;
   onChange: (value: string) => void;
   editable?: boolean;
+  guided?: boolean;
 }) {
   const invalid =
     value.length > 0 && value !== '-' && parseFloor(value) === null;
+  const input = (
+    <TextInput
+      accessibilityLabel="Piso o nivel"
+      style={[s.input, invalid && s.invalid]}
+      editable={editable}
+      keyboardType="numeric"
+      returnKeyType="done"
+      maxLength={4}
+      placeholder="Ej. 0, −1, 2"
+      placeholderTextColor={COLORS.textMuted}
+      value={value}
+      onChangeText={onChange}
+    />
+  );
   return (
     <View style={s.group}>
       <Text style={g.sectionTitle}>Piso o nivel</Text>
-      <TextInput
-        accessibilityLabel="Piso o nivel"
-        style={[s.input, invalid && s.invalid]}
-        editable={editable}
-        keyboardType="numeric"
-        returnKeyType="done"
-        maxLength={4}
-        placeholder="Ej. 0, −1, 2"
-        placeholderTextColor={COLORS.textMuted}
-        value={value}
-        onChangeText={onChange}
-      />
+      {guided ? <GuideTarget id="floor">{input}</GuideTarget> : input}
       {invalid ? (
         <Text style={s.error} accessibilityLiveRegion="polite">
           Ingresa un entero entre −10 y 150.

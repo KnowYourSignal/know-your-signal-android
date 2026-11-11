@@ -10,6 +10,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.BySelector
 import androidx.test.uiautomator.Configurator
+import androidx.test.uiautomator.StaleObjectException
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
@@ -30,6 +31,7 @@ internal class UiTestDriver {
     val device = UiDevice.getInstance(instrumentation)
     val database = FieldDatabase.open(context)
     val output = File(context.getExternalFilesDir(null), "verification")
+    private var launcherRecoveries = 0
 
     init {
         Configurator.getInstance().setWaitForIdleTimeout(500)
@@ -46,8 +48,31 @@ internal class UiTestDriver {
         context.startActivity(Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
 
-    fun find(selector: BySelector, timeout: Long = 60_000): UiObject2 =
-        device.wait(Until.findObject(selector), timeout) ?: missing("Missing UI element: $selector")
+    fun find(selector: BySelector, timeout: Long = 60_000): UiObject2 {
+        val end = SystemClock.elapsedRealtime() + timeout
+        while (SystemClock.elapsedRealtime() < end) {
+            val remaining = (end - SystemClock.elapsedRealtime()).coerceAtLeast(1)
+            device.wait(Until.findObject(selector), minOf(1_500, remaining))?.let { return it }
+            recoverKnownLauncherDialog()
+        }
+        return missing("Missing UI element: $selector")
+    }
+
+    private fun recoverKnownLauncherDialog(): Boolean {
+        val title = device.findObject(By.res("android:id/alertTitle"))?.text ?: return false
+        if (!title.startsWith("Quickstep") || !title.contains("responding")) return false
+        val close = device.findObject(By.res("android:id/aerr_close")) ?: return false
+        // This is the AOSP emulator's launcher, never our application. Keep its
+        // evidence and allow only one recovery so repeated infrastructure ANRs fail.
+        if (launcherRecoveries++ > 0) missing("The system launcher stopped responding repeatedly")
+        screenshot("system-launcher-anr")
+        File(output, "system-launcher-recovery.json").writeText(org.json.JSONObject()
+            .put("synthetic", true).put("title", title).put("recoveries", launcherRecoveries).toString(2))
+        close.click()
+        device.wait(Until.gone(By.res("android:id/aerr_close")), 5_000)
+        context.startActivity(Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        return true
+    }
 
     private fun missing(message: String): Nothing {
         runCatching { device.takeScreenshot(File(output, "failure-during-test.png")) }
@@ -64,7 +89,7 @@ internal class UiTestDriver {
                 return
             }
             // Reveal actions below the fold on compact screens and at larger font sizes.
-            if (node == null) scrollDown()
+            if (node == null && !recoverKnownLauncherDialog()) scrollDown()
             SystemClock.sleep(150)
         }
         missing("Missing or disabled action: $label")
@@ -85,13 +110,24 @@ internal class UiTestDriver {
     private fun scrollDown() = scroll(down = true)
 
     private fun scroll(down: Boolean) {
-        val bounds = device.findObjects(By.pkg(context.packageName).clazz("android.widget.ScrollView").scrollable(true))
-            .map { it.visibleBounds }.filter { it.height() > 150 }
-            .minByOrNull { it.width().toLong() * it.height() } ?: return
-        val x = bounds.right - 3
-        val upper = bounds.top + bounds.height() / 3
-        val lower = bounds.top + bounds.height() * 3 / 4
-        device.swipe(x, if (down) lower else upper, x, if (down) upper else lower, 12)
+        // Native screen transitions can retire an accessibility node between the
+        // query and the bounds read. Re-query instead of keeping that old node.
+        repeat(5) {
+            val bounds = try {
+                device.findObjects(By.pkg(context.packageName).clazz("android.widget.ScrollView").scrollable(true))
+                    .map { it.visibleBounds }.filter { it.height() > 150 }
+                    .minByOrNull { it.width().toLong() * it.height() }
+            } catch (_: StaleObjectException) {
+                SystemClock.sleep(100)
+                return@repeat
+            }
+            if (bounds == null) return
+            val x = bounds.right - 3
+            val upper = bounds.top + bounds.height() / 3
+            val lower = bounds.top + bounds.height() * 3 / 4
+            device.swipe(x, if (down) lower else upper, x, if (down) upper else lower, 12)
+            return
+        }
     }
 
     fun screenshot(name: String) {

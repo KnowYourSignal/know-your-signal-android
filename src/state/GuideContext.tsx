@@ -10,6 +10,7 @@ import React, {
 import { Keyboard, View } from 'react-native';
 import type { GuideRect } from '../domain/GuideLayout';
 import { fieldwork } from '../services/LocalRepositoryAdapter';
+import { useAppForeground } from '../services/useAppForeground';
 import type { GuideStatus } from '../specs/NativeFieldwork';
 import { GUIDE_STEPS, type GuideScope, type GuideTargetId } from './GuideSteps';
 import type { MainTabsParamList } from './WizardState';
@@ -42,15 +43,21 @@ export function measureGuideView(
   if (!view) return Promise.resolve(null);
   return new Promise(resolve => {
     let done = false;
-    const timeout = setTimeout(() => {
-      done = true;
-      resolve(null);
-    }, 300);
-    view.measureInWindow((x, y, width, height) => {
+    const settle = (rect: GuideRect | null) => {
       if (done) return;
+      done = true;
       clearTimeout(timeout);
-      resolve(width > 0 && height > 0 ? { x, y, width, height } : null);
-    });
+      resolve(rect);
+    };
+    const timeout = setTimeout(() => settle(null), 300);
+    try {
+      view.measureInWindow((x, y, width, height) => {
+        settle(width > 0 && height > 0 ? { x, y, width, height } : null);
+      });
+    } catch {
+      // A native target can disappear during navigation or a quick dismissal.
+      settle(null);
+    }
   });
 }
 
@@ -159,10 +166,11 @@ export function useGuide() {
 
 export function useAutoGuide(scope: GuideScope, enabled: boolean) {
   const { active, seen, start } = useGuide();
+  const foreground = useAppForeground();
   useEffect(() => {
-    if (!enabled || active || !seen || seen[scope]) return;
+    if (!enabled || !foreground || active || !seen || seen[scope]) return;
     // Give the native screen transition time to settle; no sensor or consent action.
     const timer = setTimeout(() => start(scope), 650);
     return () => clearTimeout(timer);
-  }, [scope, enabled, active, seen, start]);
+  }, [scope, enabled, foreground, active, seen, start]);
 }

@@ -132,6 +132,7 @@ jobs:
               timeout 20 adb pull /sdcard/Android/data/com.knowyoursignal.uitest/files/verification "$RUNNER_TEMP/kys-ui-verification" || true
               if test "$result" -ne 0; then
                 mkdir -p "$RUNNER_TEMP/kys-ui-verification"
+                timeout 10 adb logcat -d -v threadtime -t 4000 > "$RUNNER_TEMP/kys-ui-verification/failure-device.log" || true
                 timeout 15 adb exec-out screencap -p > "$RUNNER_TEMP/kys-ui-verification/failure-screen.png" || true
                 timeout 15 adb shell uiautomator dump /sdcard/kys-window.xml || true
                 timeout 10 adb pull /sdcard/kys-window.xml "$RUNNER_TEMP/kys-ui-verification/failure-window.xml" || true
@@ -163,6 +164,8 @@ jobs:
           adb shell pm revoke com.knowyoursignal.uitest android.permission.ACCESS_COARSE_LOCATION
           run_ui_phase capture CaptureJourneyTest
           adb shell am force-stop com.knowyoursignal.uitest
+          run_ui_phase guide GuideJourneyTest
+          adb shell am force-stop com.knowyoursignal.uitest
           adb shell svc wifi disable
           adb shell svc data disable
           run_ui_phase restore HistoryRestoreTest -e restorePhase true
@@ -182,8 +185,6 @@ jobs:
             adb shell pm clear-permission-flags com.knowyoursignal.uitest android.permission.ACCESS_COARSE_LOCATION user-set user-fixed
           fi
           run_ui_phase permissions PermissionsJourneyTest
-          adb shell am force-stop com.knowyoursignal.uitest
-          run_ui_phase guide GuideJourneyTest
           adb install app/build/outputs/apk/qa/app-qa.apk
           adb shell am start -n com.knowyoursignal.qa/com.knowyoursignal.MainActivity
           sleep 20

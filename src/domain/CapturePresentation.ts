@@ -76,7 +76,10 @@ export function capturePresentation(input: PresentationInput) {
       tone: 'amber' as const,
       label: 'Lectura no disponible',
       title: 'Revisa los sensores',
-      body: captureMessage(problem),
+      body:
+        problem === 'UNKNOWN'
+          ? 'No pudimos leer esta muestra. Pausa la lectura y vuelve a activar los sensores.'
+          : captureMessage(problem),
     };
   if (status === 'freezing')
     return {

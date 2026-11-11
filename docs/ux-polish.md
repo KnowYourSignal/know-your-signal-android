@@ -14,6 +14,8 @@ Esta iteración recupera el globo guía de la propuesta visual de Palta y lo con
 
 La guía nunca pulsa los controles, rellena el recinto, activa sensores ni cambia el consentimiento. Mientras está abierta se suspende la lectura. Al terminar vuelve a la pestaña original y restaura el desplazamiento de las pantallas visitadas; una sesión ya activada obtiene otra lectura al volver a Medir. La pausa manual sigue siendo explícita.
 
+La guía automática espera a que la app esté en primer plano. En el formulario no interrumpe a quien ya empezó a interactuar; el botón Guía sigue disponible. El movimiento del globo y sus fundidos se ejecutan en el hilo de interfaz, mientras el resaltado mantiene sus propias medidas. Si un control desaparece durante una transición, el recorrido vuelve a buscarlo y ofrece reintentar u omitir si no lo encuentra en un plazo acotado.
+
 La preferencia de haber visto cada recorrido se guarda solamente en `SharedPreferences`, en las claves `guide_overview_v1` y `guide_room_v1`. No modifica el esquema de Room ni el proyecto Supabase. Si no se pueden leer esas preferencias, la app sigue funcionando y permite abrir la guía manualmente.
 
 Las animaciones se detienen en segundo plano y respetan la opción de reducir movimiento. Durante la guía, el lector de pantalla accede al globo y sus acciones; el contenido de fondo queda fuera del foco. El texto explicativo se puede desplazar en un globo que no quepa completo, y sus controles permanecen separados de ese desplazamiento. Los diálogos de privacidad y exportación bloquean el cierre mientras se completa una operación.

@@ -98,16 +98,16 @@ export function SettingsScreen() {
             />
           </View>
         )}
-        <GuideTarget id="technical">
-          <View style={g.card}>
-            <View style={g.row}>
-              <Icon name="signal" size={23} />
-              <View style={s.copy}>
-                <Text style={g.sectionTitle}>Modo técnico</Text>
-                <Text style={g.caption}>
-                  Muestra potencia en dBm en lugar de niveles de señal.
-                </Text>
-              </View>
+        <View style={g.card}>
+          <View style={g.row}>
+            <Icon name="signal" size={23} />
+            <View style={s.copy}>
+              <Text style={g.sectionTitle}>Modo técnico</Text>
+              <Text style={g.caption}>
+                Muestra potencia en dBm en lugar de niveles de señal.
+              </Text>
+            </View>
+            <GuideTarget id="technical" style={s.technicalControl}>
               <Switch
                 accessibilityLabel="Modo técnico"
                 value={status?.technicalMode ?? false}
@@ -116,12 +116,10 @@ export function SettingsScreen() {
                 trackColor={{ false: COLORS.border, true: COLORS.primary }}
                 thumbColor={COLORS.cardBg}
               />
-            </View>
+            </GuideTarget>
           </View>
-        </GuideTarget>
-        <GuideTarget id="privacy">
-          <PrivacySettings />
-        </GuideTarget>
+        </View>
+        <PrivacySettings />
 
         <View style={g.card}>
           <View style={g.row}>
@@ -192,6 +190,12 @@ export function SettingsScreen() {
 
 const s = StyleSheet.create({
   layout: { gap: 14 },
+  technicalControl: {
+    minHeight: 48,
+    minWidth: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   copy: { flex: 1 },
   stats: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   stat: {

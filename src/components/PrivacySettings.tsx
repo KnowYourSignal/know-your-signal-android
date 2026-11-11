@@ -4,6 +4,7 @@ import { useSettings } from '../state/SettingsContext';
 import { COLORS } from '../theme/theme';
 import { globalStyles as g } from '../theme/globalStyles';
 import { Icon } from './Icon';
+import { GuideTarget } from './GuideTarget';
 import { Button, Dialog, StatusPill } from './UI';
 
 export function PrivacySettings() {
@@ -73,17 +74,19 @@ export function PrivacySettings() {
           recibirá la revocación cuando haya conexión.
         </Text>
       )}
-      <Button
-        label={
-          community
-            ? 'Revocar aporte comunitario'
-            : 'Habilitar aporte comunitario'
-        }
-        kind="secondary"
-        icon={community ? 'lock' : 'globe'}
-        disabled={!community && !status?.syncAvailable}
-        onPress={() => setDecision(!community)}
-      />
+      <GuideTarget id="privacy">
+        <Button
+          label={
+            community
+              ? 'Revocar aporte comunitario'
+              : 'Habilitar aporte comunitario'
+          }
+          kind="secondary"
+          icon={community ? 'lock' : 'globe'}
+          disabled={!community && !status?.syncAvailable}
+          onPress={() => setDecision(!community)}
+        />
+      </GuideTarget>
       {!status?.syncAvailable && (
         <Text style={g.caption}>
           El aporte requiere configurar el servicio en esta instalación.

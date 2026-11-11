@@ -22,6 +22,7 @@ import { GUIDE_STEPS } from '../state/GuideSteps';
 import { COLORS } from '../theme/theme';
 import { globalStyles as g } from '../theme/globalStyles';
 import { Icon } from './Icon';
+import { LoadingMark } from './LoadingMark';
 import { nextGuideFrame } from './GuideTarget';
 import { useReducedMotion } from './Motion';
 import { Button } from './UI';
@@ -66,6 +67,10 @@ function GuideOverlay({
   const [working, setWorking] = useState(true);
   const [missing, setMissing] = useState(false);
   const [retry, setRetry] = useState(0);
+  const [cardReady, setCardReady] = useState(false);
+  const cardProgress = useRef(new Animated.Value(0)).current;
+  const copyProgress = useRef(new Animated.Value(0)).current;
+  const travelProgress = useRef(new Animated.Value(1)).current;
   const title = useRef<React.ComponentRef<typeof Text>>(null);
   const contentScroll = useRef<React.ComponentRef<typeof ScrollView>>(null);
   const position = useRef(new Animated.ValueXY({ x: 16, y: 120 })).current;
@@ -76,11 +81,58 @@ function GuideOverlay({
     height: new Animated.Value(0),
   }).current;
   const hadTarget = useRef(false);
+  const previousSize = useRef({ width, height, fontScale });
   const layout = guideCardLayout(
     rect,
     { x: 0, y: 0, width, height, top: insets.top, bottom: insets.bottom },
     cardHeight,
   );
+
+  useLayoutEffect(() => {
+    if (run) copyProgress.setValue(reduced ? 1 : 0);
+  }, [run, reduced, copyProgress]);
+
+  useEffect(() => {
+    if (!present) {
+      setCardReady(false);
+      setRect(null);
+      setWorking(true);
+      cardProgress.setValue(0);
+      return;
+    }
+    if (working || !cardReady) return;
+    if (reduced || !foreground) {
+      cardProgress.setValue(1);
+      copyProgress.setValue(1);
+      return;
+    }
+    const animation = Animated.parallel([
+      Animated.timing(cardProgress, {
+        toValue: 1,
+        duration: MOTION.enter,
+        easing: MOTION.easing,
+        useNativeDriver: true,
+        isInteraction: false,
+      }),
+      Animated.timing(copyProgress, {
+        toValue: 1,
+        duration: 180,
+        easing: MOTION.easing,
+        useNativeDriver: true,
+        isInteraction: false,
+      }),
+    ]);
+    animation.start();
+    return () => animation.stop();
+  }, [
+    present,
+    cardReady,
+    working,
+    reduced,
+    foreground,
+    cardProgress,
+    copyProgress,
+  ]);
 
   useEffect(() => {
     if (!run) return;
@@ -102,21 +154,34 @@ function GuideOverlay({
     const targetId = GUIDE_STEPS[run.scope][run.index].target;
     async function locate() {
       // A tab may mount lazily. Wait for its anchor and native navigation to settle.
-      for (let attempt = 0; attempt < 75 && !cancelled; attempt += 1) {
+      const deadline = Date.now() + 4000;
+      for (
+        let attempt = 0;
+        attempt < 120 && !cancelled && Date.now() < deadline;
+        attempt += 1
+      ) {
         await nextGuideFrame();
         const target = anchor(targetId);
         if (!target || attempt < 10) continue;
-        await target.reveal();
-        if (cancelled) return;
-        const [targetRect, rootRect] = await Promise.all([
-          target.measure(),
-          measureGuideView(root.current),
-        ]);
+        let targetRect: GuideRect | null;
+        let rootRect: GuideRect | null;
+        try {
+          await target.reveal();
+          if (cancelled) return;
+          [targetRect, rootRect] = await Promise.all([
+            target.measure(),
+            measureGuideView(root.current),
+          ]);
+        } catch {
+          // Retry a native view retired by the transition; the timeout offers a safe fallback.
+          continue;
+        }
         if (cancelled) return;
         const next =
           targetRect && rootRect ? localGuideRect(targetRect, rootRect) : null;
         if (!next) continue;
         setRect(next);
+        setCardReady(true);
         setWorking(false);
         contentScroll.current?.scrollTo({ y: 0, animated: false });
         return;
@@ -124,6 +189,7 @@ function GuideOverlay({
       if (!cancelled) {
         setRect(null);
         setMissing(true);
+        setCardReady(true);
         setWorking(false);
       }
     }
@@ -138,30 +204,46 @@ function GuideOverlay({
       hadTarget.current = false;
       return;
     }
-    const values: [Animated.Value, number][] = [
-      [position.x, layout.x],
-      [position.y, layout.y],
-      [spotlight.x, rect?.x ?? 0],
-      [spotlight.y, rect?.y ?? 0],
-      [spotlight.width, rect?.width ?? 0],
-      [spotlight.height, rect?.height ?? 0],
+    // The balloon travels on the UI thread. Geometry-only dimmer panels use
+    // separate JS values so a busy map render cannot hold up the text surface.
+    const values: [Animated.Value, number, boolean][] = [
+      [position.x, layout.x, true],
+      [position.y, layout.y, true],
+      [spotlight.x, rect?.x ?? 0, false],
+      [spotlight.y, rect?.y ?? 0, false],
+      [spotlight.width, rect?.width ?? 0, false],
+      [spotlight.height, rect?.height ?? 0, false],
     ];
-    if (reduced || !hadTarget.current || !foreground) {
+    const resized =
+      previousSize.current.width !== width ||
+      previousSize.current.height !== height ||
+      previousSize.current.fontScale !== fontScale;
+    previousSize.current = { width, height, fontScale };
+    if (reduced || !hadTarget.current || !foreground || resized) {
       values.forEach(([value, next]) => value.setValue(next));
       hadTarget.current = !!rect;
+      travelProgress.setValue(1);
       return;
     }
-    const animation = Animated.parallel(
-      values.map(([value, next]) =>
+    travelProgress.setValue(0);
+    const animation = Animated.parallel([
+      Animated.timing(travelProgress, {
+        toValue: 1,
+        duration: MOTION.travel,
+        easing: MOTION.easing,
+        useNativeDriver: true,
+        isInteraction: false,
+      }),
+      ...values.map(([value, next, native]) =>
         Animated.timing(value, {
           toValue: next,
           duration: MOTION.travel,
           easing: MOTION.easing,
-          useNativeDriver: false,
+          useNativeDriver: native,
           isInteraction: false,
         }),
       ),
-    );
+    ]);
     animation.start();
     return () => animation.stop();
   }, [
@@ -173,6 +255,10 @@ function GuideOverlay({
     layout.y,
     position,
     spotlight,
+    travelProgress,
+    width,
+    height,
+    fontScale,
   ]);
 
   useEffect(() => {
@@ -249,95 +335,119 @@ function GuideOverlay({
       ) : (
         <View style={[StyleSheet.absoluteFill, s.dim]} pointerEvents="none" />
       )}
+      {!cardReady && (
+        <View style={s.preparing}>
+          <LoadingMark icon="info" label="Preparando guía" />
+          <Text style={s.preparingText}>Preparando tu recorrido</Text>
+          <Button label="Omitir guía" kind="secondary" onPress={finish} />
+        </View>
+      )}
       <Animated.View
         onLayout={event => {
           const next = event.nativeEvent.layout.height;
           if (Math.abs(cardHeight - next) > 1) setCardHeight(next);
         }}
         style={[
-          s.card,
+          s.cardPosition,
           {
             width: layout.width,
             maxHeight: layout.maxHeight,
-            transform: [
-              { translateX: position.x },
-              { translateY: position.y },
-              {
-                scale: progress.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0.975, 1],
-                }),
-              },
-            ],
+            transform: [{ translateX: position.x }, { translateY: position.y }],
           },
         ]}
       >
-        {layout.pointer && !working && (
-          <View
-            pointerEvents="none"
-            style={[
-              s.arrow,
-              { left: layout.arrowX - 7 },
-              layout.side === 'below' ? s.arrowTop : s.arrowBottom,
-            ]}
-          />
-        )}
-        <View style={s.header}>
-          <View style={s.guideIcon}>
-            <Icon name="info" size={19} />
-          </View>
-          <Text style={s.eyebrow}>
-            GUÍA · {displayed.index + 1} DE {count}
-          </Text>
-          <Button label="Omitir" kind="quiet" onPress={finish} style={s.skip} />
-        </View>
-        <ScrollView
-          ref={contentScroll}
-          style={s.copyScroll}
-          contentContainerStyle={s.copy}
+        <Animated.View
+          accessibilityElementsHidden={!cardReady}
+          importantForAccessibility={cardReady ? 'yes' : 'no-hide-descendants'}
+          style={[
+            s.card,
+            {
+              maxHeight: layout.maxHeight,
+              opacity: cardProgress,
+              transform: [
+                {
+                  scale: Animated.multiply(progress, cardProgress).interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.975, 1],
+                  }),
+                },
+              ],
+            },
+          ]}
         >
-          <Text ref={title} accessibilityRole="header" style={s.title}>
-            {step.title}
-          </Text>
-          <Text style={g.body}>{step.body}</Text>
-          {working && (
-            <Text accessibilityLiveRegion="polite" style={g.caption}>
-              Ubicando el siguiente control…
-            </Text>
-          )}
-          {missing && (
-            <>
-              <Text style={g.caption}>
-                No pudimos señalar este control. Puedes reintentar o seguir el
-                recorrido.
-              </Text>
-              <Button
-                label="Volver a señalar"
-                kind="secondary"
-                onPress={() => setRetry(value => value + 1)}
-              />
-            </>
-          )}
-        </ScrollView>
-        <View style={s.footer}>
-          {displayed.index > 0 && (
-            <Button
-              label="Anterior"
-              kind="secondary"
-              disabled={working}
-              onPress={() => move(-1)}
-              style={s.footerButton}
+          {layout.pointer && !working && (
+            <Animated.View
+              pointerEvents="none"
+              style={[
+                s.arrow,
+                {
+                  left: layout.arrowX - 7,
+                  opacity: travelProgress.interpolate({
+                    inputRange: [0, 0.75, 1],
+                    outputRange: [0, 0, 1],
+                  }),
+                },
+                layout.side === 'below' ? s.arrowTop : s.arrowBottom,
+              ]}
             />
           )}
-          <Button
-            label={
-              displayed.index === count - 1 ? 'Finalizar guía' : 'Siguiente'
-            }
-            disabled={working}
-            onPress={() => move(1)}
-            style={s.footerButton}
-          />
-        </View>
+          <View style={s.header}>
+            <View style={s.guideIcon}>
+              <Icon name="info" size={19} />
+            </View>
+            <Text style={s.eyebrow}>
+              GUÍA · {displayed.index + 1} DE {count}
+            </Text>
+            <Button
+              label="Omitir"
+              kind="quiet"
+              onPress={finish}
+              style={s.skip}
+            />
+          </View>
+          <Animated.ScrollView
+            ref={contentScroll}
+            style={[s.copyScroll, { opacity: copyProgress }]}
+            contentContainerStyle={s.copy}
+          >
+            <Text ref={title} accessibilityRole="header" style={s.title}>
+              {step.title}
+            </Text>
+            <Text style={g.body}>{step.body}</Text>
+            {missing && (
+              <>
+                <Text style={g.caption}>
+                  No pudimos señalar este control. Puedes reintentar o seguir el
+                  recorrido.
+                </Text>
+                <Button
+                  label="Volver a señalar"
+                  kind="secondary"
+                  onPress={() => setRetry(value => value + 1)}
+                />
+              </>
+            )}
+          </Animated.ScrollView>
+          <View style={s.footer}>
+            {displayed.index > 0 && (
+              <Button
+                label="Anterior"
+                kind="secondary"
+                disabled={working}
+                onPress={() => move(-1)}
+                style={s.footerButton}
+              />
+            )}
+            <Button
+              label={
+                displayed.index === count - 1 ? 'Finalizar guía' : 'Siguiente'
+              }
+              busy={working}
+              onPress={() => move(1)}
+              style={s.footerButton}
+            />
+          </View>
+        </Animated.View>
       </Animated.View>
     </Animated.View>
   );
@@ -357,10 +467,25 @@ const s = StyleSheet.create({
     borderColor: '#A5C2FF',
     borderRadius: 12,
   },
-  card: {
+  cardPosition: {
     position: 'absolute',
     top: 0,
     left: 0,
+  },
+  preparing: {
+    ...StyleSheet.absoluteFill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 14,
+    padding: 24,
+  },
+  preparingText: {
+    color: COLORS.textLight,
+    fontSize: 16,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  card: {
     backgroundColor: COLORS.cardBg,
     borderRadius: 20,
     borderWidth: 1,
