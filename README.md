@@ -30,14 +30,26 @@ La variante QA usa la firma de desarrollo del proyecto y está destinada a las p
 
 La versión actual es **1.2 (código 3)**. El flujo [Android client](https://github.com/KnowYourSignal/know-your-signal-android/actions/workflows/android.yml) también construye la APK ARM64 y deja el artefacto `KnowYourSignal-QA-arm64`, con comprobación de firma, alineación de 16 KiB y SHA-256. Descarga el artefacto de una ejecución aprobada y descomprime el ZIP antes de instalar la APK. Las APK `uitest` corresponden exclusivamente a los recorridos automáticos con datos sintéticos.
 
-## Verificación y entrega
+## Descarga de la Aplicación (Versión Beta para Pruebas)
 
-- [Guía interactiva, animaciones y estados de lectura](docs/ux-polish.md).
-- [Resumen para el equipo y recorrido de prueba](docs/entrega-equipo.md).
-- [Diseño técnico y correspondencia con los issues](docs/architecture.md).
-- [Backend de Supabase, migraciones y contrato](supabase/README.md).
-- [Revisión de dependencias y mantenimiento](docs/dependencias.md).
+La versión instalable para dispositivos Android (**v1.2.0-beta.1 · ARM64**) se encuentra disponible directamente en la sección [**Releases**](https://github.com/KnowYourSignal/know-your-signal-android/releases) de este repositorio:
 
-Ejecuta npm run typecheck y npm test -- --runInBand para comprobar el cliente. El proyecto incluye una CI que compila Android y verifica Room en un emulador. Las pruebas del backend se preparan con npm ci --prefix tests/backend y se ejecutan con npm run check:backend y npm run test:backend.
+- **Archivo APK autónomo:** `KnowYourSignal-v1.2.0-beta.1-arm64.apk` (incluye el bundle JavaScript compilado con Hermes, integración con Supabase/PostGIS y soporte de mapas Google Maps + plano geométrico offline; no requiere servidor de desarrollo Metro).
 
-La [guía de verificación Android](docs/android-verification.md) explica los recorridos de interfaz en Android API 29 y 35, la exportación del PNG y las comprobaciones pendientes en un teléfono real.
+## Documentación del Proyecto y Entregables Oficiales (`docs/`)
+
+Todos los documentos formales del proyecto y los informes de cierre por equipo se encuentran en la carpeta [`docs/`](docs/):
+
+- **Informes de Cierre y Validación Técnica (Entrega Actual):**
+  - [Informe de Cierre y Validación Técnica - Grupo 10 (Capa Móvil y Experiencia de Usuario)](<docs/Informe_de_Cierre_y_Validacion_Tecnica_G10.docx>)
+  - [Informe de Cierre y Validación Técnica - Grupo 11 (Arquitectura Cloud y Modelado Espacial)](<docs/Informe_de_Cierre_y_Validacion_Tecnica_G11.docx>)
+- **Documentos Base de Ingeniería y Diseño:**
+  - [Formulario de Requerimientos (FDR - GTD)](<docs/Formulario de Requerimientos FDR GTD.docx>)
+  - [Propuesta de Solución (PDS)](<docs/Propuesta de Solución PDS.docx>)
+  - [Informe de Diseño y Arquitectura (IDA - G10 y G11)](<docs/Informe_de_Diseno_y_Arquitectura_CobPerfecta_G10_11.docx>)
+- **Documentación Técnica del Backend:**
+  - [Backend de Supabase, migraciones PostGIS y contratos RPC](supabase/README.md)
+
+## Verificación Automatizada
+
+Ejecuta `npm run typecheck`, `npm run lint` y `npm test -- --runInBand` para comprobar el cliente móvil. Las pruebas estáticas de contrato del backend se ejecutan con `npm run check:backend` y la suite de integración PostGIS con `npm run test:backend`.

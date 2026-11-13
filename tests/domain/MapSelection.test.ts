@@ -1,4 +1,4 @@
-import { signalQuality } from '../../src/domain/Measurement';
+import { clampToTether, signalQuality } from '../../src/domain/Measurement';
 import { nearestPoint, project, type Region } from '../../src/state/MapFilters';
 
 test('map hit testing uses screen distance across the dateline and clears empty space', () => {
@@ -46,5 +46,30 @@ test('signal categories preserve separate RSSI and RSRP ranges for the map legen
   }
   expect(signalQuality(-85, 'wifi_rssi')).not.toBe(
     signalQuality(-85, 'lte_rsrp'),
+  );
+});
+
+test('tethered pin-drop clamps manual adjustments to 2x GPS accuracy radius', () => {
+  const anchor = { latitude: -33.4489, longitude: -70.6693 };
+  const accuracyM = 5;
+  const maxRadiusM = accuracyM * 2; // 10m
+  const insideTarget = {
+    latitude: anchor.latitude + 4 / 111_132.92,
+    longitude: anchor.longitude,
+  };
+  const inside = clampToTether(anchor, insideTarget, maxRadiusM);
+  expect(inside.distanceM).toBeCloseTo(4, 1);
+  expect(inside.latitude).toBeCloseTo(insideTarget.latitude, 6);
+
+  const farTarget = {
+    latitude: anchor.latitude + 35 / 111_132.92,
+    longitude: anchor.longitude,
+  };
+  const clamped = clampToTether(anchor, farTarget, maxRadiusM);
+  expect(clamped.distanceM).toBe(10);
+  expect(clamped.maxRadiusM).toBe(10);
+  expect(clamped.latitude).toBeCloseTo(
+    anchor.latitude + 10 / 111_132.92,
+    6,
   );
 });

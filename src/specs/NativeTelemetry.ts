@@ -16,6 +16,8 @@ export type SensorReading = {
 
 export type FrozenCapture = {
   id: string;
+  latitude?: number;
+  longitude?: number;
   accuracyM: number;
   powerDbm: number;
   metric: string;

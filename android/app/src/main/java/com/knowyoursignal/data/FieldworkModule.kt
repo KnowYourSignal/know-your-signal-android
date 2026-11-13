@@ -72,7 +72,7 @@ internal class FieldworkModule(private val context: ReactApplicationContext) : N
     ) = run(promise) {
         val saved = repository.save(captureId, floor, zoneSize, config?.server.orEmpty(), connectionChoice)
         val sessionName = dao.findSession(saved.measurement.sessionId)?.name ?: DEFAULT_SESSION_NAME
-        CaptureDrafts.forget(captureId)
+        CaptureDrafts.forget(saved.measurement.id)
         saved.wakeRevision?.let { schedule(it) }
         saved.measurement.toMap(sessionName)
     }

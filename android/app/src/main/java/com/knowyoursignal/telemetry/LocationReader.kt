@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
+import android.os.Build
 import android.os.Bundle
 import android.os.Looper
 import android.os.SystemClock
@@ -38,7 +39,7 @@ internal class LocationReader(private val context: Context) {
         // the stricter capture precision and freshness requirements are retained.
         val cacheAge = if (requirePrecise) 15_000L else MAX_MAP_LOCATION_AGE_MS
         val candidates = providers.mapNotNull { manager.getLastKnownLocation(it) }
-            .filter { it.hasAccuracy() && SystemClock.elapsedRealtime() - it.elapsedMs in 0..cacheAge }
+            .filter { !it.isSimulated() && it.hasAccuracy() && SystemClock.elapsedRealtime() - it.elapsedMs in 0..cacheAge }
         val cached = if (requirePrecise) {
             candidates.filter { it.provider == gps && it.accuracy < MAX_ACCURACY_M }.minByOrNull { it.accuracy }
                 ?: candidates.minByOrNull { it.accuracy }
@@ -54,7 +55,7 @@ internal class LocationReader(private val context: Context) {
             suspendCancellableCoroutine<Location> { continuation ->
                 val listener = object : LocationListener {
                     override fun onLocationChanged(location: Location) {
-                        if (!location.hasAccuracy() || !continuation.isActive) return
+                        if (location.isSimulated() || !location.hasAccuracy() || !continuation.isActive) return
                         val previous = best.get()
                         if (previous == null || location.accuracy <= previous.accuracy ||
                             location.elapsedMs - previous.elapsedMs > 1_500
@@ -92,4 +93,7 @@ internal class LocationReader(private val context: Context) {
 
     private val Location.elapsedMs get() = elapsedRealtimeNanos / 1_000_000
     private fun Location.toFreshPosition() = Position(latitude, longitude, accuracy.toDouble(), SystemClock.elapsedRealtime())
+    @Suppress("DEPRECATION")
+    private fun Location.isSimulated(): Boolean =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) isMock else isFromMockProvider
 }

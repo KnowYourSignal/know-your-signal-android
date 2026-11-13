@@ -156,33 +156,23 @@ internal class TelemetryModule(context: ReactApplicationContext) : NativeTelemet
     }
 
     private fun averageObservations(window: Collection<Observation>, newest: Observation): Observation {
-        var weightSum = 0.0
-        var latSum = 0.0
-        var lonSum = 0.0
-        var accSum = 0.0
         var dbmSum = 0.0
         for (item in window) {
-            val pos = item.reading.position
-            val weight = 1.0 / (pos.accuracyM * pos.accuracyM).coerceAtLeast(1.0)
-            weightSum += weight
-            latSum += pos.latitude * weight
-            lonSum += pos.longitude * weight
-            accSum += pos.accuracyM
             dbmSum += item.reading.signal.powerDbm
         }
         val count = window.size.coerceAtLeast(1)
         val now = SystemClock.elapsedRealtime()
-        val avgPosition = Position(
-            latitude = if (weightSum > 0.0) latSum / weightSum else newest.reading.position.latitude,
-            longitude = if (weightSum > 0.0) lonSum / weightSum else newest.reading.position.longitude,
-            accuracyM = (accSum / count).coerceIn(1.0, 9.8),
+        val bestPosition = window.minByOrNull { it.reading.position.accuracyM }?.reading?.position
+            ?: newest.reading.position
+        val anchorPosition = bestPosition.copy(
+            accuracyM = bestPosition.accuracyM.coerceIn(1.0, 9.8),
             elapsedMs = now,
         )
         val avgSignal = newest.reading.signal.copy(
             powerDbm = (dbmSum / count).roundToInt(),
             elapsedMs = now,
         )
-        return Observation(Reading(avgPosition, avgSignal), newest.network)
+        return Observation(Reading(anchorPosition, avgSignal), newest.network)
     }
 
     private fun playCompletionSound() {
@@ -243,6 +233,8 @@ internal class TelemetryModule(context: ReactApplicationContext) : NativeTelemet
             playCompletionSound()
             Arguments.createMap().apply {
                 putString("id", draft.id)
+                putDouble("latitude", reading.position.latitude)
+                putDouble("longitude", reading.position.longitude)
                 putDouble("accuracyM", reading.position.accuracyM)
                 putInt("powerDbm", reading.signal.powerDbm)
                 putString("metric", reading.signal.metric)

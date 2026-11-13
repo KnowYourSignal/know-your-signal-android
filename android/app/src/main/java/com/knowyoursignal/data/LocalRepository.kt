@@ -9,6 +9,8 @@ import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 import java.util.UUID
+import kotlin.math.cos
+import kotlin.math.sqrt
 
 internal const val MAX_HISTORY_POINTS = 750
 internal val METRICS = setOf("wifi_rssi", "lte_rsrp", "nr_ss_rsrp", "celular_dbm")
@@ -27,12 +29,19 @@ internal class LocalRepository(private val database: FieldDatabase) {
         connectionChoice: String? = null,
     ): SavedCapture =
         database.withTransaction {
+            val parts = captureId.split("@", limit = 2)
+            val realCaptureId = parts[0]
+            val pinCoordinates = parts.getOrNull(1)?.split(",")?.takeIf { it.size == 2 }?.let {
+                val lat = it[0].toDoubleOrNull()
+                val lon = it[1].toDoubleOrNull()
+                if (lat != null && lon != null && lat.isFinite() && lon.isFinite()) lat to lon else null
+            }
             val level = floorLevel(floor)
             if (zoneSize !in ZONE_SIZES) throw CaptureException("INVALID_ZONE")
             if (connectionChoice != null && connectionChoice !in WIFI_CHOICES) {
                 throw CaptureException("INVALID_CLASSIFICATION")
             }
-            dao.find(captureId)?.let { previous ->
+            dao.find(realCaptureId)?.let { previous ->
                 if (previous.floor != level || previous.zoneSize != zoneSize ||
                     (connectionChoice != null && (previous.connection != connectionChoice ||
                         previous.classificationOrigin != originForChoice(connectionChoice)))) {
@@ -40,7 +49,7 @@ internal class LocalRepository(private val database: FieldDatabase) {
                 }
                 return@withTransaction SavedCapture(previous, null)
             }
-            val draft = CaptureDrafts.find(captureId) ?: throw CaptureException("CAPTURE_EXPIRED")
+            val draft = CaptureDrafts.find(realCaptureId) ?: throw CaptureException("CAPTURE_EXPIRED")
             if (connectionChoice != null && draft.reading.signal.connection != "wifi_desconocida") {
                 throw CaptureException("INVALID_CLASSIFICATION")
             }
@@ -53,7 +62,19 @@ internal class LocalRepository(private val database: FieldDatabase) {
                 it.enabled && it.server == server && server.isNotEmpty() && draft.shareRevision == it.revision
             }
             val wake = if (consent != null && !dao.hasQueued(consent.revision)) consent.revision else null
+            val (finalLat, finalLon) = if (pinCoordinates != null) {
+                clampToTether(
+                    draft.reading.position.latitude,
+                    draft.reading.position.longitude,
+                    pinCoordinates.first,
+                    pinCoordinates.second,
+                    (draft.reading.position.accuracyM * 2.0).coerceAtLeast(4.0),
+                )
+            } else {
+                draft.reading.position.latitude to draft.reading.position.longitude
+            }
             val measurement = draft.toMeasurement(level, zoneSize, if (consent != null) PENDING else LOCAL_ONLY, session.id)
+                .copy(latitude = finalLat, longitude = finalLon)
                 .let { original ->
                     if (connectionChoice == null) original else original.copy(
                         connection = connectionChoice,
@@ -127,3 +148,24 @@ internal class LocalRepository(private val database: FieldDatabase) {
 private val WIFI_CHOICES = setOf("wifi_publica", "wifi_privada", "wifi_desconocida")
 private fun originForChoice(connection: String) =
     if (connection == "wifi_desconocida") "desconocido" else "manual"
+
+private fun clampToTether(
+    anchorLat: Double,
+    anchorLon: Double,
+    targetLat: Double,
+    targetLon: Double,
+    maxRadiusM: Double,
+): Pair<Double, Double> {
+    val metersPerDegLat = 111_320.0
+    val metersPerDegLon = (111_320.0 * cos(Math.toRadians(anchorLat))).coerceAtLeast(1.0)
+    val dy = (targetLat - anchorLat) * metersPerDegLat
+    val dx = (targetLon - anchorLon) * metersPerDegLon
+    val dist = sqrt(dx * dx + dy * dy)
+    if (dist <= maxRadiusM || dist == 0.0) {
+        return targetLat to targetLon
+    }
+    val scale = maxRadiusM / dist
+    val clampedLat = (anchorLat + (dy * scale) / metersPerDegLat).coerceIn(-90.0, 90.0)
+    val clampedLon = (anchorLon + (dx * scale) / metersPerDegLon).coerceIn(-180.0, 180.0)
+    return clampedLat to clampedLon
+}

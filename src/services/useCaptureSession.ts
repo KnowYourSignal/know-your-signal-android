@@ -163,7 +163,9 @@ export function useCaptureSession(focused: boolean) {
     setSampleStep(1);
     setStatus('freezing');
     try {
-      const isTestEnv = 'jest' in globalThis;
+      const isTestEnv =
+        '_isMockFunction' in telemetry.read ||
+        '_isMockFunction' in telemetry.freeze;
       const collected: SensorReading[] = [];
       let lastSample: SensorReading | null = null;
       if (!isTestEnv) {
@@ -227,13 +229,38 @@ export function useCaptureSession(focused: boolean) {
           collected.reduce((sum, item) => sum + (item.powerDbm ?? 0), 0) /
             collected.length,
         );
-        const avgAcc =
-          collected.reduce((sum, item) => sum + (item.accuracyM ?? 0), 0) /
-          collected.length;
+        const bestGeo = collected.reduce((best, item) => {
+          const bestAcc = best.accuracyM ?? Number.POSITIVE_INFINITY;
+          const itemAcc = item.accuracyM ?? Number.POSITIVE_INFINITY;
+          return itemAcc < bestAcc ? item : best;
+        }, collected[0]);
         saved = {
           ...saved,
+          latitude:
+            saved.latitude ??
+            bestGeo.latitude ??
+            reading?.latitude ??
+            undefined,
+          longitude:
+            saved.longitude ??
+            bestGeo.longitude ??
+            reading?.longitude ??
+            undefined,
           powerDbm: avgDbm,
-          accuracyM: Number(avgAcc.toFixed(1)),
+          accuracyM: Number(
+            (bestGeo.accuracyM ?? saved.accuracyM).toFixed(1),
+          ),
+        };
+      } else if (
+        !isTestEnv &&
+        (saved.latitude === undefined || saved.longitude === undefined) &&
+        reading?.latitude != null &&
+        reading?.longitude != null
+      ) {
+        saved = {
+          ...saved,
+          latitude: reading.latitude,
+          longitude: reading.longitude,
         };
       }
       // The draft is held natively while the user completes the floor form.

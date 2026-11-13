@@ -107,3 +107,39 @@ export function formatDate(value: string): string {
     year: 'numeric',
   });
 }
+
+export function clampToTether(
+  anchor: { latitude: number; longitude: number },
+  target: { latitude: number; longitude: number },
+  maxRadiusM: number,
+): {
+  latitude: number;
+  longitude: number;
+  distanceM: number;
+  maxRadiusM: number;
+} {
+  const allowedRadiusM = Math.max(4, maxRadiusM);
+  const metersPerLat = 111_132.92;
+  const metersPerLon = Math.max(
+    1,
+    111_412.84 * Math.cos((anchor.latitude * Math.PI) / 180),
+  );
+  const dy = (target.latitude - anchor.latitude) * metersPerLat;
+  const dx = (target.longitude - anchor.longitude) * metersPerLon;
+  const rawDistanceM = Math.hypot(dx, dy);
+  if (rawDistanceM <= allowedRadiusM || rawDistanceM === 0) {
+    return {
+      latitude: target.latitude,
+      longitude: target.longitude,
+      distanceM: Number(rawDistanceM.toFixed(1)),
+      maxRadiusM: Number(allowedRadiusM.toFixed(1)),
+    };
+  }
+  const scale = allowedRadiusM / rawDistanceM;
+  return {
+    latitude: anchor.latitude + (dy * scale) / metersPerLat,
+    longitude: anchor.longitude + (dx * scale) / metersPerLon,
+    distanceM: Number(allowedRadiusM.toFixed(1)),
+    maxRadiusM: Number(allowedRadiusM.toFixed(1)),
+  };
+}

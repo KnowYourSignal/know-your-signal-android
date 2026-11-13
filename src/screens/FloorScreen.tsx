@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useIsFocused } from '@react-navigation/native';
+import MapView, { Circle, Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FloorSelector } from '../components/FloorSelector';
@@ -29,12 +30,17 @@ import { parseFloor } from '../domain/CapturePolicy';
 import { errorCode } from '../domain/CaptureState';
 import {
   ZONES,
+  clampToTether,
   floorLabel,
   isMetric,
   type ZoneSize,
 } from '../domain/Measurement';
 import { fieldwork } from '../services/LocalRepositoryAdapter';
-import type { RecentRoom, SavedMeasurement } from '../specs/NativeFieldwork';
+import type {
+  MapConfiguration,
+  RecentRoom,
+  SavedMeasurement,
+} from '../specs/NativeFieldwork';
 import { useAutoGuide, useGuide } from '../state/GuideContext';
 import { useSettings } from '../state/SettingsContext';
 import type { RootParamList } from '../state/WizardState';
@@ -57,6 +63,18 @@ export function FloorScreen({
   const [saved, setSaved] = useState<SavedMeasurement | null>(null);
   const [recentRoom, setRecentRoom] = useState<RecentRoom | null>(null);
   const [connectionChoice, setConnectionChoice] = useState<string | null>(null);
+  const [mapConfig, setMapConfig] = useState<MapConfiguration | null>(null);
+  const hasAnchor =
+    typeof capture.latitude === 'number' &&
+    typeof capture.longitude === 'number';
+  const anchor = {
+    latitude: capture.latitude ?? -33.4489,
+    longitude: capture.longitude ?? -70.6693,
+  };
+  const maxTetherRadiusM = Math.max(4, Number((capture.accuracyM * 2).toFixed(1)));
+  const [pin, setPin] = useState(() =>
+    clampToTether(anchor, anchor, maxTetherRadiusM),
+  );
   const saving = useRef(false);
   const [savedVisible, setSavedVisible] = useState(false);
   const destination = useRef<'measure' | 'history'>('measure');
@@ -65,6 +83,12 @@ export function FloorScreen({
 
   useEffect(() => {
     let active = true;
+    fieldwork()
+      .getMapConfiguration()
+      .then(config => {
+        if (active) setMapConfig(config);
+      })
+      .catch(() => {});
     fieldwork()
       .getRecentRoom()
       .then(room => {
@@ -81,6 +105,25 @@ export function FloorScreen({
       active = false;
     };
   }, []);
+
+  function movePinTo(target: { latitude: number; longitude: number }) {
+    if (busy || saved) {
+      return;
+    }
+    setPin(clampToTether(anchor, target, maxTetherRadiusM));
+  }
+
+  function nudgePin(northM: number, eastM: number) {
+    const metersPerLat = 111_132.92;
+    const metersPerLon = Math.max(
+      1,
+      111_412.84 * Math.cos((anchor.latitude * Math.PI) / 180),
+    );
+    movePinTo({
+      latitude: pin.latitude + northM / metersPerLat,
+      longitude: pin.longitude + eastM / metersPerLon,
+    });
+  }
 
   async function save(room?: RecentRoom) {
     const selectedLevel = room?.floor ?? level;
@@ -102,8 +145,12 @@ export function FloorScreen({
         setFloor(String(room.floor));
         setZone(room.zoneSize as ZoneSize);
       }
+      const captureToken =
+        hasAnchor && pin.distanceM > 0.05
+          ? `${capture.id}@${pin.latitude.toFixed(7)},${pin.longitude.toFixed(7)}`
+          : capture.id;
       const measurement = await fieldwork().saveMeasurementWithClassification(
-        capture.id,
+        captureToken,
         selectedLevel,
         selectedZone,
         connectionChoice,
@@ -175,6 +222,105 @@ export function FloorScreen({
                 Precisión de ubicación ±{capture.accuracyM.toFixed(1)} m
               </Text>
             </View>
+            {hasAnchor && (
+              <View style={g.card}>
+                <View style={s.tetherHeader}>
+                  <View style={s.grow}>
+                    <Text style={g.sectionTitle}>
+                      Ajuste fino de ubicación (Pin-Drop)
+                    </Text>
+                    <Text style={g.caption}>
+                      Si el GPS interior se desplazó hacia la calle, mueve el
+                      pin dentro del radio permitido (máx. ±
+                      {maxTetherRadiusM.toFixed(1)} m · 2× error GPS).
+                    </Text>
+                  </View>
+                  <StatusPill
+                    label={`${pin.distanceM.toFixed(1)} / ${maxTetherRadiusM.toFixed(1)} m`}
+                    tone={pin.distanceM > 0 ? 'blue' : 'green'}
+                  />
+                </View>
+                {mapConfig?.mapTiles && (
+                  <View style={s.tetherMapWrap}>
+                    <MapView
+                      style={s.tetherMap}
+                      provider={PROVIDER_GOOGLE}
+                      mapType="standard"
+                      toolbarEnabled={false}
+                      pitchEnabled={false}
+                      rotateEnabled={false}
+                      initialRegion={{
+                        latitude: anchor.latitude,
+                        longitude: anchor.longitude,
+                        latitudeDelta: Math.max(
+                          0.00038,
+                          (maxTetherRadiusM / 111_132) * 3.6,
+                        ),
+                        longitudeDelta: Math.max(
+                          0.00038,
+                          (maxTetherRadiusM / 111_132) * 3.6,
+                        ),
+                      }}
+                      onPress={event =>
+                        movePinTo(event.nativeEvent.coordinate)
+                      }
+                    >
+                      <Circle
+                        center={anchor}
+                        radius={maxTetherRadiusM}
+                        strokeWidth={1.5}
+                        strokeColor="rgba(32, 93, 245, 0.72)"
+                        fillColor="rgba(32, 93, 245, 0.14)"
+                      />
+                      <Marker
+                        draggable={!busy && !saved}
+                        coordinate={{
+                          latitude: pin.latitude,
+                          longitude: pin.longitude,
+                        }}
+                        onDragEnd={event =>
+                          movePinTo(event.nativeEvent.coordinate)
+                        }
+                      />
+                    </MapView>
+                  </View>
+                )}
+                <View style={s.choices}>
+                  <Chip
+                    label="Norte +2 m"
+                    selected={false}
+                    disabled={busy || !!saved}
+                    onPress={() => nudgePin(2, 0)}
+                  />
+                  <Chip
+                    label="Sur +2 m"
+                    selected={false}
+                    disabled={busy || !!saved}
+                    onPress={() => nudgePin(-2, 0)}
+                  />
+                  <Chip
+                    label="Este +2 m"
+                    selected={false}
+                    disabled={busy || !!saved}
+                    onPress={() => nudgePin(0, 2)}
+                  />
+                  <Chip
+                    label="Oeste +2 m"
+                    selected={false}
+                    disabled={busy || !!saved}
+                    onPress={() => nudgePin(0, -2)}
+                  />
+                  {pin.distanceM > 0 && (
+                    <Chip
+                      label="Restaurar GPS"
+                      selected
+                      disabled={busy || !!saved}
+                      onPress={() => movePinTo(anchor)}
+                    />
+                  )}
+                </View>
+              </View>
+            )}
             {recentRoom && !saved && (
               <View style={g.card}>
                 <Text style={g.sectionTitle}>¿Sigues en el mismo recinto?</Text>
@@ -304,5 +450,21 @@ const s = StyleSheet.create({
   grow: { flex: 1 },
   layout: { gap: 14 },
   choices: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  tetherHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  tetherMapWrap: {
+    height: 196,
+    borderRadius: 14,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  tetherMap: {
+    flex: 1,
+  },
   error: { color: COLORS.danger, fontSize: 13 },
 });
