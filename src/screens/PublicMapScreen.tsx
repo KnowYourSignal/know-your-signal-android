@@ -1,97 +1,234 @@
 // src/screens/PublicMapScreen.tsx
-import React, { useState, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
-  Animated,
-  Easing,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import MapView, { PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import { COLORS } from '../theme/theme';
 import { useSettings } from '../state/SettingsContext';
-import { HeatmapPoint, HeatmapPointData } from '../components/HeatmapLayer';
+import { HeatmapLayer, GeoHeatmapPoint, MetricCategory } from '../components/HeatmapLayer';
+import {
+  PublicMapCell,
+  publicMapService,
+  ViewportBounds,
+} from '../services/PublicMapService';
 
-const MOCK_COMMUNITY: HeatmapPointData[] = [
-  { id: 'c1', lat: '36%', lng: '36%', floor: '1', dbm: -63, contributors: 12 },
-  { id: 'c2', lat: '42%', lng: '44%', floor: '1', dbm: -71, contributors: 8 },
-  { id: 'c3', lat: '50%', lng: '52%', floor: '1', dbm: -75, contributors: 6 },
-  { id: 'c4', lat: '60%', lng: '62%', floor: '1', dbm: -91, contributors: 9 },
-  { id: 'c5', lat: '48%', lng: '42%', floor: '2', dbm: -65, contributors: 7 },
-  { id: 'c6', lat: '52%', lng: '49%', floor: '2', dbm: -68, contributors: 5 },
-];
+const INITIAL_REGION: Region = {
+  latitude: -33.4568,
+  longitude: -70.6548,
+  latitudeDelta: 0.025,
+  longitudeDelta: 0.025,
+};
+
+const DEBOUNCE_MS = 300;
+
+function regionToBounds(region: Region): ViewportBounds {
+  return {
+    minLat: region.latitude - region.latitudeDelta / 2,
+    maxLat: region.latitude + region.latitudeDelta / 2,
+    minLng: region.longitude - region.longitudeDelta / 2,
+    maxLng: region.longitude + region.longitudeDelta / 2,
+  };
+}
+
+function deltaToZoom(latitudeDelta: number): number {
+  return Math.max(1, Math.min(20, Math.round(Math.log2(360 / Math.max(latitudeDelta, 0.0005)))));
+}
 
 export const PublicMapScreen = () => {
   const { technicalMode } = useSettings();
-  const [pisoActivo, setPisoActivo] = useState('1');
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [cacheLabel, setCacheLabel] = useState('Hace 2 min');
+  const [region, setRegion] = useState<Region>(INITIAL_REGION);
+  const [pisoActivo, setPisoActivo] = useState<number>(1);
+  const [metricaActiva, setMetricaActiva] = useState<MetricCategory>('wifi_rssi');
+  const [cells, setCells] = useState<PublicMapCell[]>([]);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const [cacheLabel, setCacheLabel] = useState<string>('Caché 5m lista');
+  const [renderTimeMs, setRenderTimeMs] = useState<number | null>(null);
 
-  const fadeOverlay = useRef(new Animated.Value(1)).current;
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const mountStartRef = useRef<number>(Date.now());
 
-  const datosVisibles = MOCK_COMMUNITY.filter((m) => m.floor === pisoActivo);
+  const fetchCells = useCallback(
+    async (
+      targetRegion: Region,
+      floor: number,
+      metric: MetricCategory,
+      forceFresh: boolean = false,
+    ) => {
+      abortControllerRef.current?.abort();
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
 
-  const handleRefreshZone = () => {
-    setIsRefreshing(true);
-    Animated.sequence([
-      Animated.timing(fadeOverlay, {
-        toValue: 0.35,
-        duration: 250,
-        easing: Easing.out(Easing.quad),
-        useNativeDriver: true,
-      }),
-      Animated.timing(fadeOverlay, {
-        toValue: 1,
-        duration: 350,
-        easing: Easing.in(Easing.quad),
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      setIsRefreshing(false);
-      setCacheLabel('Actualizado ahora');
-    });
-  };
+      if (forceFresh) {
+        publicMapService.clearCache();
+      }
+
+      setIsRefreshing(true);
+      try {
+        const result = await publicMapService.fetchAggregatedCells(
+          {
+            bounds: regionToBounds(targetRegion),
+            floor,
+            metric,
+            zoomLevel: deltaToZoom(targetRegion.latitudeDelta),
+          },
+          controller.signal,
+        );
+
+        // Ficha 11 IDA: Aplicar respuesta solo si coincide con la petición vigente
+        if (!publicMapService.isLatestRequest(result.requestId)) {
+          return;
+        }
+
+        setCells(result.cells);
+        setCacheLabel(
+          result.fromCache
+            ? `Caché (${result.cacheAgeSeconds}s)`
+            : 'Actualizado ahora',
+        );
+      } catch (err: any) {
+        if (err?.name !== 'AbortError') {
+          setCacheLabel('Sin conexión');
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsRefreshing(false);
+        }
+      }
+    },
+    [],
+  );
+
+  // Debounce de 300 ms en cambios de viewport, piso o métrica
+  useEffect(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      fetchCells(region, pisoActivo, metricaActiva, false);
+    }, DEBOUNCE_MS);
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [region, pisoActivo, metricaActiva, fetchCells]);
+
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort();
+    };
+  }, []);
+
+  const heatmapPoints = useMemo<GeoHeatmapPoint[]>(
+    () =>
+      cells.map((cell) => ({
+        latitude: cell.centerLat,
+        longitude: cell.centerLng,
+        signalDbm: cell.medianSignalDbm,
+        metric: cell.metric,
+        floor: cell.floor,
+      })),
+    [cells],
+  );
+
+  const resolutionLabel = cells[0]?.resolutionMeters ?? 50;
 
   return (
     <SafeAreaView style={styles.safeContainer} edges={['bottom']}>
       <View style={styles.screenBody}>
         <View style={styles.headerRow}>
-          <View>
+          <View style={{ flex: 1, paddingRight: 8 }}>
             <Text style={styles.screenTitle}>Mapa Comunitario</Text>
-            <Text style={styles.screenSubtitle}>Celdas PostGIS agregadas (≥ 5 contribuyentes)</Text>
+            <Text style={styles.screenSubtitle}>
+              Celdas PostGIS (≥ 5 contribuyentes)
+              {technicalMode && renderTimeMs !== null ? ` · ${renderTimeMs} ms` : ''}
+            </Text>
           </View>
           <View style={styles.cacheBadge}>
-            <View style={styles.cacheDot} />
+            <View
+              style={[
+                styles.cacheDot,
+                { backgroundColor: isRefreshing ? COLORS.warning : COLORS.success },
+              ]}
+            />
             <Text style={styles.cacheText}>{cacheLabel}</Text>
           </View>
         </View>
 
-        <View style={styles.mapFloorSelector}>
-          {['-1', '1', '2', '3'].map((piso) => (
-            <TouchableOpacity
-              key={piso}
-              style={[styles.floorTab, pisoActivo === piso && styles.floorTabActive]}
-              onPress={() => setPisoActivo(piso)}
-            >
-              <Text style={[styles.floorTabText, pisoActivo === piso && styles.floorTabTextActive]}>
-                Piso {piso}
-              </Text>
-            </TouchableOpacity>
-          ))}
+        {/* Selector de piso y métrica activa (sin mezclar Wi-Fi con Celular) */}
+        <View style={styles.filtersContainer}>
+          <View style={styles.mapFloorSelector}>
+            {[-1, 1, 2, 3].map((piso) => (
+              <TouchableOpacity
+                key={piso}
+                style={[styles.floorTab, pisoActivo === piso && styles.floorTabActive]}
+                onPress={() => setPisoActivo(piso)}
+              >
+                <Text style={[styles.floorTabText, pisoActivo === piso && styles.floorTabTextActive]}>
+                  Piso {piso}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <View style={styles.techRow}>
+            {(
+              [
+                { key: 'wifi_rssi', label: 'Wi-Fi RSSI' },
+                { key: 'lte_rsrp', label: '4G LTE RSRP' },
+                { key: 'nr_ss_rsrp', label: '5G NR' },
+              ] as const
+            ).map((item) => (
+              <TouchableOpacity
+                key={item.key}
+                style={[styles.techChip, metricaActiva === item.key && styles.techChipActive]}
+                onPress={() => setMetricaActiva(item.key)}
+              >
+                <Text
+                  style={[
+                    styles.techChipText,
+                    metricaActiva === item.key && styles.techChipTextActive,
+                  ]}
+                >
+                  {item.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
 
-        <Animated.View style={[styles.mapCanvasPlaceholder, { opacity: fadeOverlay }]}>
-          <View style={[styles.gridLineHorizontal, { top: '25%' }]} />
-          <View style={[styles.gridLineHorizontal, { top: '50%' }]} />
-          <View style={[styles.gridLineHorizontal, { top: '75%' }]} />
-          <View style={[styles.gridLineVertical, { left: '25%' }]} />
-          <View style={[styles.gridLineVertical, { left: '50%' }]} />
-          <View style={[styles.gridLineVertical, { left: '75%' }]} />
+        <View style={styles.mapCanvasPlaceholder}>
+          <MapView
+            provider={PROVIDER_GOOGLE}
+            style={styles.mapView}
+            initialRegion={INITIAL_REGION}
+            onRegionChangeComplete={(newRegion) => setRegion(newRegion)}
+            onMapReady={() => setRenderTimeMs(Date.now() - mountStartRef.current)}
+          >
+            <HeatmapLayer
+              points={heatmapPoints}
+              selectedFloor={pisoActivo}
+              selectedMetric={metricaActiva}
+              radius={40}
+            />
+          </MapView>
 
-          <Text style={styles.mapWatermark}>Vista Comunitaria · Resolución 50m</Text>
+          <View style={styles.watermarkPill}>
+            <Text style={styles.mapWatermark}>
+              Vista Comunitaria · Resolución {resolutionLabel}m
+            </Text>
+          </View>
 
-          {datosVisibles.length === 0 ? (
+          {!isRefreshing && heatmapPoints.length === 0 && (
             <View style={styles.emptyMapState}>
               <Text style={styles.emptyMapEmoji}>🌐</Text>
               <Text style={styles.emptyMapTitle}>Sin celdas públicas en el Piso {pisoActivo}</Text>
@@ -99,119 +236,3 @@ export const PublicMapScreen = () => {
                 Las celdas con menos de 5 contribuyentes se ocultan por privacidad.
               </Text>
             </View>
-          ) : (
-            datosVisibles.map((punto, idx) => (
-              <HeatmapPoint
-                key={punto.id}
-                point={punto}
-                index={idx}
-                isTechnical={technicalMode}
-              />
-            ))
-          )}
-
-          <View style={styles.privacyFooterBadge}>
-            <Text style={styles.privacyFooterText}>🛡️ Mediana por celda · No identifica personas</Text>
-          </View>
-        </Animated.View>
-
-        <TouchableOpacity
-          style={styles.primaryButton}
-          onPress={handleRefreshZone}
-          disabled={isRefreshing}
-          activeOpacity={0.85}
-        >
-          <Text style={styles.primaryButtonText}>
-            {isRefreshing ? 'Consultando celdas espaciales...' : 'Actualizar zona visible'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
-  );
-};
-
-const styles = StyleSheet.create({
-  safeContainer: { flex: 1, backgroundColor: COLORS.surface },
-  screenBody: { flex: 1, padding: 20 },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 },
-  screenTitle: { fontSize: 22, fontWeight: 'bold', color: COLORS.textDark },
-  screenSubtitle: { fontSize: 12, color: COLORS.textMuted, marginTop: 2 },
-  cacheBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.cardBg,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    gap: 6,
-  },
-  cacheDot: { width: 7, height: 7, borderRadius: 3.5, backgroundColor: COLORS.success },
-  cacheText: { fontSize: 11, fontWeight: '600', color: COLORS.textDark },
-  mapFloorSelector: { flexDirection: 'row', gap: 8, marginBottom: 14 },
-  floorTab: {
-    paddingHorizontal: 15,
-    paddingVertical: 7,
-    borderRadius: 20,
-    backgroundColor: COLORS.cardBg,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  floorTabActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
-  floorTabText: { fontSize: 13, color: COLORS.textDark, fontWeight: '600' },
-  floorTabTextActive: { color: COLORS.textLight },
-  mapCanvasPlaceholder: {
-    flex: 1,
-    backgroundColor: '#E5ECF6',
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  gridLineHorizontal: { position: 'absolute', left: 0, right: 0, height: 1, backgroundColor: 'rgba(24, 51, 105, 0.06)' },
-  gridLineVertical: { position: 'absolute', top: 0, bottom: 0, width: 1, backgroundColor: 'rgba(24, 51, 105, 0.06)' },
-  mapWatermark: {
-    position: 'absolute',
-    top: 12,
-    left: 14,
-    fontSize: 11,
-    fontWeight: 'bold',
-    color: COLORS.textMuted,
-    opacity: 0.7,
-  },
-  emptyMapState: {
-    backgroundColor: 'rgba(255,255,255,0.92)',
-    padding: 20,
-    borderRadius: 16,
-    alignItems: 'center',
-    maxWidth: '80%',
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  emptyMapEmoji: { fontSize: 32, marginBottom: 6 },
-  emptyMapTitle: { color: COLORS.textDark, fontWeight: 'bold', fontSize: 15, marginBottom: 4 },
-  emptyMapSubtitle: { color: COLORS.textMuted, fontSize: 12, textAlign: 'center' },
-  privacyFooterBadge: {
-    position: 'absolute',
-    bottom: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.92)',
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  privacyFooterText: { fontSize: 11, fontWeight: '600', color: COLORS.textDark },
-  primaryButton: {
-    backgroundColor: COLORS.primary,
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-    width: '100%',
-  },
-  primaryButtonText: { color: COLORS.textLight, fontSize: 15, fontWeight: 'bold' },
-});
