@@ -85,3 +85,22 @@ test('the tour and manual pause never present an old reading as available', () =
   expect(paused.phase).toBe('idle');
   expect(paused.busy || paused.locationReady || paused.signalReady).toBe(false);
 });
+
+test('multi-sample stationary averaging shows progress until 8 samples complete', () => {
+  const averaging = capturePresentation({
+    ...state,
+    reading: { ...reading, sampleCount: 3, targetSamples: 8 },
+  });
+  expect(averaging.phase).toBe('averaging');
+  expect(averaging.busy).toBe(true);
+  expect(averaging.label).toBe('Promediando (3/8)');
+
+  const completed = capturePresentation({
+    ...state,
+    status: 'ready',
+    canRecord: true,
+    reading: { ...reading, sampleCount: 8, targetSamples: 8 },
+  });
+  expect(completed.phase).toBe('ready');
+  expect(completed.body).toContain('Promedio de 8 mediciones completado');
+});

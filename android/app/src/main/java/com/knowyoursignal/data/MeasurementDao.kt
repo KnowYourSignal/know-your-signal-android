@@ -14,6 +14,21 @@ internal interface MeasurementDao {
     @Insert
     suspend fun insert(measurement: MeasurementEntity)
 
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertSession(session: SessionEntity)
+
+    @Query("SELECT * FROM sessions WHERE id = :id")
+    suspend fun findSession(id: String): SessionEntity?
+
+    @Query("SELECT * FROM sessions ORDER BY startedAt DESC, id DESC LIMIT 1")
+    suspend fun latestSession(): SessionEntity?
+
+    @Query("SELECT COUNT(*) FROM sessions")
+    suspend fun sessionCount(): Int
+
+    @Query("SELECT * FROM sessions ORDER BY startedAt DESC, id DESC")
+    suspend fun sessions(): List<SessionEntity>
+
     @Insert
     suspend fun enqueue(entry: OutboxEntity)
 

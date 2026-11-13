@@ -2,7 +2,6 @@ import React from 'react';
 import ReactTestRenderer, { act } from 'react-test-renderer';
 import { AccuracyIndicator } from '../../src/components/AccuracyIndicator';
 import { CaptureButton } from '../../src/components/CaptureButton';
-import { CaptureStatusCard } from '../../src/components/CaptureStatusCard';
 import { Button } from '../../src/components/UI';
 import { WizardScreen } from '../../src/screens/WizardScreen';
 import { telemetry } from '../../src/services/NativeTelemetryAdapter';
@@ -93,9 +92,6 @@ test('opening the guide suspends collection, hides the old values and resumes wi
   expect(telemetry.stop).toHaveBeenCalledTimes(1);
   expect(root!.root.findByType(CaptureButton).props.ready).toBe(false);
   expect(root!.root.findByType(AccuracyIndicator).props.accuracy).toBeNull();
-  expect(root!.root.findByType(CaptureStatusCard).props.state.phase).toBe(
-    'guide',
-  );
   expect(telemetry.read).toHaveBeenCalledTimes(1);
   expect(telemetry.freeze).not.toHaveBeenCalled();
   expect(mockConsent).not.toHaveBeenCalled();

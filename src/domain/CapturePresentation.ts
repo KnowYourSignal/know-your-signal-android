@@ -97,7 +97,25 @@ export function capturePresentation(input: PresentationInput) {
       tone: 'green' as const,
       label: 'Lectura lista',
       title: 'Tu señal está lista',
-      body: 'Ubicación y señal están alineadas. Ya puedes registrar esta muestra.',
+      body:
+        reading?.targetSamples != null
+          ? `Promedio de ${reading.targetSamples} mediciones completado. Ya puedes registrar esta muestra.`
+          : 'Ubicación y señal están alineadas. Ya puedes registrar esta muestra.',
+    };
+  if (
+    locationReady &&
+    signalReady &&
+    reading?.sampleCount != null &&
+    reading?.targetSamples != null &&
+    reading.sampleCount < reading.targetSamples
+  )
+    return {
+      ...base,
+      phase: 'averaging',
+      busy: true,
+      label: `Promediando (${reading.sampleCount}/${reading.targetSamples})`,
+      title: 'Mantén el teléfono quieto',
+      body: `Tomando ${reading.targetSamples} mediciones (${reading.sampleCount} de ${reading.targetSamples}) para promediar señal y ubicación. Sonará un aviso al terminar.`,
     };
   if (problem === 'NO_SIGNAL')
     return {

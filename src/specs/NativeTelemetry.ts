@@ -10,6 +10,8 @@ export type SensorReading = {
   connection: string | null;
   validForMs: number;
   problem: string | null;
+  sampleCount?: number;
+  targetSamples?: number;
 };
 
 export type FrozenCapture = {

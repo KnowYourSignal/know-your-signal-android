@@ -30,10 +30,16 @@ test('map hit testing uses screen distance across the dateline and clears empty 
 test('signal categories preserve separate RSSI and RSRP ranges for the map legend', () => {
   for (const [metric, dbm, expected] of [
     ['wifi_rssi', -50, 'good'],
+    ['wifi_rssi', -67, 'good'],
+    ['wifi_rssi', -68, 'fair'],
     ['wifi_rssi', -75, 'fair'],
+    ['wifi_rssi', -76, 'weak'],
     ['wifi_rssi', -90, 'weak'],
     ['lte_rsrp', -85, 'good'],
+    ['lte_rsrp', -90, 'good'],
+    ['lte_rsrp', -91, 'fair'],
     ['lte_rsrp', -105, 'fair'],
+    ['lte_rsrp', -106, 'weak'],
     ['lte_rsrp', -120, 'weak'],
   ] as const) {
     expect(signalQuality(dbm, metric)).toBe(expected);

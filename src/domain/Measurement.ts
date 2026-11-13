@@ -66,8 +66,21 @@ export function signalQuality(
   dbm: number,
   metric: string,
 ): 'good' | 'fair' | 'weak' {
-  const weight = signalWeight(dbm, metric);
-  return weight >= 0.56 ? 'good' : weight >= 0.36 ? 'fair' : 'weak';
+  if (metric === 'wifi_rssi') {
+    return dbm >= -67 ? 'good' : dbm >= -75 ? 'fair' : 'weak';
+  }
+  return dbm >= -90 ? 'good' : dbm >= -105 ? 'fair' : 'weak';
+}
+
+export function dateKey(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value.slice(0, 10);
+  }
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 export function formatSignal(

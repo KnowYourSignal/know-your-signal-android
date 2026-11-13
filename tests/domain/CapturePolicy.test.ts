@@ -28,4 +28,8 @@ test('requires an eligible simultaneous location and signal reading', () => {
   expect(canCapture({ ...valid, powerDbm: null })).toBe(false);
   expect(canCapture({ ...valid, problem: 'OUT_OF_SYNC' })).toBe(false);
   expect(canCapture({ ...valid, validForMs: 0 })).toBe(false);
+  expect(canCapture({ ...valid, sampleCount: 5, targetSamples: 8 })).toBe(
+    false,
+  );
+  expect(canCapture({ ...valid, sampleCount: 8, targetSamples: 8 })).toBe(true);
 });

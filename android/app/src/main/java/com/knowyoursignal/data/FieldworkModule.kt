@@ -71,9 +71,20 @@ internal class FieldworkModule(private val context: ReactApplicationContext) : N
         captureId: String, floor: Double, zoneSize: String, connectionChoice: String?, promise: Promise,
     ) = run(promise) {
         val saved = repository.save(captureId, floor, zoneSize, config?.server.orEmpty(), connectionChoice)
+        val sessionName = dao.findSession(saved.measurement.sessionId)?.name ?: DEFAULT_SESSION_NAME
         CaptureDrafts.forget(captureId)
         saved.wakeRevision?.let { schedule(it) }
-        saved.measurement.toMap()
+        saved.measurement.toMap(sessionName)
+    }
+
+    override fun startSession(name: String?, promise: Promise) = run(promise) {
+        repository.startSession(name).toMap()
+    }
+
+    override fun listSessions(promise: Promise) = run(promise) {
+        Arguments.createArray().apply {
+            repository.listSessions().forEach { pushMap(it.toMap()) }
+        }
     }
 
     override fun getRecentRoom(promise: Promise) = run(promise) {
@@ -98,7 +109,12 @@ internal class FieldworkModule(private val context: ReactApplicationContext) : N
     }
 
     override fun listMeasurements(floor: Double, metric: String, promise: Promise) = run(promise) {
-        Arguments.createArray().apply { repository.list(floor, metric).forEach { pushMap(it.toMap()) } }
+        val sessionNames = repository.listSessions().associate { it.id to it.name }
+        Arguments.createArray().apply {
+            repository.list(floor, metric).forEach {
+                pushMap(it.toMap(sessionNames[it.sessionId] ?: DEFAULT_SESSION_NAME))
+            }
+        }
     }
 
     override fun retrySync(promise: Promise) = run(promise) {
@@ -138,6 +154,7 @@ internal class FieldworkModule(private val context: ReactApplicationContext) : N
     private suspend fun status() = database.withTransaction {
         val consent = dao.consent()
         val counts = dao.counts()
+        val session = dao.latestSession()
         Arguments.createMap().apply {
             putString("choice", when (consent?.enabled) {
                 true -> "community"
@@ -152,6 +169,8 @@ internal class FieldworkModule(private val context: ReactApplicationContext) : N
             putInt("pending", counts.pending)
             putInt("synced", counts.synced)
             putInt("failed", counts.failed)
+            putString("activeSessionId", session?.id ?: DEFAULT_SESSION_ID)
+            putString("activeSessionName", session?.name ?: DEFAULT_SESSION_NAME)
         }
     }
 
@@ -175,7 +194,13 @@ internal class FieldworkModule(private val context: ReactApplicationContext) : N
     }
 }
 
-private fun MeasurementEntity.toMap() = Arguments.createMap().apply {
+private fun SessionEntity.toMap() = Arguments.createMap().apply {
+    putString("id", id)
+    putString("name", name)
+    putString("startedAt", startedAt)
+}
+
+private fun MeasurementEntity.toMap(sessionName: String = DEFAULT_SESSION_NAME) = Arguments.createMap().apply {
     putString("id", id)
     putDouble("latitude", latitude)
     putDouble("longitude", longitude)
@@ -189,4 +214,6 @@ private fun MeasurementEntity.toMap() = Arguments.createMap().apply {
     putInt("floor", floor)
     putString("zoneSize", zoneSize)
     putString("syncState", syncState)
+    putString("sessionId", sessionId)
+    putString("sessionName", sessionName)
 }

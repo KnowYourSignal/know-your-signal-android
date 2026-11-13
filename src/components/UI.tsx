@@ -15,7 +15,10 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  SafeAreaInsetsContext,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import { COLORS } from '../theme/theme';
 import { globalStyles as g } from '../theme/globalStyles';
 import { Icon, type IconName } from './Icon';
@@ -302,7 +305,12 @@ export function Dialog({
   onAfterClose?: () => void;
   dismissible?: boolean;
 }>) {
-  const insets = useSafeAreaInsets();
+  const insets = React.useContext(SafeAreaInsetsContext) ?? {
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+  };
   const heading = useRef<React.ComponentRef<typeof Text>>(null);
   const [shown, setShown] = useState(false);
   const { present, progress, interactive } = useAnimatedPresence(

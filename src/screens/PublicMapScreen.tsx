@@ -116,6 +116,8 @@ export function PublicMapScreen() {
   const [floorEdit, setFloorEdit] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mapLayout, setMapLayout] = useState<MapLayout | null>(null);
+  const [preferPlane, setPreferPlane] = useState(false);
+  const autoLocated = useRef(false);
   const map = useRef<MapView>(null);
   const { hasViewport, current, cells, loading, reload } = usePublicCells(
     configuration,
@@ -153,12 +155,13 @@ export function PublicMapScreen() {
     return counts;
   }, [cells, filters.metric]);
 
+  const showTileMap = Boolean(configuration?.mapTiles && !preferPlane);
+
   function center(next: Region) {
     setSelectedId(null);
-    if (configuration?.mapTiles && map.current) {
+    setRegion(next);
+    if (showTileMap && map.current) {
       map.current.animateToRegion(next, reduced ? 0 : 220);
-    } else {
-      setRegion(next);
     }
   }
 
@@ -178,6 +181,18 @@ export function PublicMapScreen() {
       ),
     );
   });
+
+  useEffect(() => {
+    if (
+      focused &&
+      foreground &&
+      configuration?.mapTiles &&
+      !autoLocated.current
+    ) {
+      autoLocated.current = true;
+      locate();
+    }
+  }, [focused, foreground, configuration?.mapTiles, locate]);
 
   const floor = floorEdit === null ? null : parseFloor(floorEdit);
 
@@ -228,21 +243,30 @@ export function PublicMapScreen() {
         <View style={[g.card, s.mapCard]}>
           <View style={s.mapHeading}>
             <Text style={g.sectionTitle}>Zona visible</Text>
-            <StatusPill
-              label={
-                loading
-                  ? 'Consultando'
-                  : current?.error && cells.length
-                  ? 'Última consulta'
-                  : current?.cached
-                  ? 'En caché'
-                  : resolution
-                  ? resolution + ' m por celda'
-                  : 'Vista agregada'
-              }
-            />
+            <View style={s.filters}>
+              {configuration?.mapTiles && (
+                <Chip
+                  label={preferPlane ? 'Ver mapa base' : 'Ver plano'}
+                  selected={preferPlane}
+                  onPress={() => setPreferPlane(previous => !previous)}
+                />
+              )}
+              <StatusPill
+                label={
+                  loading
+                    ? 'Consultando'
+                    : current?.error && cells.length
+                    ? 'Última consulta'
+                    : current?.cached
+                    ? 'En caché'
+                    : resolution
+                    ? resolution + ' m por celda'
+                    : 'Vista agregada'
+                }
+              />
+            </View>
           </View>
-          {configuration?.mapTiles ? (
+          {showTileMap ? (
             <View
               style={[s.mapFrame, { height: mapHeight }]}
               onLayout={event => setMapLayout(event.nativeEvent.layout)}
@@ -252,6 +276,7 @@ export function PublicMapScreen() {
                 style={StyleSheet.absoluteFill}
                 provider={PROVIDER_GOOGLE}
                 initialRegion={region}
+                region={region}
                 toolbarEnabled={false}
                 rotateEnabled={false}
                 pitchEnabled={false}
@@ -273,6 +298,7 @@ export function PublicMapScreen() {
                   cells={cells}
                   metric={filters.metric}
                   selectedId={selectedId}
+                  technical={settings?.technicalMode ?? false}
                 />
               </MapView>
             </View>

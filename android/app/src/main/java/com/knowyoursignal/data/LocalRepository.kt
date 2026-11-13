@@ -4,6 +4,11 @@ import androidx.room.withTransaction
 import com.knowyoursignal.telemetry.CaptureDraft
 import com.knowyoursignal.telemetry.CaptureDrafts
 import com.knowyoursignal.telemetry.CaptureException
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
+import java.util.UUID
 
 internal const val MAX_HISTORY_POINTS = 750
 internal val METRICS = setOf("wifi_rssi", "lte_rsrp", "nr_ss_rsrp", "celular_dbm")
@@ -39,11 +44,16 @@ internal class LocalRepository(private val database: FieldDatabase) {
             if (connectionChoice != null && draft.reading.signal.connection != "wifi_desconocida") {
                 throw CaptureException("INVALID_CLASSIFICATION")
             }
+            val session = dao.latestSession() ?: SessionEntity(
+                id = DEFAULT_SESSION_ID,
+                name = DEFAULT_SESSION_NAME,
+                startedAt = draft.capturedAt,
+            ).also { dao.insertSession(it) }
             val consent = dao.consent()?.takeIf {
                 it.enabled && it.server == server && server.isNotEmpty() && draft.shareRevision == it.revision
             }
             val wake = if (consent != null && !dao.hasQueued(consent.revision)) consent.revision else null
-            val measurement = draft.toMeasurement(level, zoneSize, if (consent != null) PENDING else LOCAL_ONLY)
+            val measurement = draft.toMeasurement(level, zoneSize, if (consent != null) PENDING else LOCAL_ONLY, session.id)
                 .let { original ->
                     if (connectionChoice == null) original else original.copy(
                         connection = connectionChoice,
@@ -56,6 +66,23 @@ internal class LocalRepository(private val database: FieldDatabase) {
             }
             SavedCapture(measurement, wake)
         }
+
+    suspend fun startSession(name: String? = null): SessionEntity =
+        database.withTransaction {
+            val now = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.ROOT).apply {
+                timeZone = TimeZone.getTimeZone("UTC")
+            }.format(Date())
+            if (dao.sessionCount() == 0) {
+                dao.insertSession(SessionEntity(DEFAULT_SESSION_ID, DEFAULT_SESSION_NAME, now))
+            }
+            val nextNumber = dao.sessionCount() + 1
+            val label = name?.trim()?.takeIf { it.isNotEmpty() }?.take(60) ?: "Sesión $nextNumber"
+            val created = SessionEntity(UUID.randomUUID().toString(), label, now)
+            dao.insertSession(created)
+            created
+        }
+
+    suspend fun listSessions(): List<SessionEntity> = dao.sessions()
 
     suspend fun list(floor: Double, metric: String): List<MeasurementEntity> {
         if (metric !in METRICS) throw CaptureException("INVALID_METRIC")
@@ -79,7 +106,7 @@ internal class LocalRepository(private val database: FieldDatabase) {
         return floor.toInt()
     }
 
-    private fun CaptureDraft.toMeasurement(floor: Int, zoneSize: String, state: String) =
+    private fun CaptureDraft.toMeasurement(floor: Int, zoneSize: String, state: String, sessionId: String) =
         MeasurementEntity(
             id = id,
             latitude = reading.position.latitude,
@@ -93,6 +120,7 @@ internal class LocalRepository(private val database: FieldDatabase) {
             zoneSize = zoneSize,
             capturedAt = capturedAt,
             syncState = state,
+            sessionId = sessionId,
         )
 }
 

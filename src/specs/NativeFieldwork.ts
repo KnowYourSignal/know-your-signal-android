@@ -10,6 +10,14 @@ export type FieldStatus = {
   failed: number;
   syncAvailable: boolean;
   syncProblem: string | null;
+  activeSessionId?: string;
+  activeSessionName?: string;
+};
+
+export type MeasurementSession = {
+  id: string;
+  name: string;
+  startedAt: string;
 };
 
 export type SavedMeasurement = {
@@ -26,6 +34,8 @@ export type SavedMeasurement = {
   floor: number;
   zoneSize: string;
   syncState: string;
+  sessionId?: string;
+  sessionName?: string;
 };
 
 export type HistoryLayer = { floor: number; metric: string; count: number };
@@ -55,6 +65,8 @@ export interface Spec extends TurboModule {
     zoneSize: string,
     connectionChoice: string | null,
   ): Promise<SavedMeasurement>;
+  startSession(name: string | null): Promise<MeasurementSession>;
+  listSessions(): Promise<ReadonlyArray<MeasurementSession>>;
   getRecentRoom(): Promise<RecentRoom | null>;
   listLayers(): Promise<ReadonlyArray<HistoryLayer>>;
   listMeasurements(

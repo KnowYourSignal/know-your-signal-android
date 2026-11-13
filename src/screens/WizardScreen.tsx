@@ -1,5 +1,12 @@
-import React from 'react';
-import { Linking, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  Animated,
+  Easing,
+  Linking,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import {
   useIsFocused,
   type CompositeScreenProps,
@@ -13,10 +20,16 @@ import { AccuracyIndicator } from '../components/AccuracyIndicator';
 import { CaptureButton } from '../components/CaptureButton';
 import { Icon } from '../components/Icon';
 import { NetworkBadge } from '../components/NetworkBadge';
-import { Reveal } from '../components/Motion';
-import { Button, ProgressSteps, ScreenTitle } from '../components/UI';
-import { capturePresentation } from '../domain/CapturePresentation';
-import { CaptureStatusCard } from '../components/CaptureStatusCard';
+import { Reveal, useReducedMotion } from '../components/Motion';
+import {
+  Button,
+  Chip,
+  Dialog,
+  ProgressSteps,
+  ScreenTitle,
+  StatusPill,
+} from '../components/UI';
+import { fieldwork } from '../services/LocalRepositoryAdapter';
 import { useCaptureSession } from '../services/useCaptureSession';
 import { useSettings } from '../state/SettingsContext';
 import type { MainTabsParamList, RootParamList } from '../state/WizardState';
@@ -28,19 +41,94 @@ type Props = CompositeScreenProps<
   NativeStackScreenProps<RootParamList, 'MainTabs'>
 >;
 
+const BAR_HEIGHTS = [16, 26, 20, 34, 24, 38, 28, 32];
+
+function StationaryAveragingGraphic({
+  active,
+  step,
+}: {
+  active: boolean;
+  step: number;
+}) {
+  const reduced = useReducedMotion();
+  const wave = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (!active) {
+      wave.setValue(0);
+      return;
+    }
+    let loop: Animated.CompositeAnimation | undefined;
+    if (!reduced) {
+      loop = Animated.loop(
+        Animated.sequence([
+          Animated.timing(wave, {
+            toValue: 1,
+            duration: 500,
+            easing: Easing.inOut(Easing.quad),
+            useNativeDriver: true,
+          }),
+          Animated.timing(wave, {
+            toValue: 0,
+            duration: 500,
+            easing: Easing.inOut(Easing.quad),
+            useNativeDriver: true,
+          }),
+        ]),
+      );
+      loop.start();
+    }
+    return () => {
+      loop?.stop();
+    };
+  }, [active, reduced, wave]);
+
+  return (
+    <View style={s.averagingBox}>
+      <View style={s.averagingHeader}>
+        <StatusPill label={'Muestra ' + step + ' de 8'} tone="blue" />
+        <Text style={g.caption}>Promediando dBm y GPS</Text>
+      </View>
+      <View style={s.barsRow}>
+        {BAR_HEIGHTS.map((height, index) => {
+          const captured = index < step;
+          const current = index === step - 1;
+          return (
+            <Animated.View
+              key={index}
+              style={[
+                s.bar,
+                { height },
+                captured ? s.barCaptured : s.barPending,
+                current && {
+                  transform: [
+                    {
+                      scaleY: wave.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.85, 1.22],
+                      }),
+                    },
+                  ],
+                },
+              ]}
+            />
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
 export function WizardScreen({ navigation }: Props) {
-  const { status: settings } = useSettings();
+  const { status: settings, refresh } = useSettings();
   const focused = useIsFocused();
   const guide = useGuide();
   const session = useCaptureSession(focused && !guide.active);
+  const [startingSession, setStartingSession] = useState(false);
   useAutoGuide(
     'overview',
     focused && !session.enabled && session.status !== 'permission',
   );
-  const presentation = capturePresentation({
-    ...session,
-    guiding: guide.active,
-  });
   const needsSettings =
     session.problem === 'PERMISSION_DENIED' ||
     session.problem === 'LOCATION_DISABLED';
@@ -52,6 +140,19 @@ export function WizardScreen({ navigation }: Props) {
     }
   }
 
+  async function createSession() {
+    if (startingSession) return;
+    setStartingSession(true);
+    try {
+      await fieldwork().startSession?.(null);
+      await refresh();
+    } catch {
+      // Keep current session if local storage is busy.
+    } finally {
+      setStartingSession(false);
+    }
+  }
+
   return (
     <GuideScrollView style={g.screen} contentContainerStyle={g.content}>
       <Reveal style={s.layout}>
@@ -60,7 +161,7 @@ export function WizardScreen({ navigation }: Props) {
             <ScreenTitle
               eyebrow="01 / 02 · CAPTURA"
               title="Medir señal"
-              subtitle="Quédate quieto mientras medimos."
+              subtitle="Deja el teléfono quieto mientras promediamos 8 lecturas."
             />
           </View>
           <Button
@@ -72,7 +173,19 @@ export function WizardScreen({ navigation }: Props) {
         </View>
         <ProgressSteps count={2} current={0} />
 
-        <CaptureStatusCard state={presentation} />
+        <View style={s.sessionRow}>
+          <StatusPill
+            label={
+              'Sesión activa: ' + (settings?.activeSessionName ?? 'Sesión 1')
+            }
+          />
+          <Chip
+            label={startingSession ? 'Creando...' : '+ Nueva sesión'}
+            selected={false}
+            disabled={startingSession}
+            onPress={createSession}
+          />
+        </View>
 
         <View style={g.card}>
           <GuideTarget id="accuracy">
@@ -99,7 +212,12 @@ export function WizardScreen({ navigation }: Props) {
           <CaptureButton
             status={session.status}
             active={session.enabled}
-            ready={session.canRecord}
+            ready={
+              session.enabled &&
+              !guide.active &&
+              session.status !== 'permission' &&
+              !needsSettings
+            }
             onStart={session.start}
             onCapture={capture}
           />
@@ -134,6 +252,21 @@ export function WizardScreen({ navigation }: Props) {
           </Text>
         </View>
       </Reveal>
+      <Dialog
+        title="Promediando señal"
+        visible={session.status === 'freezing'}
+        dismissible={false}
+        onClose={() => {}}
+      >
+        <Text style={g.body}>
+          Deje su teléfono quieto, sonará cuando el proceso termine, no debería
+          tomar más de 5 segundos.
+        </Text>
+        <StationaryAveragingGraphic
+          active={session.status === 'freezing'}
+          step={session.sampleStep}
+        />
+      </Dialog>
     </GuideScrollView>
   );
 }
@@ -141,6 +274,45 @@ export function WizardScreen({ navigation }: Props) {
 const s = StyleSheet.create({
   layout: { gap: 14 },
   heading: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
+  sessionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  averagingBox: {
+    gap: 12,
+    padding: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    backgroundColor: COLORS.assistantGlow,
+  },
+  averagingHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  barsRow: {
+    height: 46,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    paddingHorizontal: 6,
+  },
+  bar: {
+    flex: 1,
+    borderRadius: 999,
+  },
+  barCaptured: {
+    backgroundColor: COLORS.primary,
+  },
+  barPending: {
+    backgroundColor: '#D4E1FA',
+  },
   flex: { flex: 1 },
   hint: {
     flexDirection: 'row',

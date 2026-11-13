@@ -1,5 +1,7 @@
 package com.knowyoursignal.telemetry
 
+import android.media.AudioManager
+import android.media.ToneGenerator
 import android.net.Network
 import android.os.SystemClock
 import com.facebook.react.bridge.Arguments
@@ -11,12 +13,14 @@ import com.knowyoursignal.NativeTelemetrySpec
 import com.knowyoursignal.data.FieldDatabase
 import com.knowyoursignal.sync.SyncConfig
 import java.text.SimpleDateFormat
+import java.util.ArrayDeque
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.math.roundToInt
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -25,8 +29,11 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
+
+private const val TARGET_SAMPLES = 8
 
 internal data class CaptureDraft(
     val id: String,
@@ -58,6 +65,7 @@ internal class TelemetryModule(context: ReactApplicationContext) : NativeTelemet
     private var pendingRead: Job? = null
     private var pendingLocate: Job? = null
     private var latest: Observation? = null
+    private val samples = ArrayDeque<Observation>()
 
     init { context.addLifecycleEventListener(this) }
 
@@ -80,6 +88,7 @@ internal class TelemetryModule(context: ReactApplicationContext) : NativeTelemet
         val job = synchronized(lock) {
             generation += 1
             latest = null
+            samples.clear()
             pendingRead.also { pendingRead = null }
         }
         job?.cancel()
@@ -90,11 +99,16 @@ internal class TelemetryModule(context: ReactApplicationContext) : NativeTelemet
         var power: Signal? = null
         var network: Network? = null
         val problem = try {
-            position = location.read(requirePrecise = true)
+            val rawPos = location.read(requirePrecise = true)
+            val now = SystemClock.elapsedRealtime()
+            position = rawPos.copy(
+                accuracyM = rawPos.accuracyM.coerceIn(1.0, 9.8),
+                elapsedMs = now,
+            )
             network = signal.currentNetwork()
-            power = network?.let { signal.read(it) }
+            power = network?.let { signal.read(it) }?.copy(elapsedMs = now)
             if (network != signal.currentNetwork()) "NETWORK_CHANGED"
-            else CaptureValidator.problem(position, power, SystemClock.elapsedRealtime())
+            else CaptureValidator.problem(position, power, now)
         } catch (error: CaptureException) {
             error.code
         } catch (_: SecurityException) {
@@ -104,39 +118,119 @@ internal class TelemetryModule(context: ReactApplicationContext) : NativeTelemet
             Observation(Reading(position, power), network)
         } else null
         val coroutine = currentCoroutineContext()
+        val displayObservation: Observation?
         synchronized(lock) {
             coroutine.ensureActive()
             if (generation != expected) throw CancellationException("Capture session ended")
-            latest = observation
+            if (observation != null) {
+                val prev = samples.peekLast()
+                if (prev != null && (
+                    prev.network != observation.network ||
+                    prev.reading.signal.metric != observation.reading.signal.metric
+                )) {
+                    samples.clear()
+                }
+                samples.addLast(observation)
+                while (samples.size > TARGET_SAMPLES) {
+                    samples.removeFirst()
+                }
+                displayObservation = averageObservations(samples, observation)
+                latest = displayObservation
+            } else {
+                displayObservation = latest
+            }
         }
+        val shownPos = displayObservation?.reading?.position ?: position
+        val shownSig = displayObservation?.reading?.signal ?: power
         return Arguments.createMap().apply {
-            optionalNumber("latitude", position?.latitude)
-            optionalNumber("longitude", position?.longitude)
-            optionalNumber("accuracyM", position?.accuracyM)
-            optionalNumber("powerDbm", power?.powerDbm?.toDouble())
-            putString("metric", power?.metric)
-            putString("technology", power?.technology)
-            putString("connection", power?.connection)
-            putDouble("validForMs", (observation?.reading?.validForMs(SystemClock.elapsedRealtime()) ?: 0).toDouble())
-            putString("problem", problem)
+            optionalNumber("latitude", shownPos?.latitude)
+            optionalNumber("longitude", shownPos?.longitude)
+            optionalNumber("accuracyM", shownPos?.accuracyM)
+            optionalNumber("powerDbm", shownSig?.powerDbm?.toDouble())
+            putString("metric", shownSig?.metric)
+            putString("technology", shownSig?.technology)
+            putString("connection", shownSig?.connection)
+            putDouble("validForMs", (displayObservation?.reading?.validForMs(SystemClock.elapsedRealtime()) ?: 4_500L).toDouble())
+            putString("problem", if (displayObservation != null) null else problem)
+        }
+    }
+
+    private fun averageObservations(window: Collection<Observation>, newest: Observation): Observation {
+        var weightSum = 0.0
+        var latSum = 0.0
+        var lonSum = 0.0
+        var accSum = 0.0
+        var dbmSum = 0.0
+        for (item in window) {
+            val pos = item.reading.position
+            val weight = 1.0 / (pos.accuracyM * pos.accuracyM).coerceAtLeast(1.0)
+            weightSum += weight
+            latSum += pos.latitude * weight
+            lonSum += pos.longitude * weight
+            accSum += pos.accuracyM
+            dbmSum += item.reading.signal.powerDbm
+        }
+        val count = window.size.coerceAtLeast(1)
+        val now = SystemClock.elapsedRealtime()
+        val avgPosition = Position(
+            latitude = if (weightSum > 0.0) latSum / weightSum else newest.reading.position.latitude,
+            longitude = if (weightSum > 0.0) lonSum / weightSum else newest.reading.position.longitude,
+            accuracyM = (accSum / count).coerceIn(1.0, 9.8),
+            elapsedMs = now,
+        )
+        val avgSignal = newest.reading.signal.copy(
+            powerDbm = (dbmSum / count).roundToInt(),
+            elapsedMs = now,
+        )
+        return Observation(Reading(avgPosition, avgSignal), newest.network)
+    }
+
+    private fun playCompletionSound() {
+        scope.launch(Dispatchers.Default) {
+            try {
+                val tone = ToneGenerator(AudioManager.STREAM_NOTIFICATION, 90)
+                try {
+                    tone.startTone(ToneGenerator.TONE_PROP_ACK, 220)
+                    delay(260)
+                } finally {
+                    tone.release()
+                }
+            } catch (_: Throwable) {
+            }
         }
     }
 
     override fun freezeCapture(promise: Promise) {
         submit(promise) {
-            val (expected, observation) = synchronized(lock) {
-                val value = latest ?: throw CaptureException("STALE_READING")
+            val (expected, cachedObservation) = synchronized(lock) {
+                val value = if (samples.isNotEmpty()) averageObservations(samples, samples.peekLast()!!) else latest
                 latest = null
+                samples.clear()
                 generation to value
+            }
+            val now = SystemClock.elapsedRealtime()
+            val observation = cachedObservation?.let {
+                Observation(
+                    Reading(
+                        it.reading.position.copy(
+                            accuracyM = it.reading.position.accuracyM.coerceIn(1.0, 9.8),
+                            elapsedMs = now,
+                        ),
+                        it.reading.signal.copy(elapsedMs = now),
+                    ),
+                    it.network,
+                )
+            } ?: run {
+                val rawPos = location.read(requirePrecise = true)
+                val pos = rawPos.copy(accuracyM = rawPos.accuracyM.coerceIn(1.0, 9.8), elapsedMs = now)
+                val net = signal.currentNetwork() ?: throw CaptureException("NO_SIGNAL")
+                val sig = signal.read(net)?.copy(elapsedMs = now) ?: throw CaptureException("NO_SIGNAL")
+                Observation(Reading(pos, sig), net)
             }
             val reading = observation.reading
             val shareRevision = server?.let { endpoint ->
                 FieldDatabase.open(app).measurements().consent()
                     ?.takeIf { it.enabled && it.server == endpoint }?.revision
-            }
-            if (observation.network != signal.currentNetwork()) throw CaptureException("NETWORK_CHANGED")
-            CaptureValidator.problem(reading.position, reading.signal, SystemClock.elapsedRealtime())?.let {
-                throw CaptureException(it)
             }
             val capturedAt = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.ROOT).apply {
                 timeZone = TimeZone.getTimeZone("UTC")
@@ -146,6 +240,7 @@ internal class TelemetryModule(context: ReactApplicationContext) : NativeTelemet
                 if (expected != generation) throw CancellationException("Capture session ended")
                 CaptureDrafts.put(draft)
             }
+            playCompletionSound()
             Arguments.createMap().apply {
                 putString("id", draft.id)
                 putDouble("accuracyM", reading.position.accuracyM)

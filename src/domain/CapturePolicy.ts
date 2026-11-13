@@ -27,6 +27,9 @@ export function canCapture(reading: SensorReading | null): boolean {
     reading.powerDbm <= -1 &&
     reading.metric !== null &&
     isMetric(reading.metric) &&
-    reading.powerDbm >= (reading.metric === 'wifi_rssi' ? -127 : -160)
+    reading.powerDbm >= (reading.metric === 'wifi_rssi' ? -127 : -160) &&
+    (reading.sampleCount == null ||
+      reading.targetSamples == null ||
+      reading.sampleCount >= reading.targetSamples)
   );
 }

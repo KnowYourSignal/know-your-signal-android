@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import MapView, { Circle, Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 
 import { EvidenceCard } from '../components/EvidenceCard';
 import { GeoPlane } from '../components/GeoPlane';
@@ -25,11 +26,14 @@ import {
 } from '../components/UI';
 import {
   METRIC_LABELS,
+  dateKey,
   floorLabel,
   formatDate,
   formatSignal,
   isMetric,
   networkLabel,
+  signalQuality,
+  signalWeight,
 } from '../domain/Measurement';
 import { shareEvidence } from '../services/EvidenceService';
 import {
@@ -37,9 +41,15 @@ import {
   type EvidenceSnapshot,
 } from '../domain/Evidence';
 import { fieldwork } from '../services/LocalRepositoryAdapter';
-import type { HistoryLayer, SavedMeasurement } from '../specs/NativeFieldwork';
+import type {
+  HistoryLayer,
+  MapConfiguration,
+  SavedMeasurement,
+} from '../specs/NativeFieldwork';
 import {
   fitRegion,
+  nearestPoint,
+  project,
   zoomRegion,
   type Filters,
   type MapLayout,
@@ -47,7 +57,7 @@ import {
 } from '../state/MapFilters';
 import { useSettings } from '../state/SettingsContext';
 import type { MainTabsParamList } from '../state/WizardState';
-import { COLORS } from '../theme/theme';
+import { COLORS, SIGNAL_COLORS } from '../theme/theme';
 import { globalStyles as g } from '../theme/globalStyles';
 
 const EMPTY: ReadonlyArray<SavedMeasurement> = [];
@@ -64,7 +74,7 @@ export function PersonalMapScreen({
   route,
 }: BottomTabScreenProps<MainTabsParamList, 'MapaPersonal'>) {
   const focused = useIsFocused();
-  const { status: settings } = useSettings();
+  const { status: settings, refresh } = useSettings();
   const { height, fontScale } = useWindowDimensions();
   const mapControlStyle = { flexGrow: 1, flexBasis: 90 * fontScale };
   const [layers, setLayers] = useState<ReadonlyArray<HistoryLayer> | null>(
@@ -76,6 +86,7 @@ export function PersonalMapScreen({
     points: ReadonlyArray<SavedMeasurement>;
   } | null>(null);
   const [region, setRegion] = useState<Region | null>(null);
+  const [sessionFilter, setSessionFilter] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [reload, setReload] = useState(0);
   const [failure, setFailure] = useState(false);
@@ -84,10 +95,26 @@ export function PersonalMapScreen({
   const [exporting, setExporting] = useState(false);
   const [previewReady, setPreviewReady] = useState(false);
   const [exportError, setExportError] = useState(false);
+  const [mapConfig, setMapConfig] = useState<MapConfiguration | null>(null);
+  const [showBaseMap, setShowBaseMap] = useState(false);
+  const [creatingSession, setCreatingSession] = useState(false);
   const cardRef = useRef<React.ComponentRef<typeof View>>(null);
   const sharing = useRef(false);
   const requested = useRef<string | null>(null);
   const params = route.params;
+
+  useEffect(() => {
+    let active = true;
+    fieldwork()
+      .getMapConfiguration()
+      .then(config => {
+        if (active) setMapConfig(config);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!focused) return;
@@ -104,6 +131,7 @@ export function PersonalMapScreen({
         if (isNew && params) {
           requested.current = params.savedId;
           setSelectedId(params.savedId);
+          setSessionFilter(null);
           setRegion(null);
         }
         setFilters(previous => {
@@ -178,7 +206,41 @@ export function PersonalMapScreen({
   ]);
 
   const current = result?.key === key ? result : null;
-  const points = current?.points ?? EMPTY;
+  const allPoints = current?.points ?? EMPTY;
+  const sessions = useMemo(() => {
+    const groups = new Map<
+      string,
+      { key: string; label: string; count: number }
+    >();
+    for (const point of allPoints) {
+      const sessionKey = point.sessionId ?? dateKey(point.capturedAt);
+      const existing = groups.get(sessionKey);
+      if (existing) {
+        existing.count += 1;
+      } else {
+        groups.set(sessionKey, {
+          key: sessionKey,
+          label: point.sessionName ?? formatDate(point.capturedAt),
+          count: 1,
+        });
+      }
+    }
+    return Array.from(groups.values());
+  }, [allPoints]);
+  const activeSession =
+    sessionFilter && sessions.some(session => session.key === sessionFilter)
+      ? sessionFilter
+      : null;
+  const points = useMemo(
+    () =>
+      activeSession
+        ? allPoints.filter(
+            point =>
+              (point.sessionId ?? dateKey(point.capturedAt)) === activeSession,
+          )
+        : allPoints,
+    [allPoints, activeSession],
+  );
   const naturalRegion = useMemo(() => fitRegion(points), [points]);
   const viewRegion = region ?? naturalRegion;
   const evidence = useMemo(
@@ -196,9 +258,24 @@ export function PersonalMapScreen({
 
   function change(next: Filters) {
     setSelectedId(null);
+    setSessionFilter(null);
     setRegion(null);
     setFailure(false);
     setFilters(next);
+  }
+
+  async function createNewSession() {
+    if (creatingSession) return;
+    setCreatingSession(true);
+    try {
+      await fieldwork().startSession?.(null);
+      await refresh();
+      navigation.navigate('Medir');
+    } catch {
+      // Ignore if local storage is busy.
+    } finally {
+      setCreatingSession(false);
+    }
   }
 
   async function sendEvidence() {
@@ -314,17 +391,62 @@ export function PersonalMapScreen({
                   ),
               )}
             </View>
+            {sessions.length > 0 && (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={s.filterRow}
+                style={s.filters}
+              >
+                <Chip
+                  label={'Todas (' + allPoints.length + ')'}
+                  selected={activeSession === null}
+                  onPress={() => {
+                    setSelectedId(null);
+                    setRegion(null);
+                    setSessionFilter(null);
+                  }}
+                />
+                {sessions.map(session => (
+                  <Chip
+                    key={session.key}
+                    label={session.label + ' (' + session.count + ')'}
+                    selected={activeSession === session.key}
+                    onPress={() => {
+                      setSelectedId(null);
+                      setRegion(null);
+                      setSessionFilter(session.key);
+                    }}
+                  />
+                ))}
+                <Chip
+                  label={creatingSession ? 'Iniciando...' : '+ Nueva sesión'}
+                  selected={false}
+                  disabled={creatingSession}
+                  onPress={createNewSession}
+                />
+              </ScrollView>
+            )}
             <View style={[g.card, s.mapCard]}>
               <View style={s.mapHeading}>
                 <Text style={g.sectionTitle}>Plano de señal</Text>
-                <StatusPill
-                  label={
-                    current
-                      ? points.length +
-                        (points.length === 1 ? ' medición' : ' mediciones')
-                      : 'Cargando'
-                  }
-                />
+                <View style={s.filterRow}>
+                  {mapConfig?.mapTiles && (
+                    <Chip
+                      label={showBaseMap ? 'Ver plano' : 'Ver mapa base'}
+                      selected={showBaseMap}
+                      onPress={() => setShowBaseMap(previous => !previous)}
+                    />
+                  )}
+                  <StatusPill
+                    label={
+                      current
+                        ? points.length +
+                          (points.length === 1 ? ' medición' : ' mediciones')
+                        : 'Cargando'
+                    }
+                  />
+                </View>
               </View>
               {!current ? (
                 <StatePanel
@@ -333,6 +455,101 @@ export function PersonalMapScreen({
                   body="Leyendo el piso seleccionado."
                   busy
                 />
+              ) : showBaseMap && mapConfig?.mapTiles ? (
+                <View
+                  style={[s.mapFrame, { height: mapHeight }]}
+                  onLayout={event => setMapLayout(event.nativeEvent.layout)}
+                >
+                  <MapView
+                    style={StyleSheet.absoluteFill}
+                    provider={PROVIDER_GOOGLE}
+                    initialRegion={viewRegion}
+                    region={viewRegion}
+                    toolbarEnabled={false}
+                    rotateEnabled={false}
+                    pitchEnabled={false}
+                    onRegionChangeComplete={setRegion}
+                    onPress={event => {
+                      if (!mapLayout) return;
+                      const pixel = project(
+                        event.nativeEvent.coordinate,
+                        viewRegion,
+                        mapLayout.width,
+                        mapLayout.height,
+                      );
+                      setSelectedId(
+                        nearestPoint(points, pixel, viewRegion, mapLayout)
+                          ?.id ?? null,
+                      );
+                    }}
+                  >
+                    {[...points].reverse().map(point => {
+                      const color =
+                        SIGNAL_COLORS[signalQuality(point.powerDbm, metric)];
+                      const weight = signalWeight(point.powerDbm, metric);
+                      const baseRadius = Math.max(5, point.accuracyM);
+                      const active = point.id === selectedId;
+                      const center = {
+                        latitude: point.latitude,
+                        longitude: point.longitude,
+                      };
+                      return (
+                        <React.Fragment key={point.id}>
+                          <Circle
+                            center={center}
+                            radius={baseRadius * 2.15}
+                            fillColor={color + '1F'}
+                            strokeColor="transparent"
+                            strokeWidth={0}
+                            zIndex={active ? 4 : 1}
+                          />
+                          <Circle
+                            center={center}
+                            radius={baseRadius * (1.15 + weight * 0.35)}
+                            fillColor={color + '38'}
+                            strokeColor="transparent"
+                            strokeWidth={0}
+                            zIndex={active ? 5 : 2}
+                          />
+                          <Circle
+                            center={center}
+                            radius={baseRadius * 0.55}
+                            fillColor={color + '80'}
+                            strokeColor={active ? COLORS.navy : color}
+                            strokeWidth={active ? 2 : 1}
+                            zIndex={active ? 6 : 3}
+                          />
+                          {(settings?.technicalMode ?? false) && (
+                            <Marker
+                              coordinate={center}
+                              anchor={{ x: 0.5, y: 0.5 }}
+                              tracksViewChanges={false}
+                              zIndex={active ? 10 : 7}
+                              onPress={() => setSelectedId(point.id)}
+                            >
+                              <View
+                                style={[
+                                  s.dbmBadge,
+                                  { borderColor: active ? COLORS.navy : color },
+                                  active && s.dbmBadgeActive,
+                                ]}
+                              >
+                                <Text
+                                  style={[
+                                    s.dbmText,
+                                    active && s.dbmTextActive,
+                                  ]}
+                                >
+                                  {point.powerDbm} dBm
+                                </Text>
+                              </View>
+                            </Marker>
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
+                  </MapView>
+                </View>
               ) : (
                 <GeoPlane
                   points={points}
@@ -390,7 +607,9 @@ export function PersonalMapScreen({
                       {selected.accuracyM.toFixed(1)} m
                     </Text>
                     <Text style={g.caption}>
-                      {formatDate(selected.capturedAt)}
+                      {(selected.sessionName ?? 'Sesión 1') +
+                        ' · ' +
+                        formatDate(selected.capturedAt)}
                     </Text>
                   </View>
                   <Button
@@ -496,6 +715,11 @@ export function PersonalMapScreen({
 const s = StyleSheet.create({
   layout: { gap: 14 },
   mapCard: { padding: 11, gap: 7 },
+  mapFrame: {
+    overflow: 'hidden',
+    borderRadius: 14,
+    backgroundColor: '#EAF1FD',
+  },
   mapHeading: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -508,4 +732,22 @@ const s = StyleSheet.create({
   filters: { flexGrow: 0 },
   grow: { flex: 1 },
   error: { color: COLORS.danger, fontSize: 13 },
+  dbmBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    backgroundColor: '#FFFFFFEB',
+  },
+  dbmBadgeActive: {
+    backgroundColor: COLORS.navy,
+  },
+  dbmText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: COLORS.navy,
+  },
+  dbmTextActive: {
+    color: '#FFFFFF',
+  },
 });

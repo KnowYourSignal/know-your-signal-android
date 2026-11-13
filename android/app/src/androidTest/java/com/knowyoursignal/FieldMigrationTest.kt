@@ -37,9 +37,11 @@ class FieldMigrationTest {
                 execSQL("INSERT INTO outbox VALUES ('unknown', 7, 200)")
                 close()
             }
-            helper.runMigrationsAndValidate(name, 2, true, FieldDatabase.MIGRATION_1_2).close()
+            helper.runMigrationsAndValidate(
+                name, 3, true, FieldDatabase.MIGRATION_1_2, FieldDatabase.MIGRATION_2_3,
+            ).close()
             val migrated = Room.databaseBuilder(context, FieldDatabase::class.java, name)
-                .addMigrations(FieldDatabase.MIGRATION_1_2).build()
+                .addMigrations(FieldDatabase.MIGRATION_1_2, FieldDatabase.MIGRATION_2_3).build()
             try {
                 val dao = migrated.measurements()
                 assertEquals(3, dao.counts().total)
@@ -49,6 +51,8 @@ class FieldMigrationTest {
                 assertEquals(LOCAL_ONLY, dao.find("private")?.syncState)
                 assertEquals("desconocido", dao.find("unknown")?.classificationOrigin)
                 assertEquals("sistema", dao.find("known")?.classificationOrigin)
+                assertEquals("session-1", dao.find("known")?.sessionId)
+                assertEquals("Sesión 1", dao.latestSession()?.name)
                 val queue = dao.nextBatch(7)
                 assertEquals(listOf("known", "unknown"), queue.map { it.id })
                 val payload = PublicPayloadBuilder.build(queue).getJSONArray("mediciones")
