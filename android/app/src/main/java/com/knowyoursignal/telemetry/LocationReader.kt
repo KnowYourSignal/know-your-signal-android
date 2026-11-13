@@ -19,7 +19,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 internal class CaptureException(val code: String) : Exception(code)
 
 private const val MAX_MAP_LOCATION_AGE_MS = 10 * 60 * 1_000L
-private const val PRECISE_CACHE_MAX_AGE_MS = 2_000L
+private const val PRECISE_CACHE_MAX_AGE_MS = MAX_READING_AGE_MS
 private const val ACTIVE_FIX_TIMEOUT_MS = 4_000L
 
 internal class LocationReader(private val context: Context) {
