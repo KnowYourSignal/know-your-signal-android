@@ -1,314 +1,118 @@
 package com.knowyoursignal.telemetry
 
-import android.media.AudioManager
-import android.media.ToneGenerator
-import android.net.Network
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.location.Location
+import android.location.LocationListener
+import android.location.LocationManager
+import android.os.Bundle
+import android.os.Looper
 import android.os.SystemClock
-import com.facebook.react.bridge.Arguments
-import com.facebook.react.bridge.LifecycleEventListener
-import com.facebook.react.bridge.Promise
-import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.bridge.WritableMap
-import com.knowyoursignal.NativeTelemetrySpec
-import com.knowyoursignal.data.FieldDatabase
-import com.knowyoursignal.sync.SyncConfig
-import java.text.SimpleDateFormat
-import java.util.ArrayDeque
-import java.util.Date
-import java.util.Locale
-import java.util.TimeZone
-import java.util.UUID
-import java.util.concurrent.atomic.AtomicBoolean
+import androidx.core.content.ContextCompat
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.math.roundToInt
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.launch
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
 
-private const val TARGET_SAMPLES = 4
+internal class CaptureException(val code: String) : Exception(code)
 
-internal data class CaptureDraft(
-    val id: String,
-    val reading: Reading,
-    val capturedAt: String,
-    val shareRevision: Long? = null,
-)
+private const val MAX_MAP_LOCATION_AGE_MS = 10 * 60 * 1_000L
+private const val PRECISE_CACHE_MAX_AGE_MS = 2_000L
+private const val ACTIVE_FIX_TIMEOUT_MS = 4_000L
 
-internal object CaptureDrafts {
-    private val current = AtomicReference<CaptureDraft?>()
-    fun put(draft: CaptureDraft) = current.set(draft)
-    fun find(id: String) = current.get()?.takeIf { it.id == id }
+internal class LocationReader(private val context: Context) {
+    private val manager = context.getSystemService(LocationManager::class.java)
 
-    fun forget(id: String) {
-        find(id)?.let { current.compareAndSet(it, null) }
-    }
-}
-
-internal class TelemetryModule(context: ReactApplicationContext) : NativeTelemetrySpec(context), LifecycleEventListener {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val app = context.applicationContext
-    private val location = LocationReader(app)
-    private val signal = SignalReader(app)
-    private val server = SyncConfig.load()?.server
-
-    private data class Observation(val reading: Reading, val network: Network)
-    private val lock = Any()
-    private var generation = 0L
-    private var pendingRead: Job? = null
-    private var pendingLocate: Job? = null
-    private var latest: Observation? = null
-    private val samples = ArrayDeque<Observation>()
-
-    init { context.addLifecycleEventListener(this) }
-
-    override fun onHostResume() = Unit
-    override fun onHostPause() {
-        stopReading()
-        stopLocating()
-    }
-    override fun onHostDestroy() = onHostPause()
-
-    override fun readSensors(promise: Promise) {
-        synchronized(lock) {
-            pendingRead?.cancel()
-            val currentGeneration = generation
-            pendingRead = submit(promise) { readSnapshot(currentGeneration) }
+    @Suppress("MissingPermission")
+    suspend fun read(requirePrecise: Boolean): Position {
+        val fine = has(Manifest.permission.ACCESS_FINE_LOCATION)
+        if (!fine && (requirePrecise || !has(Manifest.permission.ACCESS_COARSE_LOCATION))) {
+            throw CaptureException("PERMISSION_DENIED")
         }
-    }
+        val gps = LocationManager.GPS_PROVIDER
+        val network = LocationManager.NETWORK_PROVIDER
+        val providers = (if (fine) listOf(gps, network) else listOf(network))
+            .filter { manager.isProviderEnabled(it) }
+        if (providers.isEmpty()) throw CaptureException("LOCATION_DISABLED")
 
-    override fun stopReading() {
-        val job = synchronized(lock) {
-            generation += 1
-            latest = null
-            samples.clear()
-            pendingRead.also { pendingRead = null }
-        }
-        job?.cancel()
-    }
+        val now = SystemClock.elapsedRealtime()
+        val cacheAge = if (requirePrecise) PRECISE_CACHE_MAX_AGE_MS else MAX_MAP_LOCATION_AGE_MS
+        val candidates = providers.mapNotNull { manager.getLastKnownLocation(it) }
+            .filter { it.hasAccuracy() && (now - it.elapsedMs) in 0..cacheAge }
 
-    private suspend fun readSnapshot(expected: Long): WritableMap {
-        var position: Position? = null
-        var power: Signal? = null
-        var network: Network? = null
-        val problem = try {
-            position = location.read(requirePrecise = true)
-            network = signal.currentNetwork()
-            power = network?.let { signal.read(it) }
-            if (network != signal.currentNetwork()) "NETWORK_CHANGED"
-            else CaptureValidator.problem(position, power, SystemClock.elapsedRealtime())
-        } catch (error: CaptureException) {
-            error.code
-        } catch (_: SecurityException) {
-            "PERMISSION_DENIED"
+        val cached = if (requirePrecise) {
+            candidates
+                .filter { it.provider == gps && it.accuracy <= MAX_ACCURACY_M }
+                .minByOrNull { it.accuracy }
+        } else {
+            candidates.maxByOrNull { it.elapsedMs }
         }
 
-        val observation = if (problem == null && position != null && power != null && network != null) {
-            Observation(Reading(position, power), network)
-        } else null
+        if (cached != null) {
+            return cached.toPosition()
+        }
 
-        val coroutine = currentCoroutineContext()
-        val stabilized: Observation?
-        val currentSampleCount: Int
-        synchronized(lock) {
-            coroutine.ensureActive()
-            if (generation != expected) throw CancellationException("Capture session ended")
+        val best = AtomicReference<Location?>(null)
+        val fresh = withTimeoutOrNull(ACTIVE_FIX_TIMEOUT_MS) {
+            suspendCancellableCoroutine<Location> { continuation ->
+                val listener = object : LocationListener {
+                    override fun onLocationChanged(location: Location) {
+                        if (!location.hasAccuracy() || !continuation.isActive) return
 
-            val now = SystemClock.elapsedRealtime()
-            while (samples.isNotEmpty() && (now - samples.peekFirst()!!.reading.position.elapsedMs) > MAX_READING_AGE_MS) {
-                samples.removeFirst()
-            }
+                        val previous = best.get()
+                        val isBetterAccuracy = previous == null || location.accuracy < previous.accuracy
+                        val previousExpired = previous != null &&
+                            (location.elapsedMs - previous.elapsedMs) > MAX_READING_AGE_MS
 
-            if (observation != null) {
-                val prev = samples.peekLast()
-                if (prev != null && (
-                    prev.network != observation.network ||
-                    prev.reading.signal.metric != observation.reading.signal.metric
-                )) {
-                    samples.clear()
+                        if (isBetterAccuracy || previousExpired) {
+                            best.set(location)
+                        }
+
+                        if (!requirePrecise || location.accuracy <= MAX_ACCURACY_M) {
+                            manager.removeUpdates(this)
+                            continuation.resume(location)
+                        }
+                    }
+
+                    override fun onProviderEnabled(provider: String) = Unit
+                    override fun onProviderDisabled(provider: String) = Unit
+                    @Deprecated("Legacy Android callback")
+                    override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) = Unit
                 }
-                samples.addLast(observation)
-                while (samples.size > TARGET_SAMPLES) {
-                    samples.removeFirst()
-                }
-                stabilized = selectBestFixWithMeanSignal(samples, observation)
-                latest = stabilized
-            } else {
-                stabilized = null
-                if (problem != null) {
-                    samples.clear()
-                    latest = null
-                }
-            }
-            currentSampleCount = samples.size
-        }
 
-        val shownPos = stabilized?.reading?.position ?: position
-        val shownSig = stabilized?.reading?.signal ?: power
-        val validForMs = stabilized?.reading?.validForMs(SystemClock.elapsedRealtime()) ?: 0L
-
-        return Arguments.createMap().apply {
-            optionalNumber("latitude", shownPos?.latitude)
-            optionalNumber("longitude", shownPos?.longitude)
-            optionalNumber("accuracyM", shownPos?.accuracyM)
-            optionalNumber("powerDbm", shownSig?.powerDbm?.toDouble())
-            putString("metric", shownSig?.metric)
-            putString("technology", shownSig?.technology)
-            putString("connection", shownSig?.connection)
-            putDouble("validForMs", validForMs.toDouble())
-            putString("problem", problem)
-            putInt("sampleCount", currentSampleCount)
-            putInt("targetSamples", TARGET_SAMPLES)
-        }
-    }
-
-    /**
-     * Ficha 3 IDA: No promedia coordenadas con sesgo interior; selecciona el fix GPS
-     * con menor radio de incertidumbre (accuracyM) dentro de la ventana y suaviza
-     * únicamente el nivel de señal RF (powerDbm).
-     */
-    private fun selectBestFixWithMeanSignal(window: Collection<Observation>, newest: Observation): Observation {
-        val bestFix = window.minByOrNull { it.reading.position.accuracyM } ?: newest
-        val meanDbm = (window.sumOf { it.reading.signal.powerDbm }.toDouble() / window.size.coerceAtLeast(1)).roundToInt()
-        val smoothedSignal = newest.reading.signal.copy(powerDbm = meanDbm)
-        return Observation(Reading(bestFix.reading.position, smoothedSignal), newest.network)
-    }
-
-    private fun playCompletionSound() {
-        scope.launch(Dispatchers.Default) {
-            try {
-                val tone = ToneGenerator(AudioManager.STREAM_NOTIFICATION, 90)
+                continuation.invokeOnCancellation { manager.removeUpdates(listener) }
                 try {
-                    tone.startTone(ToneGenerator.TONE_PROP_ACK, 220)
-                    delay(260)
-                } finally {
-                    tone.release()
-                }
-            } catch (_: Throwable) {
-            }
-        }
-    }
-
-    override fun freezeCapture(promise: Promise) {
-        submit(promise) {
-            val (expected, cachedObservation) = synchronized(lock) {
-                val now = SystemClock.elapsedRealtime()
-                while (samples.isNotEmpty() && (now - samples.peekFirst()!!.reading.position.elapsedMs) > MAX_READING_AGE_MS) {
-                    samples.removeFirst()
-                }
-                val value = if (samples.isNotEmpty()) {
-                    selectBestFixWithMeanSignal(samples, samples.peekLast()!!)
-                } else {
-                    latest
-                }
-                latest = null
-                samples.clear()
-                generation to value
-            }
-
-            val observation = cachedObservation?.takeIf {
-                CaptureValidator.problem(it.reading.position, it.reading.signal, SystemClock.elapsedRealtime()) == null
-            } ?: run {
-                val pos = location.read(requirePrecise = true)
-                val net = signal.currentNetwork() ?: throw CaptureException("NO_SIGNAL")
-                val sig = signal.read(net) ?: throw CaptureException("NO_SIGNAL")
-                Observation(Reading(pos, sig), net)
-            }
-
-            if (observation.network != signal.currentNetwork()) {
-                throw CaptureException("NETWORK_CHANGED")
-            }
-
-            val reading = observation.reading
-            CaptureValidator.problem(reading.position, reading.signal, SystemClock.elapsedRealtime())?.let {
-                throw CaptureException(it)
-            }
-
-            val shareRevision = server?.let { endpoint ->
-                FieldDatabase.open(app).measurements().consent()
-                    ?.takeIf { it.enabled && it.server == endpoint }?.revision
-            }
-            val capturedAt = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.ROOT).apply {
-                timeZone = TimeZone.getTimeZone("UTC")
-            }.format(Date())
-            val draft = CaptureDraft(UUID.randomUUID().toString(), reading, capturedAt, shareRevision)
-            synchronized(lock) {
-                if (expected != generation) throw CancellationException("Capture session ended")
-                CaptureDrafts.put(draft)
-            }
-            playCompletionSound()
-            Arguments.createMap().apply {
-                putString("id", draft.id)
-                putDouble("accuracyM", reading.position.accuracyM)
-                putInt("powerDbm", reading.signal.powerDbm)
-                putString("metric", reading.signal.metric)
-                putString("technology", reading.signal.technology)
-                putString("connection", reading.signal.connection)
-                putString("capturedAt", draft.capturedAt)
-            }
-        }
-    }
-
-    override fun locate(promise: Promise) {
-        synchronized(lock) {
-            pendingLocate?.cancel()
-            pendingLocate = submit(promise) {
-                val position = location.read(requirePrecise = false)
-                Arguments.createMap().apply {
-                    putDouble("latitude", position.latitude)
-                    putDouble("longitude", position.longitude)
+                    providers.forEach { provider ->
+                        if (continuation.isActive) {
+                            manager.requestLocationUpdates(
+                                provider,
+                                200L,
+                                0f,
+                                listener,
+                                Looper.getMainLooper(),
+                            )
+                        }
+                    }
+                } catch (error: SecurityException) {
+                    manager.removeUpdates(listener)
+                    if (continuation.isActive) continuation.resumeWithException(error)
                 }
             }
         }
-    }
 
-    override fun stopLocating() {
-        val job = synchronized(lock) { pendingLocate.also { pendingLocate = null } }
-        job?.cancel()
-    }
-
-    private fun submit(promise: Promise, block: suspend () -> Any?): Job {
-        val settled = AtomicBoolean(false)
-        fun reject(code: String) {
-            if (settled.compareAndSet(false, true)) promise.reject(code, code)
+        val location = fresh ?: best.get() ?: throw CaptureException("LOCATION_TIMEOUT")
+        val maxAge = if (requirePrecise) MAX_READING_AGE_MS else MAX_MAP_LOCATION_AGE_MS
+        if ((SystemClock.elapsedRealtime() - location.elapsedMs) !in 0 until maxAge) {
+            throw CaptureException("STALE_READING")
         }
-        val job = scope.launch(start = CoroutineStart.LAZY) {
-            try {
-                val value = block()
-                if (settled.compareAndSet(false, true)) promise.resolve(value)
-            } catch (error: CancellationException) {
-                throw error
-            } catch (error: CaptureException) {
-                reject(error.code)
-            } catch (_: SecurityException) {
-                reject("PERMISSION_DENIED")
-            } catch (_: Exception) {
-                reject("SENSOR_UNAVAILABLE")
-            }
-        }
-        job.invokeOnCompletion { error ->
-            if (error is CancellationException) reject("READING_CANCELLED")
-        }
-        job.start()
-        return job
+        return location.toPosition()
     }
 
-    override fun invalidate() {
-        reactApplicationContext.removeLifecycleEventListener(this)
-        stopReading()
-        stopLocating()
-        scope.cancel()
-        super.invalidate()
-    }
-}
+    private fun has(permission: String) =
+        ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
 
-private fun WritableMap.optionalNumber(key: String, value: Double?) {
-    if (value == null) putNull(key) else putDouble(key, value)
+    private val Location.elapsedMs get() = elapsedRealtimeNanos / 1_000_000
+    private fun Location.toPosition() = Position(latitude, longitude, accuracy.toDouble(), elapsedMs)
 }
