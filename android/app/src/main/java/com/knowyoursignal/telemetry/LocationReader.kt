@@ -17,7 +17,10 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
 
 internal class CaptureException(val code: String) : Exception(code)
+
 private const val MAX_MAP_LOCATION_AGE_MS = 10 * 60 * 1_000L
+private const val PRECISE_CACHE_MAX_AGE_MS = MAX_READING_AGE_MS
+private const val ACTIVE_FIX_TIMEOUT_MS = 4_000L
 
 internal class LocationReader(private val context: Context) {
     private val manager = context.getSystemService(LocationManager::class.java)
@@ -34,32 +37,40 @@ internal class LocationReader(private val context: Context) {
             .filter { manager.isProviderEnabled(it) }
         if (providers.isEmpty()) throw CaptureException("LOCATION_DISABLED")
 
-        // Approximate location may be throttled. This only centers the map;
-        // the stricter capture precision and freshness requirements are retained.
-        val cacheAge = if (requirePrecise) 15_000L else MAX_MAP_LOCATION_AGE_MS
+        val now = SystemClock.elapsedRealtime()
+        val cacheAge = if (requirePrecise) PRECISE_CACHE_MAX_AGE_MS else MAX_MAP_LOCATION_AGE_MS
         val candidates = providers.mapNotNull { manager.getLastKnownLocation(it) }
-            .filter { it.hasAccuracy() && SystemClock.elapsedRealtime() - it.elapsedMs in 0..cacheAge }
+            .filter { it.hasAccuracy() && (now - it.elapsedMs) in 0..cacheAge }
+
         val cached = if (requirePrecise) {
-            candidates.filter { it.provider == gps && it.accuracy < MAX_ACCURACY_M }.minByOrNull { it.accuracy }
-                ?: candidates.minByOrNull { it.accuracy }
+            candidates
+                .filter { it.provider == gps && it.accuracy <= MAX_ACCURACY_M }
+                .minByOrNull { it.accuracy }
         } else {
             candidates.maxByOrNull { it.elapsedMs }
         }
-        if (cached != null && (!requirePrecise || cached.accuracy < MAX_ACCURACY_M)) {
-            return cached.toFreshPosition()
+
+        if (cached != null) {
+            return cached.toPosition()
         }
 
-        val best = AtomicReference(cached)
-        val fresh = withTimeoutOrNull(3_500) {
+        val best = AtomicReference<Location?>(null)
+        val fresh = withTimeoutOrNull(ACTIVE_FIX_TIMEOUT_MS) {
             suspendCancellableCoroutine<Location> { continuation ->
                 val listener = object : LocationListener {
                     override fun onLocationChanged(location: Location) {
                         if (!location.hasAccuracy() || !continuation.isActive) return
+
                         val previous = best.get()
-                        if (previous == null || location.accuracy <= previous.accuracy ||
-                            location.elapsedMs - previous.elapsedMs > 1_500
-                        ) best.set(location)
-                        if (!requirePrecise || location.accuracy < MAX_ACCURACY_M) {
+                        val isBetterAccuracy = previous == null || location.accuracy < previous.accuracy
+                        val previousExpired = previous != null &&
+                            (location.elapsedMs - previous.elapsedMs) > MAX_READING_AGE_MS
+
+                        if (isBetterAccuracy || previousExpired) {
+                            best.set(location)
+                        }
+
+                        if (!requirePrecise || location.accuracy <= MAX_ACCURACY_M) {
                             manager.removeUpdates(this)
                             continuation.resume(location)
                         }
@@ -70,11 +81,18 @@ internal class LocationReader(private val context: Context) {
                     @Deprecated("Legacy Android callback")
                     override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) = Unit
                 }
+
                 continuation.invokeOnCancellation { manager.removeUpdates(listener) }
                 try {
                     providers.forEach { provider ->
                         if (continuation.isActive) {
-                            manager.requestLocationUpdates(provider, 150L, 0f, listener, Looper.getMainLooper())
+                            manager.requestLocationUpdates(
+                                provider,
+                                200L,
+                                0f,
+                                listener,
+                                Looper.getMainLooper(),
+                            )
                         }
                     }
                 } catch (error: SecurityException) {
@@ -83,13 +101,18 @@ internal class LocationReader(private val context: Context) {
                 }
             }
         }
+
         val location = fresh ?: best.get() ?: throw CaptureException("LOCATION_TIMEOUT")
-        return location.toFreshPosition()
+        val maxAge = if (requirePrecise) MAX_READING_AGE_MS else MAX_MAP_LOCATION_AGE_MS
+        if ((SystemClock.elapsedRealtime() - location.elapsedMs) !in 0 until maxAge) {
+            throw CaptureException("STALE_READING")
+        }
+        return location.toPosition()
     }
 
     private fun has(permission: String) =
         ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
 
     private val Location.elapsedMs get() = elapsedRealtimeNanos / 1_000_000
-    private fun Location.toFreshPosition() = Position(latitude, longitude, accuracy.toDouble(), SystemClock.elapsedRealtime())
+    private fun Location.toPosition() = Position(latitude, longitude, accuracy.toDouble(), elapsedMs)
 }

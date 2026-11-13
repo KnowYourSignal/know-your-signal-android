@@ -44,6 +44,7 @@ export function useCaptureSession(focused: boolean) {
     setEnabled(false);
     setReading(null);
     setProblem(null);
+    setSampleStep(1);
     setStatus('idle');
   }, []);
 
@@ -57,6 +58,7 @@ export function useCaptureSession(focused: boolean) {
     let stabilizationTimeout: ReturnType<typeof setTimeout> | undefined;
     setStatus('reading');
     setReading(null);
+    setSampleStep(1);
 
     function armStabilizationTimeout() {
       if (stabilizationTimeout) {
@@ -79,7 +81,7 @@ export function useCaptureSession(focused: boolean) {
         timer = setTimeout(refresh, 200);
         return;
       }
-      let nextDelay = 1_350;
+      let nextDelay = 1_100;
       try {
         const sample = await telemetry.read();
         if (!active || freezing.current) {
@@ -90,18 +92,26 @@ export function useCaptureSession(focused: boolean) {
         }
         setReading(sample);
         setProblem(sample.problem);
+        if (sample.sampleCount != null && sample.sampleCount > 0) {
+          setSampleStep(sample.sampleCount);
+        } else {
+          setSampleStep(1);
+        }
+
         const ready = canCapture(sample);
-        const averaging =
+        const stabilizing =
           !ready &&
           sample.problem === null &&
           sample.validForMs > 0 &&
           sample.sampleCount != null &&
           sample.targetSamples != null &&
           sample.sampleCount < sample.targetSamples;
-        if (averaging) {
-          nextDelay = 650;
+
+        if (stabilizing) {
+          nextDelay = 550;
           armStabilizationTimeout();
         }
+
         setStatus(ready ? 'ready' : 'reading');
         if (ready) {
           if (stabilizationTimeout) {
@@ -112,6 +122,7 @@ export function useCaptureSession(focused: boolean) {
             if (active && !freezing.current) {
               setReading(null);
               setProblem('STALE_READING');
+              setSampleStep(1);
               setStatus('reading');
               armStabilizationTimeout();
             }
@@ -123,6 +134,7 @@ export function useCaptureSession(focused: boolean) {
         if (active && !freezing.current) {
           setReading(null);
           setProblem(errorCode(error));
+          setSampleStep(1);
           setStatus('reading');
         }
       } finally {
@@ -154,87 +166,18 @@ export function useCaptureSession(focused: boolean) {
       !focused ||
       !foreground ||
       !enabled ||
-      status === 'permission'
+      status !== 'ready' ||
+      !canCapture(reading)
     ) {
       return null;
     }
     freezing.current = true;
     const captureSession = session.current;
-    setSampleStep(1);
     setStatus('freezing');
     try {
-      const isTestEnv = 'jest' in globalThis;
-      const collected: SensorReading[] = [];
-      let lastSample: SensorReading | null = null;
-      if (!isTestEnv) {
-        for (let step = 1; step <= 8; step += 1) {
-          if (captureSession !== session.current) {
-            return null;
-          }
-          setSampleStep(step);
-          const startedAt = Date.now();
-          try {
-            const sample = await telemetry.read();
-            if (captureSession !== session.current) {
-              return null;
-            }
-            lastSample = sample;
-            if (sample.powerDbm !== null && sample.accuracyM !== null) {
-              collected.push(sample);
-              setReading(sample);
-            }
-          } catch {
-            // Keep collecting remaining stationary samples.
-          }
-          const elapsed = Date.now() - startedAt;
-          const remaining = Math.max(120, 520 - elapsed);
-          await new Promise<void>(resolve =>
-            setTimeout(() => resolve(), remaining),
-          );
-        }
-        for (
-          let attempt = 0;
-          attempt < 5 && (!lastSample || lastSample.problem !== null);
-          attempt += 1
-        ) {
-          if (captureSession !== session.current) {
-            return null;
-          }
-          try {
-            const sample = await telemetry.read();
-            lastSample = sample;
-            if (sample.powerDbm !== null && sample.accuracyM !== null) {
-              collected.push(sample);
-              setReading(sample);
-            }
-          } catch {
-            // Retry before freezing.
-          }
-        }
-      }
-      let saved = await telemetry.freeze().catch(async () => {
-        const retrySample = await telemetry.read();
-        if (retrySample.powerDbm !== null && retrySample.accuracyM !== null) {
-          collected.push(retrySample);
-        }
-        return telemetry.freeze();
-      });
+      const saved = await telemetry.freeze();
       if (captureSession !== session.current) {
         return null;
-      }
-      if (collected.length > 0) {
-        const avgDbm = Math.round(
-          collected.reduce((sum, item) => sum + (item.powerDbm ?? 0), 0) /
-            collected.length,
-        );
-        const avgAcc =
-          collected.reduce((sum, item) => sum + (item.accuracyM ?? 0), 0) /
-          collected.length;
-        saved = {
-          ...saved,
-          powerDbm: avgDbm,
-          accuracyM: Number(avgAcc.toFixed(1)),
-        };
       }
       // The draft is held natively while the user completes the floor form.
       // Keep the explicit session enabled so returning to Medir starts a fresh
@@ -243,12 +186,15 @@ export function useCaptureSession(focused: boolean) {
       telemetry.stop();
       setReading(null);
       setProblem(null);
+      setSampleStep(1);
       setStatus('reading');
       return saved;
     } catch (error) {
       if (captureSession === session.current) {
+        setReading(null);
         setProblem(errorCode(error));
-        setStatus(reading ? 'ready' : 'reading');
+        setSampleStep(1);
+        setStatus('reading');
       }
       return null;
     } finally {
