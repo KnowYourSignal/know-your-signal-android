@@ -39,6 +39,7 @@ PHASES = [
         False,
         "ROADMAP-B1",
     ),
+    ("KYS-ANDROID-011", "gnss-integrity", "GnssIntegrityJourneyTest", False, "IDA-GPS-TRUTHFUL-ACCURACY"),
     ("KYS-ANDROID-002", "capture", "CaptureJourneyTest", False, "ROADMAP-A1/B5"),
     (
         "KYS-ANDROID-010",
@@ -330,8 +331,8 @@ def run(args):
             )
             log = output / "logs" / (phase + ".log")
             try:
-                if phase == "gnss-capture":
-                    with EmulatorGps(adb, output / "logs/console-gps.json") as gps:
+                if phase in {"gnss-capture", "gnss-integrity"}:
+                    with EmulatorGps(adb, output / ("logs/" + phase + "-console-gps.json")) as gps:
                         execution = execute(
                             command, REPO, log, os.environ.copy(), timeout
                         )

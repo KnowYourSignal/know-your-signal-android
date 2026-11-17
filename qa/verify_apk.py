@@ -10,7 +10,7 @@ from pathlib import Path
 import re
 import zipfile
 
-FIXTURE_CLASS = b"GnssCaptureJourneyTest"
+FIXTURE_CLASSES = (b"GnssCaptureJourneyTest", b"GnssIntegrityJourneyTest")
 
 
 def inspect_apk(path: Path) -> dict:
@@ -23,15 +23,16 @@ def inspect_apk(path: Path) -> dict:
             for name in names
             if "ui_test_ca" in name.lower() or "ui-test-key" in name.lower()
         ]
-        fixture_class = any(
-            FIXTURE_CLASS in archive.read(name)
-            for name in names
-            if re.fullmatch(r"classes\d*\.dex", name)
-        )
+        fixture_classes = set()
+        for name in names:
+            if re.fullmatch(r"classes\d*\.dex", name):
+                data = archive.read(name)
+                fixture_classes.update(item.decode() for item in FIXTURE_CLASSES if item in data)
     return {
         "file": path.name,
         "fixture_files": fixture_names,
-        "contains_console_qa_class": fixture_class,
+        "contains_console_qa_class": bool(fixture_classes),
+        "console_qa_classes": sorted(fixture_classes),
     }
 
 
@@ -49,9 +50,9 @@ def verify(app: Path, test: Path | None = None) -> dict:
     if test is not None:
         test_data = inspect_apk(test)
         value["test"] = test_data
-        checks["test_apk_contains_new_qa_journey"] = test_data[
-            "contains_console_qa_class"
-        ]
+        checks["test_apk_contains_both_new_qa_journeys"] = (
+            set(test_data["console_qa_classes"]) == {item.decode() for item in FIXTURE_CLASSES}
+        )
     value["passed"] = all(checks.values())
     return value
 

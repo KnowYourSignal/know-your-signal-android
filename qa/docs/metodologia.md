@@ -89,6 +89,16 @@ equipo antes de afirmar impacto sobre usuarios.
 La calibración con personas se deja `NOT_CALIBRATED` hasta disponer de pares
 reales. El módulo `judge_agreement` calcula acuerdo observado e intervalo Wilson;
 no demuestra exactitud ni inventa juicios. No es requisito de compra de un LLM.
+La plantilla `calibration-template.csv` vincula cada par a campaña, hash de reporte
+y veredicto automático. `robot.py calibrate` valida la evidencia original y crea
+otro informe con acuerdos, desacuerdos, cobertura y tabla de confusión. Mantiene
+los estados automáticos y la compuerta. El muestreo elegido por personas puede
+estar sesgado y los criterios correlacionados; no se extrapola a toda la app.
+
+La comparación entre versiones verifica también entradas/oráculos, evaluadores,
+política, código del robot, semilla, herramientas y perfil. Un criterio cambiado
+se identifica aparte. La base no coincidente o incompleta queda `INCOMPARABLE`,
+sin atribuir a una mejora del producto un cambio de la prueba.
 
 La automatización ayuda a decidir; no prueba ausencia total de fallos, no concede
 certificación ISO y no autoriza por sí sola publicación comercial o entrega final.

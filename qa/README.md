@@ -46,7 +46,7 @@ al incluir también el contenedor de la suite; el robot no lo cuenta dos veces.
 | Análisis estático | Invariantes identificadas en archivos reales | Un patrón presente/ausente es un diagnóstico, no una prueba funcional completa |
 | `backend.py` | 68 contratos hoja originales del handler/SQL con JUnit real por caso | No cambia sus aserciones ni prueba el Supabase desplegado |
 | Suite JS existente | 54 pruebas del producto con su JSON/log real | Se reporta como suite adicional, sin duplicar el catálogo |
-| `android.py` | Ocho recorridos originales, un ensayo positivo con GNSS de consola y un indicador de tiempo; evidencia por fase | Emulador, GPS/servidor sintéticos; no teléfonos físicos ni Cloud real |
+| `android.py` | Ocho recorridos originales, dos ensayos GNSS (integridad y positivo) y un indicador de tiempo; evidencia por fase | Emulador, GPS/servidor sintéticos; no teléfonos físicos ni Cloud real |
 | `instrumentation.py` | Quince contratos nativos Room/sincronización originales, con resultados `-r` identificados | Emulador y servidor local; no Cloud real |
 | `native_backend.py --execute` | Diez comprobaciones SQL/concurrencia originales, en ambos esquemas PostGIS de CI | Base desechable protegida; no SLA de Android/Cloud |
 | Humano | Hoja de ruta, roles A/B/C/D y evidencia identificada | Pendiente hasta que una persona ejecute y firme |
@@ -78,6 +78,11 @@ Una función que no existía en la versión antigua queda como capacidad no
 compatible (`ERROR`), no como mejora de una regresión. Cambiar el catálogo o el
 entorno requiere interpretar la comparación. `PASS → ERROR` señala pérdida de
 evidencia ejecutable; no demuestra por sí solo un nuevo defecto de la app.
+La comparación contrasta oráculos/entradas por caso y versión del robot,
+política, semilla, repeticiones, perfil y herramientas. Un criterio editado se
+separa como `test_basis_changes`; una base distinta o incompleta queda
+`INCOMPARABLE`, con código de salida 1. Ese resultado nunca equivale a regresión
+aprobada, aunque no haya transiciones `PASS → FAIL`.
 
 ## Android y dependencias de escenarios
 
@@ -135,7 +140,8 @@ una IA ficticia al producto. Tampoco se afirma certificación ISO. El objetivo
 académico específico IA/LLM requiere acordar la adaptación con el docente; este
 trabajo no lo declara satisfecho.
 
-Para registrar una aceptación real, complete `human-review-template.csv` (persona,
+Para registrar una aceptación real, copie `human-review-template.csv` **fuera de
+la campaña original**, y complete esa copia (persona,
 PASS/FAIL, evidencia y observación; no deje campos vacíos) y genere otro informe:
 
 ```sh
@@ -145,6 +151,23 @@ python3 qa/robot.py review qa/reports/mi-ejecucion/report.json revisiones.csv --
 La importación no permite sobreescribir un fallo automático. No inventa acuerdo
 entre jueces: sin pares evaluados por personas, queda `NOT_CALIBRATED`. Los hashes
 detectan cambios accidentales; no son firma digital ni certificación de autoría.
+
+Para auditar un oráculo, copie `calibration-template.csv` fuera de la campaña,
+conserve las columnas de versión/hash/veredicto automático y deje solo las filas
+que una persona realmente revisó. Complete revisor, PASS/FAIL humano, evidencia y
+fundamento. Importe con:
+
+```sh
+python3 qa/robot.py calibrate qa/reports/mi-ejecucion/report.json pares-reales.csv --output qa/reports/calibracion
+```
+
+Calcula acuerdo observado, pares únicos, desacuerdos, tabla de confusión e
+intervalo Wilson con sus supuestos. La muestra elegida por revisores puede estar
+sesgada; no prueba exactitud poblacional. No evalúa un LLM ni modifica el estado
+de un caso o la compuerta de aceptación. Sin juicios reales sigue
+`NOT_CALIBRATED`. Una revisión/calibración verifica primero la integridad y
+genera otra carpeta, fuera de la campaña original; nunca edite la plantilla
+dentro del paquete inmutable.
 
 ## Fuentes y trabajo del equipo
 

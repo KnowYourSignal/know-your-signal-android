@@ -33,10 +33,12 @@ from core import (
     statistics,
     validate_catalog,
     apply_human_reviews,
+    apply_calibration_reviews,
     validate_policy,
 )
 from reporting import write_json, write_report
 from backend import aggregate_backend, parse_backend_xml
+from verify import verify
 
 QA = Path(__file__).resolve().parent
 REPO = QA.parent
@@ -560,6 +562,12 @@ def build_parser():
     review.add_argument("report", type=Path)
     review.add_argument("reviews", type=Path)
     review.add_argument("--output", type=Path, required=True)
+    calibrate = sub.add_parser(
+        "calibrate", help="Measure genuine human/automatic oracle agreement without overriding verdicts"
+    )
+    calibrate.add_argument("report", type=Path)
+    calibrate.add_argument("reviews", type=Path)
+    calibrate.add_argument("--output", type=Path, required=True)
     return parser
 
 
@@ -594,17 +602,29 @@ def main() -> int:
             raise ValueError("Comparison output already exists")
         write_json(args.output, diff)
         print(json.dumps(diff, ensure_ascii=False, indent=2))
-        return 1 if diff["regressions"] else 0
-    if args.command == "review":
+        return 0 if diff["decision"] == "NO_OBSERVED_REGRESSIONS" else 1
+    if args.command in {"review", "calibrate"}:
+        if args.report.name != "report.json" or args.report.is_symlink():
+            raise ValueError("Review requires the original report.json in its immutable campaign directory")
+        integrity_errors = verify(args.report.parent)
+        if integrity_errors:
+            raise ValueError("Source campaign integrity failed: " + "; ".join(integrity_errors))
+        original_folder = args.report.parent.resolve()
+        destination = args.output.resolve()
+        if destination == original_folder or original_folder in destination.parents:
+            raise ValueError("A reviewed report must be outside the original immutable campaign")
         report = json.loads(args.report.read_text())
         with args.reviews.open(encoding="utf-8-sig", newline="") as stream:
             reviews = list(csv.DictReader(stream))
-        reviewed = apply_human_reviews(report, reviews)
+        reviewed = (
+            apply_human_reviews(report, reviews) if args.command == "review"
+            else apply_calibration_reviews(report, reviews, digest(args.report))
+        )
         reviewed["parent_report_sha256"] = digest(args.report)
         reviewed["reviewed_at"] = dt.datetime.now(dt.timezone.utc).isoformat()
         output = new_output(args.output)
         policy = json.loads((args.report.parent / "policy.json").read_text())
-        for name in ("logs", "raw"):
+        for name in ("logs", "raw", "artifacts", "device", "journey-evidence"):
             origin = args.report.parent / name
             if origin.is_dir():
                 shutil.copytree(origin, output / name)

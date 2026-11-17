@@ -2,12 +2,15 @@
 """Verify immutable evidence without trusting paths supplied by a report."""
 import argparse
 import json
+import re
 from pathlib import Path
 from core import digest, validate_report
 
 
 def verify(folder: Path) -> list[str]:
     folder = folder.resolve(strict=True)
+    if (folder / "manifest.sha256.json").is_symlink():
+        return ["Integrity manifest cannot be a symlink"]
     manifest = json.loads((folder / "manifest.sha256.json").read_text())
     errors = []
     if not isinstance(manifest, dict) or not manifest:
@@ -18,10 +21,16 @@ def verify(folder: Path) -> list[str]:
             or Path(relative).is_absolute()
             or ".." in Path(relative).parts
             or "\\" in relative
+            or ":" in relative
         ):
             errors.append("Unsafe manifest path")
             continue
         path = (folder / relative).resolve()
+        if not isinstance(expected, str) or not re.fullmatch(r"[a-f0-9]{64}", expected):
+            errors.append("Invalid evidence digest: " + relative)
+            continue
+        if (folder / relative).is_symlink():
+            errors.append("Symlink evidence is not permitted: " + relative)
         if folder not in path.parents:
             errors.append("Manifest path escapes evidence directory")
         elif not path.is_file() or digest(path) != expected:
@@ -29,8 +38,10 @@ def verify(folder: Path) -> list[str]:
     actual_files = {
         str(p.relative_to(folder))
         for p in folder.rglob("*")
-        if p.is_file() and p.name != "manifest.sha256.json"
+        if p.is_file() and p != folder / "manifest.sha256.json"
     }
+    if any(p.is_symlink() for p in folder.rglob("*")):
+        errors.append("Evidence inventory contains a symlink")
     if actual_files != set(manifest):
         errors.append("Evidence file inventory differs from manifest")
     report = json.loads((folder / "report.json").read_text())
@@ -43,6 +54,13 @@ def verify(folder: Path) -> list[str]:
             errors.append(
                 "Case evidence/hash missing from manifest: " + case["case_id"]
             )
+        elif isinstance(relative, str) and not Path(relative).is_absolute() and ".." not in Path(relative).parts:
+            evidence_path = (folder / relative).resolve()
+            if folder in evidence_path.parents and evidence_path.is_file():
+                evidence = json.loads(evidence_path.read_text())
+                canonical_case = {k: v for k, v in case.items() if k not in {"evidence_file", "evidence_sha256"}}
+                if evidence != canonical_case:
+                    errors.append("Case record differs from its evidence: " + case["case_id"])
     return errors
 
 

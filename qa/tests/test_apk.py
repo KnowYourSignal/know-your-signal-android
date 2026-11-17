@@ -18,7 +18,7 @@ class ApkSeparationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             app, test = Path(temp) / "app.apk", Path(temp) / "test.apk"
             self.apk(app, {"classes.dex": b"main application"})
-            self.apk(test, {"classes2.dex": b"GnssCaptureJourneyTest"})
+            self.apk(test, {"classes2.dex": b"GnssCaptureJourneyTest GnssIntegrityJourneyTest"})
             self.assertTrue(verify(app, test)["passed"])
 
     def test_test_tls_key_or_ca_never_belongs_in_the_app(self):
@@ -40,6 +40,14 @@ class ApkSeparationTests(unittest.TestCase):
             self.apk(app, {"classes.dex": b"main"})
             self.apk(test, {"classes.dex": b"old tests"})
             self.assertFalse(verify(app, test)["passed"])
+            self.apk(test, {"classes.dex": b"GnssCaptureJourneyTest"})
+            self.assertFalse(verify(app, test)["passed"])
+
+    def test_negative_fixture_must_also_stay_out_of_the_app(self):
+        with tempfile.TemporaryDirectory() as temp:
+            app = Path(temp) / "app.apk"
+            self.apk(app, {"classes3.dex": b"GnssIntegrityJourneyTest"})
+            self.assertFalse(verify(app)["passed"])
 
     def test_empty_and_corrupt_archives_are_rejected(self):
         with tempfile.TemporaryDirectory() as temp:

@@ -12,6 +12,12 @@ from test_robot import case, report, POLICY
 
 
 class IntegrityTests(unittest.TestCase):
+    def test_run_identifier_cannot_inject_formulas_into_review_templates(self):
+        for value in ['=HYPERLINK("bad")', "a/b", None, "a\nb", "a" * 182]:
+            with tempfile.TemporaryDirectory() as temp:
+                with self.assertRaises(ValueError):
+                    write_report(report(case(), run_id=value), Path(temp) / "out", POLICY)
+
     def test_unsafe_case_id_is_refused_before_any_evidence_is_written(self):
         with tempfile.TemporaryDirectory() as temp:
             output = Path(temp) / "out"
@@ -82,6 +88,36 @@ class IntegrityTests(unittest.TestCase):
             errors = verify(output)
             self.assertIn("Unsafe manifest path", errors)
             self.assertIn("Manifest path escapes evidence directory", errors)
+
+    def test_internal_symlinks_are_also_refused_before_review_import(self):
+        with tempfile.TemporaryDirectory() as temp:
+            output = Path(temp)
+            write_report(report(case()), output, POLICY)
+            (output / "alias.json").symlink_to(output / "report.json")
+            manifest = json.loads((output / "manifest.sha256.json").read_text())
+            manifest["alias.json"] = digest(output / "report.json")
+            (output / "manifest.sha256.json").write_text(json.dumps(manifest))
+            self.assertTrue(any("Symlink" in e or "symlink" in e for e in verify(output)))
+
+    def test_nested_manifest_named_file_is_not_silently_excluded(self):
+        with tempfile.TemporaryDirectory() as temp:
+            output = Path(temp)
+            write_report(report(case()), output, POLICY)
+            (output / "raw").mkdir()
+            (output / "raw/manifest.sha256.json").write_text("unrecorded")
+            self.assertIn("Evidence file inventory differs from manifest", verify(output))
+
+    def test_report_verdict_must_match_its_per_case_evidence(self):
+        with tempfile.TemporaryDirectory() as temp:
+            output = Path(temp)
+            write_report(report(case()), output, POLICY)
+            source = output / "report.json"
+            value = json.loads(source.read_text()); value["cases"][0]["status"] = "FAIL"
+            source.write_text(json.dumps(value))
+            manifest_path = output / "manifest.sha256.json"
+            manifest = json.loads(manifest_path.read_text()); manifest["report.json"] = digest(source)
+            manifest_path.write_text(json.dumps(manifest))
+            self.assertTrue(any("differs from its evidence" in e for e in verify(output)))
 
 
 if __name__ == "__main__":

@@ -275,6 +275,21 @@ class GateTests(unittest.TestCase):
 
 
 class ComparisonTests(unittest.TestCase):
+    def test_changing_the_oracle_is_not_a_product_improvement(self):
+        diff = compare_reports(report(case(status="FAIL", expected=False)), report(case(expected=True)))
+        self.assertFalse(diff["improvements"])
+        self.assertEqual(len(diff["test_basis_changes"]), 1)
+        self.assertEqual(diff["decision"], "INCOMPARABLE")
+
+    def test_complete_comparison_basis_is_required_for_regression_gate(self):
+        fields = dict(catalog_sha256="c", policy_sha256="p", robot_sources_sha256={"core.py": "h"}, sources_sha256="s", seed=0, repetitions=3, environment="synthetic", tools={"node": "24"})
+        before = report(case(), metadata=fields, profile="portable")
+        after = report(case(), metadata=fields, profile="portable")
+        self.assertEqual(compare_reports(before, after)["decision"], "NO_OBSERVED_REGRESSIONS")
+        after["metadata"] = {**fields, "seed": 9}
+        self.assertEqual(compare_reports(before, after)["decision"], "INCOMPARABLE")
+        self.assertEqual(compare_reports(report(case()), report(case()))["decision"], "INCOMPARABLE")
+
     def test_regression_improvement_and_new_case_are_distinct(self):
         before = report(case(), case(case_id="KYS-CAP-002", status="FAIL"))
         after = report(

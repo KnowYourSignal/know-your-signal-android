@@ -39,7 +39,9 @@ def write_report(report: dict, output: Path, policy: dict):
     )
     for case in report["cases"]:
         relative = f'evidence/{case["case_id"]}.json'
-        write_json(output / relative, case)
+        write_json(output / relative, {
+            k: v for k, v in case.items() if k not in {"evidence_file", "evidence_sha256"}
+        })
         case["evidence_file"] = relative
         case["evidence_sha256"] = digest(output / relative)
     write_json(output / "report.json", report)
@@ -48,7 +50,7 @@ def write_report(report: dict, output: Path, policy: dict):
     _incidents(report, output)
     _html(report, output)
     files = [
-        p for p in output.rglob("*") if p.is_file() and p.name != "manifest.sha256.json"
+        p for p in output.rglob("*") if p.is_file() and p != output / "manifest.sha256.json"
     ]
     write_json(
         output / "manifest.sha256.json",
@@ -113,6 +115,18 @@ def _csv(report: dict, output: Path):
         for c in report["cases"]:
             if c.get("requires_interpretation"):
                 writer.writerow([report["run_id"], c["case_id"], "", "", "", ""])
+    with (output / "calibration-template.csv").open(
+        "w", newline="", encoding="utf-8-sig"
+    ) as stream:
+        writer = csv.writer(stream)
+        writer.writerow([
+            "run_id", "source_report_sha256", "case_id", "automatic_verdict",
+            "reviewer", "human_verdict", "evidence", "rationale",
+        ])
+        report_sha = digest(output / "report.json")
+        for c in report["cases"]:
+            if c.get("adapter") != "human" and c["status"] in {"PASS", "FAIL"}:
+                writer.writerow([report["run_id"], report_sha, c["case_id"], c["status"], "", "", "", ""])
 
 
 def safe_csv_cell(value):
@@ -243,7 +257,8 @@ def _html(report: dict, output: Path):
 </style></head><body><header><h1>Robot QA · Know Your Signal</h1><p>{esc(report['run_id'])}</p><div class="gate">Decisión: {esc(report['gate']['decision'])}</div><p>{esc(report['gate']['reason'])}</p></header>
 <main><p class="warn">{esc(report['scope_warning'])} Los tiempos de los casos lógicos son del evaluador, no la velocidad de la app.</p>
 <div class="stats">{cards}</div><section class="meta"><p><b>Commit probado:</b> {esc(metadata.get('sut_revision'))}</p><p><b>App SHA-256:</b> {esc(metadata.get('application_fingerprint'))}</p><p><b>Catálogo SHA-256:</b> {esc(metadata.get('catalog_sha256'))}</p><p><b>Repeticiones:</b> {esc(metadata.get('repetitions'))}</p><p><b>Entorno:</b> {esc(metadata.get('environment'))}</p><p><b>Modelo / prompt:</b> no aplica al producto Android actual</p></section>
-<nav><a href="report.json">Reporte completo JSON</a><a href="traceability.csv">Matriz CSV</a><a href="junit.xml">JUnit XML</a><a href="incidents.md">Hallazgos</a><a href="human-review-template.csv">Revisión humana</a><a href="manifest.sha256.json">Integridad de evidencias</a></nav>
+<nav><a href="report.json">Reporte completo JSON</a><a href="traceability.csv">Matriz CSV</a><a href="junit.xml">JUnit XML</a><a href="incidents.md">Hallazgos</a><a href="human-review-template.csv">Aceptación humana</a><a href="technical-review-template.csv">Decisiones técnicas</a><a href="calibration-template.csv">Calibración de oráculos</a><a href="manifest.sha256.json">Integridad de evidencias</a></nav>
+<p><b>Revisión de evaluadores:</b> {esc(report['judge_agreement'].get('status'))} · pares reales: {esc(report['judge_agreement'].get('n'))}. El acuerdo no modifica los veredictos automáticos ni aprueba una entrega. Consulte sus límites de muestreo en el JSON.</p>
 <p>{summary['executed_unique']} casos únicos ejecutados de {summary['total']}. Las repeticiones no aumentan el número de casos. Los casos humanos pendientes no cuentan como aprobados.</p>
 <div class="filters"><label>Buscar<input id="query" placeholder="Caso, requisito o título"></label><label>Estado<select id="status"><option value="">Todos</option>{''.join(f'<option>{esc(s)}</option>' for s in LABELS)}</select></label><button id="expand" type="button">Mostrar detalles</button></div>
 <section aria-label="Resultados por caso">{''.join(entries)}</section>

@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 SCHEMA_VERSION = "1.0"
-ROBOT_VERSION = "1.0.0"
+ROBOT_VERSION = "1.1.0"
 STATUSES = {"PASS", "FAIL", "ERROR", "BLOCKED", "REVIEW", "NOT_APPLICABLE"}
 EVALUATORS = {
     "exact-contract",
@@ -349,7 +349,16 @@ def compare_reports(baseline: dict, candidate: dict) -> dict:
         if old[c["case_id"]].get("comparable") is False
         or new[c["case_id"]].get("comparable") is False
     ]
-    comparable = [c for c in changes if c not in capability_changes]
+    basis_fields = ("input", "expected", "evaluators", "adapter", "operation", "requirement_id", "required", "severity")
+    basis_changes = [
+        {"case_id": key, "before": old[key]["status"], "after": new[key]["status"],
+         "reason": "Inputs, oracle, evaluator or required criterion changed"}
+        for key in common
+        if canonical_hash({k: old[key].get(k) for k in basis_fields})
+        != canonical_hash({k: new[key].get(k) for k in basis_fields})
+    ]
+    changed_basis_ids = {c["case_id"] for c in basis_changes}
+    comparable = [c for c in changes if c not in capability_changes and c["case_id"] not in changed_basis_ids]
     regressions = [
         c for c in comparable if c["before"] == "PASS" and c["after"] == "FAIL"
     ]
@@ -359,14 +368,29 @@ def compare_reports(baseline: dict, candidate: dict) -> dict:
     lost_evidence = [
         c for c in comparable if c["before"] == "PASS" and c["after"] == "ERROR"
     ]
+    metadata_fields = ("catalog_sha256", "policy_sha256", "robot_sources_sha256", "sources_sha256", "seed", "repetitions", "environment", "tools")
+    comparison_basis = {
+        field: (
+            "MATCH" if field in baseline["metadata"] and field in candidate["metadata"]
+            and baseline["metadata"][field] is not None
+            and baseline["metadata"][field] == candidate["metadata"][field]
+            else "DIFFERENT_OR_MISSING"
+        ) for field in metadata_fields
+    }
+    comparison_basis["profile"] = "MATCH" if baseline.get("profile") and baseline.get("profile") == candidate.get("profile") else "DIFFERENT_OR_MISSING"
+    controlled = all(state == "MATCH" for state in comparison_basis.values()) and not basis_changes
     return {
         "schema_version": SCHEMA_VERSION,
         "baseline_run": baseline["run_id"],
         "candidate_run": candidate["run_id"],
-        "same_sut": baseline["metadata"].get("application_fingerprint")
+        "same_sut": bool(baseline["metadata"].get("application_fingerprint")) and baseline["metadata"].get("application_fingerprint")
         == candidate["metadata"].get("application_fingerprint"),
-        "same_catalog": baseline["metadata"].get("catalog_sha256")
+        "same_catalog": bool(baseline["metadata"].get("catalog_sha256")) and baseline["metadata"].get("catalog_sha256")
         == candidate["metadata"].get("catalog_sha256"),
+        "comparison_basis": comparison_basis,
+        "controlled_comparison": controlled,
+        "decision": "INCOMPARABLE" if not controlled else ("REGRESSIONS" if regressions or lost_evidence else "NO_OBSERVED_REGRESSIONS"),
+        "test_basis_changes": basis_changes,
         "regressions": regressions,
         "improvements": improvements,
         "capability_changes": capability_changes,
@@ -379,7 +403,7 @@ def compare_reports(baseline: dict, candidate: dict) -> dict:
         "added": sorted(new.keys() - old.keys()),
         "removed": sorted(old.keys() - new.keys()),
         "common_count": len(common),
-        "interpretation": "Only comparable case IDs are contrasted. A missing, blocked or human case is never an improvement. Changes in test basis require human interpretation.",
+        "interpretation": "Status transitions are observations, not causal attribution. A changed oracle is not a product improvement. Missing, blocked, unsupported and human cases are separate. Review DIFFERENT_OR_MISSING basis before using this comparison as a regression gate.",
     }
 
 
@@ -387,7 +411,8 @@ def validate_report(report: dict):
     if (
         not isinstance(report, dict)
         or report.get("schema_version") != SCHEMA_VERSION
-        or not report.get("run_id")
+        or not isinstance(report.get("run_id"), str)
+        or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,180}", report["run_id"])
         or not isinstance(report.get("metadata"), dict)
         or not isinstance(report.get("cases"), list)
     ):
@@ -408,13 +433,15 @@ def validate_report(report: dict):
 
 def apply_human_reviews(report: dict, reviews: list[dict]) -> dict:
     validate_report(report)
+    if not isinstance(reviews, list) or not reviews or any(not isinstance(r, dict) for r in reviews):
+        raise ValueError("Human acceptance requires nonempty genuine review records")
     # JSON roundtrip creates a new report; the machine evidence remains immutable.
     result = json.loads(json.dumps(report))
     index = {c["case_id"]: c for c in result["cases"]}
     seen = set()
     for review in reviews:
         ident = review.get("case_id")
-        if ident in seen:
+        if not isinstance(ident, str) or ident in seen:
             raise ValueError(f"Duplicate review: {ident}")
         seen.add(ident)
         if review.get("run_id") != report["run_id"] or ident not in index:
@@ -424,12 +451,12 @@ def apply_human_reviews(report: dict, reviews: list[dict]) -> dict:
             raise ValueError("A human review cannot overwrite machine failures")
         if (
             review.get("verdict") not in {"PASS", "FAIL"}
-            or not str(review.get("reviewer", "")).strip()
+            or not isinstance(review.get("reviewer"), str)
+            or not review["reviewer"].strip()
         ):
             raise ValueError("Review requires an identified reviewer and PASS/FAIL")
         if (
-            not str(review.get("evidence", "")).strip()
-            or not str(review.get("notes", "")).strip()
+            any(not isinstance(review.get(k), str) or not review[k].strip() for k in ("evidence", "notes"))
         ):
             raise ValueError("Review requires evidence and rationale")
         item["status"] = review["verdict"]
@@ -466,3 +493,58 @@ def judge_agreement(rows: list[dict]) -> dict:
         "status": "OBSERVED",
         "interpretation": "Agreement, not proof of accuracy. Review the sampling and adjudicate disagreements.",
     }
+
+
+def apply_calibration_reviews(report: dict, reviews: list[dict], source_sha256: str) -> dict:
+    """Measure genuine oracle review without changing any machine case verdict."""
+    validate_report(report)
+    if (
+        not isinstance(source_sha256, str)
+        or not re.fullmatch(r"[a-f0-9]{64}", source_sha256)
+        or not isinstance(reviews, list) or not reviews
+        or any(not isinstance(r, dict) for r in reviews)
+    ):
+        raise ValueError("Calibration requires a report hash and nonempty genuine reviews")
+    result = json.loads(json.dumps(report))
+    index = {c["case_id"]: c for c in result["cases"]}
+    seen, pairs = set(), []
+    for review in reviews:
+        ident = review.get("case_id")
+        if not isinstance(ident, str) or ident in seen or ident not in index:
+            raise ValueError("Unknown or duplicate calibration case")
+        seen.add(ident)
+        item = index[ident]
+        if (
+            review.get("run_id") != report["run_id"]
+            or review.get("source_report_sha256") != source_sha256
+        ):
+            raise ValueError("Calibration belongs to a different run or report hash")
+        if (
+            item.get("adapter") == "human"
+            or item["status"] not in {"PASS", "FAIL"}
+            or review.get("automatic_verdict") != item["status"]
+            or review.get("human_verdict") not in {"PASS", "FAIL"}
+        ):
+            raise ValueError("Calibration requires the unchanged automatic verdict and a human PASS/FAIL")
+        if any(not isinstance(review.get(k), str) or not review[k].strip() for k in ("reviewer", "evidence", "rationale")):
+            raise ValueError("Calibration requires reviewer, evidence and rationale")
+        pairs.append(dict(review))
+    result["calibration_reviews"] = pairs
+    result["judge_agreement"] = {
+        **judge_agreement(pairs),
+        "unique_cases": len(seen),
+        "coverage_of_machine_verdicts": len(seen) / sum(
+            c.get("adapter") != "human" and c["status"] in {"PASS", "FAIL"}
+            for c in report["cases"]
+        ),
+        "disagreements": [r["case_id"] for r in pairs if r["automatic_verdict"] != r["human_verdict"]],
+        "confusion_counts": {
+            auto + "_human_" + human: sum(
+                r["automatic_verdict"] == auto and r["human_verdict"] == human for r in pairs
+            )
+            for auto in ("PASS", "FAIL") for human in ("PASS", "FAIL")
+        },
+        "scope": "Review of software test oracles, not an LLM evaluation or physical acceptance",
+        "sample_limitations": "Reviewer-selected cases; correlated criteria and selection bias may invalidate population inference. Wilson interval is descriptive under its independence assumptions. No agreement threshold automatically approves release.",
+    }
+    return result
