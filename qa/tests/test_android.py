@@ -1,13 +1,26 @@
 """Prove the Android adapter does not turn adb exit=0 or a skip into PASS."""
 
 from pathlib import Path
+import json
 import subprocess
 import sys
+import tempfile
 import unittest
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from android import assert_emulator, parse_instrumentation
+from android import assert_emulator, parse_instrumentation, positive_capture_proof
+from core import digest
+
+
+def raw_completion(code=0, cls="com.knowyoursignal.ui.ExampleTest", method="example"):
+    return (
+        f"INSTRUMENTATION_STATUS: class={cls}\n"
+        f"INSTRUMENTATION_STATUS: test={method}\n"
+        f"INSTRUMENTATION_STATUS_CODE: {code}\n"
+        "INSTRUMENTATION_RESULT: stream=\nOK (1 test)\n"
+        "INSTRUMENTATION_CODE: -1\n"
+    )
 
 
 class AndroidContractTests(unittest.TestCase):
@@ -15,10 +28,28 @@ class AndroidContractTests(unittest.TestCase):
         return parse_instrumentation(text, code, outcome)[0]
 
     def test_real_success_requires_nonempty_ok_record(self):
-        self.assertEqual(
-            self.state("INSTRUMENTATION_STATUS_CODE: 0\nOK (1 test)\n"), "PASS"
-        )
-        self.assertEqual(self.state("OK (15 tests)\n"), "PASS")
+        self.assertEqual(self.state(raw_completion()), "PASS")
+        self.assertEqual(self.state("OK (15 tests)\n"), "ERROR")
+        self.assertEqual(self.state("INSTRUMENTATION_STATUS_CODE: 0\nOK (1 test)\n"), "ERROR")
+
+    def test_actual_dots_only_skipped_gnss_summary_is_not_success(self):
+        # AndroidJUnitRunner prints this even when assumeTrue skips the body.
+        text = "\ncom.knowyoursignal.ui.GnssCaptureJourneyTest:\ncom.knowyoursignal.ui.GnssCaptureJourneyTest:\n\nTime: 30.133\n\nOK (1 test)\n"
+        self.assertEqual(self.state(text), "ERROR")
+
+    def test_raw_assumption_and_ignored_completion_are_blocked(self):
+        for code in (-3, -4):
+            self.assertEqual(self.state(raw_completion(code)), "BLOCKED")
+
+    def test_missing_runner_completion_or_wrong_class_cannot_pass(self):
+        self.assertEqual(self.state(raw_completion().replace("INSTRUMENTATION_CODE: -1", "")), "ERROR")
+        self.assertEqual(parse_instrumentation(raw_completion(), 0, "completed", "a.different.Class")[0], "ERROR")
+
+    def test_duplicate_raw_completion_is_not_success(self):
+        self.assertEqual(self.state(raw_completion() * 2), "ERROR")
+
+    def test_raw_assertion_failure_beats_a_misleading_ok_summary(self):
+        self.assertEqual(self.state(raw_completion(-2)), "FAIL")
 
     def test_adb_exit_zero_does_not_hide_assertion_failure(self):
         self.assertEqual(self.state("FAILURES!!!\nTests run: 1, Failures: 1\n"), "FAIL")
@@ -36,8 +67,31 @@ class AndroidContractTests(unittest.TestCase):
             self.assertEqual(self.state(text), "ERROR")
         self.assertEqual(self.state("OK (1 test)\n", 2), "ERROR")
 
+    def test_positive_fixture_needs_completed_two_records_and_matching_png(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            proof = root / "console-gnss-fixture.json"
+            png = root / "evidence-current-console-synthetic.png"
+            png.write_bytes(b"\x89PNG\r\n\x1a\n" + b"synthetic fixture" * 20)
+            attachments = [{"label": p.name, "path": p.name} for p in [proof, png]]
+            value = {"completed": True, "local_records": 2, "exported_png_verified": True,
+                     "accuracy_m": 5.0, "mock_flag": False, "production_anti_mock_unchanged": True,
+                     "png_sha256": digest(png)}
+            proof.write_text(json.dumps(value))
+            self.assertTrue(positive_capture_proof(root, attachments)[0])
+            for key, changed in [("completed", False), ("local_records", 0), ("accuracy_m", True),
+                                 ("mock_flag", True), ("png_sha256", "wrong")]:
+                proof.write_text(json.dumps({**value, key: changed}))
+                self.assertFalse(positive_capture_proof(root, attachments)[0], key)
+            proof.write_text(json.dumps(value))
+            self.assertFalse(positive_capture_proof(root, attachments[:1])[0])
+
     def test_timeout_is_infrastructure_error(self):
         self.assertEqual(self.state("", None, "timeout"), "ERROR")
+
+    def test_known_failure_is_retained_if_fixture_also_times_out(self):
+        self.assertEqual(self.state(raw_completion(-2), None, "fixture_failed"), "FAIL")
+        self.assertEqual(self.state("FAILURES!!!", None, "timeout"), "FAIL")
 
     def test_unsupported_fixture_never_hides_a_real_failure(self):
         self.assertEqual(self.state("[QA_CAPABILITY_BLOCKED] mock flag"), "BLOCKED")

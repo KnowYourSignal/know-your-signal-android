@@ -99,6 +99,14 @@ workflow y emulador verificado. El adaptador rechaza teléfonos físicos, serial
 ambiguos y paquetes distintos. Sus cambios de permisos/conectividad ocurren solo
 en el emulador aislado. No use ese comando sobre el teléfono del evaluador.
 
+Cada recorrido usa los eventos nativos `-r`: un resumen `OK (1 test)` sin
+finalización identificada no acredita que el test haya ejecutado sus aserciones.
+Una suposición/omisión queda `BLOCKED`. El ensayo GNSS exige además un registro
+de finalización con dos mediciones locales y el SHA-256 del PNG realmente
+producido. Una omisión nunca satisface la precondición de los recorridos de
+historial. El reinicio opcional de flags de permisos se usa solo si `pm help`
+declara que ese Android lo soporta; las aserciones del permiso se mantienen.
+
 Las capturas creadas dentro del journey se preservan tras cada fase. Las
 pantallas posteriores a cerrar instrumentation se identifican por separado y
 pueden mostrar el launcher. El indicador de 1000 celdas mide hasta una etiqueta

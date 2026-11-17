@@ -24,6 +24,7 @@ from robot import execute, metadata, new_output, QA, REPO
 from metrics import map_proxy_case
 from evidence import collect_changed_files
 from gps import EmulatorGps
+from instrumentation import parse_raw
 
 PACKAGE = "com.knowyoursignal.uitest"
 RUNNER = PACKAGE + ".test/androidx.test.runner.AndroidJUnitRunner"
@@ -62,26 +63,40 @@ PHASES = [
 
 
 def parse_instrumentation(
-    text: str, exit_code: int | None, outcome: str
+    text: str, exit_code: int | None, outcome: str, expected_class: str | None = None
 ) -> tuple[str, str]:
     """am instrument can return exit 0 even when assertions fail: parse evidence."""
-    if outcome != "completed" or exit_code is None:
-        return "ERROR", "ADB command unavailable or timed out; not a product verdict"
     if re.search(r"FAILURES!!!|INSTRUMENTATION_FAILED|Process crashed|shortMsg=", text):
         return (
             "FAIL",
             "The existing Android journey reported a failure; inspect the log and screenshot",
         )
-    if "[QA_CAPABILITY_BLOCKED]" in text:
+    try:
+        records = parse_raw(text)
+    except ValueError as error:
+        return "ERROR", str(error)
+    if expected_class and any(cls != expected_class for cls, _ in records):
+        return "ERROR", "Raw instrumentation completed a different class than requested"
+    if any(r["status"] in {"FAIL", "ERROR"} for r in records.values()):
+        return "FAIL", "Raw Android test completion contains an assertion error or test failure"
+    if outcome != "completed" or exit_code is None:
+        return "ERROR", "ADB command unavailable or timed out; not a product verdict"
+    if "[QA_CAPABILITY_BLOCKED]" in text or any(
+        r["status"] == "BLOCKED" for r in records.values()
+    ):
         return (
             "BLOCKED",
-            "The declared emulator console capability is unavailable or marked mock. Production anti-mock is unchanged; positive journey was not verified.",
+            "Android reported an ignored/assumption test or a blocked fixture capability; the scenario was not verified. Production anti-mock is unchanged.",
         )
     ok = re.search(r"^OK \((\d+) tests?\)\s*$", text, re.MULTILINE)
     if (
         exit_code == 0
+        and records
         and ok
         and int(ok[1]) > 0
+        and int(ok[1]) == len(records)
+        and all(r["status"] == "PASS" for r in records.values())
+        and re.search(r"^INSTRUMENTATION_CODE: -1\s*$", text, re.MULTILINE)
         and not re.search(
             r"AssumptionViolated|INSTRUMENTATION_STATUS_CODE: -[1234]", text
         )
@@ -92,8 +107,41 @@ def parse_instrumentation(
         )
     return (
         "ERROR",
-        "No complete nonempty Android success record; skipped or missing instrumentation is not PASS",
+        "No complete named raw Android success record; a dots-only OK summary, skip or missing completion is not PASS",
     )
+
+
+def positive_capture_proof(output: Path, attachments: list[dict]) -> tuple[bool, str]:
+    """A skipped JUnit test must never establish the two-record prerequisite."""
+    candidates = [a for a in attachments if a.get("label") == "console-gnss-fixture.json"]
+    if len(candidates) != 1:
+        return False, "Missing unique journey completion evidence"
+    try:
+        proof = json.loads((output / candidates[0]["path"]).read_text())
+    except (OSError, ValueError, KeyError):
+        return False, "Unreadable journey completion evidence"
+    if not (
+        proof.get("completed") is True
+        and proof.get("mock_flag") is False
+        and proof.get("production_anti_mock_unchanged") is True
+        and proof.get("local_records") == 2
+        and proof.get("exported_png_verified") is True
+        and not isinstance(proof.get("accuracy_m"), bool)
+        and isinstance(proof.get("accuracy_m"), (int, float))
+        and 0 < proof["accuracy_m"] < 10
+    ):
+        return False, "Console GNSS journey did not prove two local records and the actual PNG flow"
+    pngs = [a for a in attachments if a.get("label") == "evidence-current-console-synthetic.png"]
+    if len(pngs) != 1:
+        return False, "Actual journey-produced PNG attachment is missing"
+    png = output / pngs[0]["path"]
+    try:
+        valid_png = png.stat().st_size > 100 and png.read_bytes().startswith(b"\x89PNG\r\n\x1a\n")
+    except OSError:
+        valid_png = False
+    if not valid_png or proof.get("png_sha256") != digest(png):
+        return False, "PNG bytes do not match the completed journey proof"
+    return True, "Two local records and the exported PNG were verified by the completed journey"
 
 
 def assert_emulator(adb, serial: str):
@@ -169,6 +217,15 @@ def run(args):
     capture_passed = False
     fixture_case = None
     seen_files = {}
+    permission_help = execute(
+        adb + ["shell", "pm", "help"], REPO, output / "logs/permission-capabilities.log",
+        os.environ.copy(), 25,
+    )
+    supports_flag_reset = (
+        permission_help["exit_code"] == 0
+        and "clear-permission-flags" in (output / "logs/permission-capabilities.log").read_text()
+    )
+    meta["permission_flag_reset_supported"] = supports_flag_reset
     deadline = time.monotonic() + policy["android_campaign_budget_seconds"]
     for ident, phase, cls, needs_capture, requirement in PHASES:
         case = {
@@ -214,7 +271,7 @@ def run(args):
                 ["shell", "pm", "revoke", PACKAGE, "android.permission." + name]
                 for name in ("ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION")
             ]
-            if phase == "permissions":
+            if phase == "permissions" and supports_flag_reset:
                 preconditions += [
                     [
                         "shell",
@@ -259,6 +316,7 @@ def run(args):
                 "am",
                 "instrument",
                 "-w",
+                "-r",
                 "-e",
                 "class",
                 "com.knowyoursignal.ui." + cls,
@@ -298,7 +356,8 @@ def run(args):
                 }
             text = (output / "logs" / (phase + ".log")).read_text()
             state, explanation = parse_instrumentation(
-                text, execution["exit_code"], execution["outcome"]
+                text, execution["exit_code"], execution["outcome"],
+                "com.knowyoursignal.ui." + cls,
             )
             execution["log_file"] = "logs/" + phase + ".log"
             case.update(
@@ -345,6 +404,12 @@ def run(args):
                 )
             if temporary.exists():
                 shutil.rmtree(temporary)
+            if phase == "gnss-capture" and case["status"] == "PASS":
+                proven, proof_reason = positive_capture_proof(output, case.get("attachments", []))
+                case["positive_fixture_proof"] = proof_reason
+                if not proven:
+                    case["status"], case["observed"] = "ERROR", proof_reason
+                    case["attempts"][0].update(status="ERROR", message=proof_reason)
         if phase == "capture":
             capture_passed = case["status"] == "PASS"
             if capture_passed:
