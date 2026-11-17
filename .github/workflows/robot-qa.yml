@@ -1,0 +1,79 @@
+name: Robot QA
+
+on:
+  pull_request:
+    paths:
+      [
+        'qa/**',
+        'App.tsx',
+        'src/**',
+        'android/app/src/**',
+        'supabase/**',
+        'tests/**',
+        'package*.json',
+        '.github/workflows/robot-qa.yml',
+      ]
+  push:
+    branches: [main, feat/android-issue-integration]
+    paths:
+      [
+        'qa/**',
+        'App.tsx',
+        'src/**',
+        'android/app/src/**',
+        'supabase/**',
+        'tests/**',
+        'package*.json',
+        '.github/workflows/robot-qa.yml',
+      ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: robot-qa-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  portable:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            tests/backend/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm ci --no-audit --no-fund
+      - run: npm ci --prefix tests/backend --ignore-scripts --no-audit --no-fund
+      - name: Validate registry and test the robot itself
+        run: |
+          python3 qa/robot.py validate
+          python3 -m unittest discover -s qa/tests -v
+          npx --no-install eslint qa --ext .jsx,.cjs --max-warnings 0
+      - name: Run actual product campaign (failures are kept)
+        run: python3 qa/robot.py run --output "$RUNNER_TEMP/kys-robot" --repetitions 3
+      - name: Verify evidence integrity
+        if: always()
+        run: |
+          if test -f "$RUNNER_TEMP/kys-robot/report.json"; then
+            python3 qa/verify.py "$RUNNER_TEMP/kys-robot"
+          else
+            echo 'No completed campaign report was produced' >&2
+            exit 1
+          fi
+      - name: Keep complete QA evidence even when product criteria fail
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: robot-qa-portable
+          path: ${{ runner.temp }}/kys-robot
+          if-no-files-found: error
+          retention-days: 30

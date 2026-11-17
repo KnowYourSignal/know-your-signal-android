@@ -1,0 +1,104 @@
+{
+  "sources": [
+    {
+      "id": "DOC-01",
+      "name": "2-  MODELOS DE NEGOCIOS (BUSINESS CANVAS) 2026 (1).pdf",
+      "sha256": "11a42a38a959cdcce160824844190d445d42a8e28efd758aa78fe92b1055abee",
+      "usage": "base metodológica",
+      "scope": "archivo aportado por el usuario; no se incorpora el PDF al repositorio"
+    },
+    {
+      "id": "DOC-02",
+      "name": "3 - ELEVATOR PITCH GENERACION DE VALOR 2026 (1).pdf",
+      "sha256": "428c78ed0cd20a9b25ff199683a04b131edf22b8ba1fa2c92050726bc282362f",
+      "usage": "base metodológica",
+      "scope": "archivo aportado por el usuario; no se incorpora el PDF al repositorio"
+    },
+    {
+      "id": "DOC-03",
+      "name": "CAP 1  - INNOVACION -SH 2026 (1).pdf",
+      "sha256": "fec2edb681d0b31bdb35bf115711add275280854bff46d51078e6f486db31e69",
+      "usage": "base metodológica",
+      "scope": "archivo aportado por el usuario; no se incorpora el PDF al repositorio"
+    },
+    {
+      "id": "DOC-04",
+      "name": "Guia_Proyecto_Robot_QA_para_Sistemas_IA_y_LLM.pdf",
+      "sha256": "01a7d56bd088b8b3c9662a1f6d585171f8d2b1175e561ef3e9ae44bf1d069a11",
+      "usage": "base metodológica",
+      "scope": "archivo aportado por el usuario; no se incorpora el PDF al repositorio"
+    },
+    {
+      "id": "DOC-05",
+      "name": "Modelo  Business Canvas 2026.pdf",
+      "sha256": "e328fcb0cfb322bcf036d784ffc6ed5183f0479ca3e792ba852c743aa0be71b1",
+      "usage": "base metodológica",
+      "scope": "archivo aportado por el usuario; no se incorpora el PDF al repositorio"
+    },
+    {
+      "id": "DOC-06",
+      "name": "Resumen_ISO_IEC_IEEE_29119-1_2022.pdf",
+      "sha256": "ef53c2c7d7189470c55823d6f07c4dc29a4334d8c5adcee17e28a6d96f1a50a3",
+      "usage": "base metodológica",
+      "scope": "archivo aportado por el usuario; no se incorpora el PDF al repositorio"
+    },
+    {
+      "id": "DOC-07",
+      "name": "TE 2 - C7 - DOCUMENTACION SISTEMAS SOFTWARE.pdf",
+      "sha256": "83000957caf41334a4e36ed529651d097189dd759df37ea89434ba4ddf790a2e",
+      "usage": "base metodológica",
+      "scope": "archivo aportado por el usuario; no se incorpora el PDF al repositorio"
+    },
+    {
+      "id": "DOC-08",
+      "name": "TE 2- C6-Plan_QA_IA_GenAI_2026.pdf",
+      "sha256": "ceb00051bd026fcbc7e6d70eddf6829fbf11a4b1e090173f5e14e1682bc12e50",
+      "usage": "base metodológica",
+      "scope": "archivo aportado por el usuario; no se incorpora el PDF al repositorio"
+    },
+    {
+      "id": "DOC-09",
+      "name": "TE2 -C5 - PLANIFICACION PRUEBAS QA.pdf",
+      "sha256": "f781d28328479eeca4560da9b8869ce387e9f3668059458cc7e74e126c4b6cda",
+      "usage": "base metodológica",
+      "scope": "archivo aportado por el usuario; no se incorpora el PDF al repositorio"
+    },
+    {
+      "id": "DOC-10",
+      "name": "hoja de ruta.pdf",
+      "sha256": "b6cb076db8d3f720a9c3ac021d8b2924ee9b0ab3f729dd5fc65257fe4de4331f",
+      "usage": "roles A/B/C/D y casos de aceptación físicos",
+      "scope": "archivo aportado por el usuario; no se incorpora el PDF al repositorio"
+    },
+    {
+      "id": "PROJECT-11",
+      "name": "docs/Formulario de Requerimientos FDR GTD.docx",
+      "sha256": "2b8df54bbfcff2ad362dde3333e7867189ecb2e076090bd4a697a49a35ca71b2",
+      "usage": "requisitos/diseño/documentación del producto"
+    },
+    {
+      "id": "PROJECT-12",
+      "name": "docs/Informe_de_Cierre_y_Validacion_Tecnica_G10.docx",
+      "sha256": "f6e9265cd9a193221c4b4087f09f9275782f66f8a52c03cc268627b83b748c65",
+      "usage": "requisitos/diseño/documentación del producto"
+    },
+    {
+      "id": "PROJECT-13",
+      "name": "docs/Informe_de_Cierre_y_Validacion_Tecnica_G11.docx",
+      "sha256": "c2205abc0b132668a9cac5574ccbc4670bfd1619c09814c4c43049c36a63f838",
+      "usage": "requisitos/diseño/documentación del producto"
+    },
+    {
+      "id": "PROJECT-14",
+      "name": "docs/Informe_de_Diseno_y_Arquitectura_CobPerfecta_G10_11.docx",
+      "sha256": "cc9cfb04a9b55de430c6dad8eef328446257943abe43b4441f30ec1c9914a236",
+      "usage": "requisitos/diseño/documentación del producto"
+    },
+    {
+      "id": "PROJECT-15",
+      "name": "docs/Propuesta de Solución PDS.docx",
+      "sha256": "a0bfe7931e381c36e0df8a0717307574f6aaa9c06c41d6c344d89e76eabfda40",
+      "usage": "requisitos/diseño/documentación del producto"
+    }
+  ]
+}

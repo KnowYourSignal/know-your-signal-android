@@ -1,0 +1,3700 @@
+{
+  "schema_version": "1.0",
+  "seed": 17112026,
+  "description": "Casos independientes del producto. El robot prueba código real con fixtures explícitos y separa aceptación física, análisis estático y pruebas ejecutadas.",
+  "cases": [
+    {
+      "case_id": "KYS-CAP-001",
+      "title": "Sin lectura no se captura",
+      "requirement_id": "NEC01.03",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "capture",
+      "input": null,
+      "expected": false,
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA §4 captura y guardia",
+        "FDR NEC01",
+        "Hoja de ruta p.2 A1"
+      ],
+      "tags": [
+        "capture",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-CAP-002",
+      "title": "Lectura válida de Wi-Fi",
+      "requirement_id": "NEC01.03",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "capture",
+      "input": {},
+      "expected": true,
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA §4 captura y guardia",
+        "FDR NEC01",
+        "Hoja de ruta p.2 A1"
+      ],
+      "tags": [
+        "capture",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-CAP-003",
+      "title": "Precisión cero bloqueada",
+      "requirement_id": "NEC01.03",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "capture",
+      "input": {
+        "accuracyM": 0
+      },
+      "expected": false,
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA §4 captura y guardia",
+        "FDR NEC01",
+        "Hoja de ruta p.2 A1"
+      ],
+      "tags": [
+        "capture",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-CAP-004",
+      "title": "Precisión negativa bloqueada",
+      "requirement_id": "NEC01.03",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "capture",
+      "input": {
+        "accuracyM": -1
+      },
+      "expected": false,
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA §4 captura y guardia",
+        "FDR NEC01",
+        "Hoja de ruta p.2 A1"
+      ],
+      "tags": [
+        "capture",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-CAP-005",
+      "title": "9,9 m todavía es válido",
+      "requirement_id": "NEC01.03",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "capture",
+      "input": {
+        "accuracyM": 9.9
+      },
+      "expected": true,
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA §4 captura y guardia",
+        "FDR NEC01",
+        "Hoja de ruta p.2 A1"
+      ],
+      "tags": [
+        "capture",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-CAP-006",
+      "title": "10,0 m permanece bloqueado",
+      "requirement_id": "NEC01.03",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "capture",
+      "input": {
+        "accuracyM": 10
+      },
+      "expected": false,
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA §4 captura y guardia",
+        "FDR NEC01",
+        "Hoja de ruta p.2 A1"
+      ],
+      "tags": [
+        "capture",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-CAP-007",
+      "title": "10,1 m bloqueado",
+      "requirement_id": "NEC01.03",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "capture",
+      "input": {
+        "accuracyM": 10.1
+      },
+      "expected": false,
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA §4 captura y guardia",
+        "FDR NEC01",
+        "Hoja de ruta p.2 A1"
+      ],
+      "tags": [
+        "capture",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-CAP-008",
+      "title": "25 m bloqueado",
+      "requirement_id": "NEC01.03",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "capture",
+      "input": {
+        "accuracyM": 25
+      },
+      "expected": false,
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA §4 captura y guardia",
+        "FDR NEC01",
+        "Hoja de ruta p.2 A1"
+      ],
+      "tags": [
+        "capture",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-CAP-009",
+      "title": "GPS ausente bloqueado",
+      "requirement_id": "NEC01.03",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "capture",
+      "input": {
+        "accuracyM": null
+      },
+      "expected": false,
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA §4 captura y guardia",
+        "FDR NEC01",
+        "Hoja de ruta p.2 A1"
+      ],
+      "tags": [
+        "capture",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-CAP-010",
+      "title": "Lectura vencida bloqueada",
+      "requirement_id": "NEC01.03",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "capture",
+      "input": {
+        "validForMs": 0
+      },
+      "expected": false,
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA §4 captura y guardia",
+        "FDR NEC01",
+        "Hoja de ruta p.2 A1"
+      ],
+      "tags": [
+        "capture",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-CAP-011",
+      "title": "Tiempo negativo bloqueado",
+      "requirement_id": "NEC01.03",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "capture",
+      "input": {
+        "validForMs": -1
+      },
+      "expected": false,
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA §4 captura y guardia",
+        "FDR NEC01",
+        "Hoja de ruta p.2 A1"
+      ],
+      "tags": [
+        "capture",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-CAP-012",
+      "title": "Señal ausente bloqueada",
+      "requirement_id": "NEC01.03",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "capture",
+      "input": {
+        "powerDbm": null
+      },
+      "expected": false,
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA §4 captura y guardia",
+        "FDR NEC01",
+        "Hoja de ruta p.2 A1"
+      ],
+      "tags": [
+        "capture",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-CAP-013",
+      "title": "dBm cero bloqueado",
+      "requirement_id": "NEC01.03",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "capture",
+      "input": {
+        "powerDbm": 0
+      },
+      "expected": false,
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA §4 captura y guardia",
+        "FDR NEC01",
+        "Hoja de ruta p.2 A1"
+      ],
+      "tags": [
+        "capture",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-CAP-014",
+      "title": "Wi-Fi fuera de rango bloqueado",
+      "requirement_id": "NEC01.03",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "capture",
+      "input": {
+        "powerDbm": -128
+      },
+      "expected": false,
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA §4 captura y guardia",
+        "FDR NEC01",
+        "Hoja de ruta p.2 A1"
+      ],
+      "tags": [
+        "capture",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-CAP-015",
+      "title": "Límite Wi-Fi -127 admitido",
+      "requirement_id": "NEC01.03",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "capture",
+      "input": {
+        "powerDbm": -127
+      },
+      "expected": true,
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA §4 captura y guardia",
+        "FDR NEC01",
+        "Hoja de ruta p.2 A1"
+      ],
+      "tags": [
+        "capture",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-CAP-016",
+      "title": "Potencia fraccionaria bloqueada",
+      "requirement_id": "NEC01.03",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "capture",
+      "input": {
+        "powerDbm": -68.5
+      },
+      "expected": false,
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA §4 captura y guardia",
+        "FDR NEC01",
+        "Hoja de ruta p.2 A1"
+      ],
+      "tags": [
+        "capture",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-CAP-017",
+      "title": "Métrica no soportada bloqueada",
+      "requirement_id": "NEC01.03",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "capture",
+      "input": {
+        "metric": "snr"
+      },
+      "expected": false,
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA §4 captura y guardia",
+        "FDR NEC01",
+        "Hoja de ruta p.2 A1"
+      ],
+      "tags": [
+        "capture",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-CAP-018",
+      "title": "Métrica ausente bloqueada",
+      "requirement_id": "NEC01.03",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "capture",
+      "input": {
+        "metric": null
+      },
+      "expected": false,
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA §4 captura y guardia",
+        "FDR NEC01",
+        "Hoja de ruta p.2 A1"
+      ],
+      "tags": [
+        "capture",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-CAP-019",
+      "title": "LTE válido",
+      "requirement_id": "NEC01.03",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "capture",
+      "input": {
+        "metric": "lte_rsrp",
+        "powerDbm": -100
+      },
+      "expected": true,
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA §4 captura y guardia",
+        "FDR NEC01",
+        "Hoja de ruta p.2 A1"
+      ],
+      "tags": [
+        "capture",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-CAP-020",
+      "title": "Límite celular -160 admitido",
+      "requirement_id": "NEC01.03",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "capture",
+      "input": {
+        "metric": "nr_ss_rsrp",
+        "powerDbm": -160
+      },
+      "expected": true,
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA §4 captura y guardia",
+        "FDR NEC01",
+        "Hoja de ruta p.2 A1"
+      ],
+      "tags": [
+        "capture",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-CAP-021",
+      "title": "Celular -161 bloqueado",
+      "requirement_id": "NEC01.03",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "capture",
+      "input": {
+        "metric": "nr_ss_rsrp",
+        "powerDbm": -161
+      },
+      "expected": false,
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA §4 captura y guardia",
+        "FDR NEC01",
+        "Hoja de ruta p.2 A1"
+      ],
+      "tags": [
+        "capture",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-CAP-022",
+      "title": "Muestreo incompleto bloqueado",
+      "requirement_id": "NEC01.03",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "capture",
+      "input": {
+        "sampleCount": 3,
+        "targetSamples": 8
+      },
+      "expected": false,
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA §4 captura y guardia",
+        "FDR NEC01",
+        "Hoja de ruta p.2 A1"
+      ],
+      "tags": [
+        "capture",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-CAP-023",
+      "title": "Ocho muestras listas",
+      "requirement_id": "NEC01.03",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "capture",
+      "input": {
+        "sampleCount": 8,
+        "targetSamples": 8
+      },
+      "expected": true,
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA §4 captura y guardia",
+        "FDR NEC01",
+        "Hoja de ruta p.2 A1"
+      ],
+      "tags": [
+        "capture",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-CAP-024",
+      "title": "Error LOW_ACCURACY bloquea la captura",
+      "requirement_id": "NEC01.03",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "capture",
+      "input": {
+        "problem": "LOW_ACCURACY"
+      },
+      "expected": false,
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA §4 captura y guardia",
+        "FDR NEC01",
+        "Hoja de ruta p.2 A1"
+      ],
+      "tags": [
+        "capture",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-CAP-025",
+      "title": "Error STALE_READING bloquea la captura",
+      "requirement_id": "NEC01.03",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "capture",
+      "input": {
+        "problem": "STALE_READING"
+      },
+      "expected": false,
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA §4 captura y guardia",
+        "FDR NEC01",
+        "Hoja de ruta p.2 A1"
+      ],
+      "tags": [
+        "capture",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-CAP-026",
+      "title": "Error NETWORK_CHANGED bloquea la captura",
+      "requirement_id": "NEC01.03",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "capture",
+      "input": {
+        "problem": "NETWORK_CHANGED"
+      },
+      "expected": false,
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA §4 captura y guardia",
+        "FDR NEC01",
+        "Hoja de ruta p.2 A1"
+      ],
+      "tags": [
+        "capture",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-CAP-027",
+      "title": "Error NO_SIGNAL bloquea la captura",
+      "requirement_id": "NEC01.03",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "capture",
+      "input": {
+        "problem": "NO_SIGNAL"
+      },
+      "expected": false,
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA §4 captura y guardia",
+        "FDR NEC01",
+        "Hoja de ruta p.2 A1"
+      ],
+      "tags": [
+        "capture",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-CAP-028",
+      "title": "Error OUT_OF_SYNC bloquea la captura",
+      "requirement_id": "NEC01.03",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "capture",
+      "input": {
+        "problem": "OUT_OF_SYNC"
+      },
+      "expected": false,
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA §4 captura y guardia",
+        "FDR NEC01",
+        "Hoja de ruta p.2 A1"
+      ],
+      "tags": [
+        "capture",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-CAP-029",
+      "title": "Error PERMISSION_DENIED bloquea la captura",
+      "requirement_id": "NEC01.03",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "capture",
+      "input": {
+        "problem": "PERMISSION_DENIED"
+      },
+      "expected": false,
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA §4 captura y guardia",
+        "FDR NEC01",
+        "Hoja de ruta p.2 A1"
+      ],
+      "tags": [
+        "capture",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-FLOOR-001",
+      "title": "Piso '0'",
+      "requirement_id": "NEC02.01",
+      "category": "boundary",
+      "adapter": "jest-contract",
+      "operation": "floor",
+      "input": "0",
+      "expected": 0,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA selector de nivel",
+        "FDR NEC02"
+      ],
+      "tags": [
+        "floor",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-FLOOR-002",
+      "title": "Piso '-10'",
+      "requirement_id": "NEC02.01",
+      "category": "boundary",
+      "adapter": "jest-contract",
+      "operation": "floor",
+      "input": "-10",
+      "expected": -10,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA selector de nivel",
+        "FDR NEC02"
+      ],
+      "tags": [
+        "floor",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-FLOOR-003",
+      "title": "Piso '150'",
+      "requirement_id": "NEC02.01",
+      "category": "boundary",
+      "adapter": "jest-contract",
+      "operation": "floor",
+      "input": "150",
+      "expected": 150,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA selector de nivel",
+        "FDR NEC02"
+      ],
+      "tags": [
+        "floor",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-FLOOR-004",
+      "title": "Piso '-11'",
+      "requirement_id": "NEC02.01",
+      "category": "boundary",
+      "adapter": "jest-contract",
+      "operation": "floor",
+      "input": "-11",
+      "expected": null,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA selector de nivel",
+        "FDR NEC02"
+      ],
+      "tags": [
+        "floor",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-FLOOR-005",
+      "title": "Piso '151'",
+      "requirement_id": "NEC02.01",
+      "category": "boundary",
+      "adapter": "jest-contract",
+      "operation": "floor",
+      "input": "151",
+      "expected": null,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA selector de nivel",
+        "FDR NEC02"
+      ],
+      "tags": [
+        "floor",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-FLOOR-006",
+      "title": "Piso ''",
+      "requirement_id": "NEC02.01",
+      "category": "boundary",
+      "adapter": "jest-contract",
+      "operation": "floor",
+      "input": "",
+      "expected": null,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA selector de nivel",
+        "FDR NEC02"
+      ],
+      "tags": [
+        "floor",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-FLOOR-007",
+      "title": "Piso ' 2 '",
+      "requirement_id": "NEC02.01",
+      "category": "boundary",
+      "adapter": "jest-contract",
+      "operation": "floor",
+      "input": " 2 ",
+      "expected": 2,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA selector de nivel",
+        "FDR NEC02"
+      ],
+      "tags": [
+        "floor",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-FLOOR-008",
+      "title": "Piso '1.5'",
+      "requirement_id": "NEC02.01",
+      "category": "boundary",
+      "adapter": "jest-contract",
+      "operation": "floor",
+      "input": "1.5",
+      "expected": null,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA selector de nivel",
+        "FDR NEC02"
+      ],
+      "tags": [
+        "floor",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-FLOOR-009",
+      "title": "Piso '1e2'",
+      "requirement_id": "NEC02.01",
+      "category": "boundary",
+      "adapter": "jest-contract",
+      "operation": "floor",
+      "input": "1e2",
+      "expected": null,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA selector de nivel",
+        "FDR NEC02"
+      ],
+      "tags": [
+        "floor",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-FLOOR-010",
+      "title": "Piso 'NaN'",
+      "requirement_id": "NEC02.01",
+      "category": "boundary",
+      "adapter": "jest-contract",
+      "operation": "floor",
+      "input": "NaN",
+      "expected": null,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA selector de nivel",
+        "FDR NEC02"
+      ],
+      "tags": [
+        "floor",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-FLOOR-011",
+      "title": "Piso '1;DROP TABLE'",
+      "requirement_id": "NEC02.01",
+      "category": "boundary",
+      "adapter": "jest-contract",
+      "operation": "floor",
+      "input": "1;DROP TABLE",
+      "expected": null,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA selector de nivel",
+        "FDR NEC02"
+      ],
+      "tags": [
+        "floor",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-FLOOR-012",
+      "title": "Piso '<script>'",
+      "requirement_id": "NEC02.01",
+      "category": "boundary",
+      "adapter": "jest-contract",
+      "operation": "floor",
+      "input": "<script>",
+      "expected": null,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA selector de nivel",
+        "FDR NEC02"
+      ],
+      "tags": [
+        "floor",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-FLOOR-013",
+      "title": "Piso '0000'",
+      "requirement_id": "NEC02.01",
+      "category": "boundary",
+      "adapter": "jest-contract",
+      "operation": "floor",
+      "input": "0000",
+      "expected": null,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA selector de nivel",
+        "FDR NEC02"
+      ],
+      "tags": [
+        "floor",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-FLOOR-014",
+      "title": "Piso '+1'",
+      "requirement_id": "NEC02.01",
+      "category": "boundary",
+      "adapter": "jest-contract",
+      "operation": "floor",
+      "input": "+1",
+      "expected": null,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA selector de nivel",
+        "FDR NEC02"
+      ],
+      "tags": [
+        "floor",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-FLOOR-015",
+      "title": "Piso '-0'",
+      "requirement_id": "NEC02.01",
+      "category": "boundary",
+      "adapter": "jest-contract",
+      "operation": "floor",
+      "input": "-0",
+      "expected": 0,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA selector de nivel",
+        "FDR NEC02"
+      ],
+      "tags": [
+        "floor",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-FLOOR-016",
+      "title": "Piso '  -2 '",
+      "requirement_id": "NEC02.01",
+      "category": "boundary",
+      "adapter": "jest-contract",
+      "operation": "floor",
+      "input": "  -2 ",
+      "expected": -2,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "IDA selector de nivel",
+        "FDR NEC02"
+      ],
+      "tags": [
+        "floor",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-SIG-001",
+      "title": "Clasificación wifi_rssi -67 dBm",
+      "requirement_id": "NEC03.01",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "quality",
+      "input": {
+        "dbm": -67,
+        "metric": "wifi_rssi"
+      },
+      "expected": "good",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "FDR NEC03",
+        "Hoja de ruta p.2 A4"
+      ],
+      "tags": [
+        "quality",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-SIG-002",
+      "title": "Clasificación wifi_rssi -68 dBm",
+      "requirement_id": "NEC03.01",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "quality",
+      "input": {
+        "dbm": -68,
+        "metric": "wifi_rssi"
+      },
+      "expected": "fair",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "FDR NEC03",
+        "Hoja de ruta p.2 A4"
+      ],
+      "tags": [
+        "quality",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-SIG-003",
+      "title": "Clasificación wifi_rssi -75 dBm",
+      "requirement_id": "NEC03.01",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "quality",
+      "input": {
+        "dbm": -75,
+        "metric": "wifi_rssi"
+      },
+      "expected": "fair",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "FDR NEC03",
+        "Hoja de ruta p.2 A4"
+      ],
+      "tags": [
+        "quality",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-SIG-004",
+      "title": "Clasificación wifi_rssi -76 dBm",
+      "requirement_id": "NEC03.01",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "quality",
+      "input": {
+        "dbm": -76,
+        "metric": "wifi_rssi"
+      },
+      "expected": "weak",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "FDR NEC03",
+        "Hoja de ruta p.2 A4"
+      ],
+      "tags": [
+        "quality",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-SIG-005",
+      "title": "Clasificación lte_rsrp -90 dBm",
+      "requirement_id": "NEC03.01",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "quality",
+      "input": {
+        "dbm": -90,
+        "metric": "lte_rsrp"
+      },
+      "expected": "good",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "FDR NEC03",
+        "Hoja de ruta p.2 A4"
+      ],
+      "tags": [
+        "quality",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-SIG-006",
+      "title": "Clasificación lte_rsrp -91 dBm",
+      "requirement_id": "NEC03.01",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "quality",
+      "input": {
+        "dbm": -91,
+        "metric": "lte_rsrp"
+      },
+      "expected": "fair",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "FDR NEC03",
+        "Hoja de ruta p.2 A4"
+      ],
+      "tags": [
+        "quality",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-SIG-007",
+      "title": "Clasificación nr_ss_rsrp -105 dBm",
+      "requirement_id": "NEC03.01",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "quality",
+      "input": {
+        "dbm": -105,
+        "metric": "nr_ss_rsrp"
+      },
+      "expected": "fair",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "FDR NEC03",
+        "Hoja de ruta p.2 A4"
+      ],
+      "tags": [
+        "quality",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-SIG-008",
+      "title": "Clasificación nr_ss_rsrp -106 dBm",
+      "requirement_id": "NEC03.01",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "quality",
+      "input": {
+        "dbm": -106,
+        "metric": "nr_ss_rsrp"
+      },
+      "expected": "weak",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "FDR NEC03",
+        "Hoja de ruta p.2 A4"
+      ],
+      "tags": [
+        "quality",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-SIG-009",
+      "title": "Peso acotado wifi_rssi -95",
+      "requirement_id": "NEC03.01",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "weight",
+      "input": {
+        "dbm": -95,
+        "metric": "wifi_rssi"
+      },
+      "expected": 0,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "FDR NEC03",
+        "Hoja de ruta p.2 A4"
+      ],
+      "tags": [
+        "quality",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-SIG-010",
+      "title": "Peso acotado wifi_rssi -45",
+      "requirement_id": "NEC03.01",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "weight",
+      "input": {
+        "dbm": -45,
+        "metric": "wifi_rssi"
+      },
+      "expected": 1,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "FDR NEC03",
+        "Hoja de ruta p.2 A4"
+      ],
+      "tags": [
+        "quality",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-SIG-011",
+      "title": "Peso acotado wifi_rssi -140",
+      "requirement_id": "NEC03.01",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "weight",
+      "input": {
+        "dbm": -140,
+        "metric": "wifi_rssi"
+      },
+      "expected": 0,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "FDR NEC03",
+        "Hoja de ruta p.2 A4"
+      ],
+      "tags": [
+        "quality",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-SIG-012",
+      "title": "Peso acotado wifi_rssi -1",
+      "requirement_id": "NEC03.01",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "weight",
+      "input": {
+        "dbm": -1,
+        "metric": "wifi_rssi"
+      },
+      "expected": 1,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "FDR NEC03",
+        "Hoja de ruta p.2 A4"
+      ],
+      "tags": [
+        "quality",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-SIG-013",
+      "title": "Peso acotado lte_rsrp -125",
+      "requirement_id": "NEC03.01",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "weight",
+      "input": {
+        "dbm": -125,
+        "metric": "lte_rsrp"
+      },
+      "expected": 0,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "FDR NEC03",
+        "Hoja de ruta p.2 A4"
+      ],
+      "tags": [
+        "quality",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-SIG-014",
+      "title": "Peso acotado lte_rsrp -80",
+      "requirement_id": "NEC03.01",
+      "category": "functional",
+      "adapter": "jest-contract",
+      "operation": "weight",
+      "input": {
+        "dbm": -80,
+        "metric": "lte_rsrp"
+      },
+      "expected": 1,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "FDR NEC03",
+        "Hoja de ruta p.2 A4"
+      ],
+      "tags": [
+        "quality",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-TETHER-001",
+      "title": "Ancla no se desplaza",
+      "requirement_id": "ROADMAP-A2",
+      "category": "robustness",
+      "adapter": "jest-contract",
+      "operation": "tether",
+      "input": {
+        "north": 0,
+        "east": 0,
+        "radius": 14,
+        "expectedDistance": 0,
+        "identity": true
+      },
+      "expected": true,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "numeric-boundary"
+      ],
+      "sources": [
+        "Hoja de ruta p.2 A2",
+        "README Tethered Pin-Drop"
+      ],
+      "tags": [
+        "tether",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-TETHER-002",
+      "title": "Movimiento dentro del radio",
+      "requirement_id": "ROADMAP-A2",
+      "category": "robustness",
+      "adapter": "jest-contract",
+      "operation": "tether",
+      "input": {
+        "north": 2,
+        "east": 2,
+        "radius": 14,
+        "identity": true
+      },
+      "expected": true,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "numeric-boundary"
+      ],
+      "sources": [
+        "Hoja de ruta p.2 A2",
+        "README Tethered Pin-Drop"
+      ],
+      "tags": [
+        "tether",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-TETHER-003",
+      "title": "Borde norte",
+      "requirement_id": "ROADMAP-A2",
+      "category": "robustness",
+      "adapter": "jest-contract",
+      "operation": "tether",
+      "input": {
+        "north": 14,
+        "east": 0,
+        "radius": 14,
+        "expectedDistance": 14
+      },
+      "expected": true,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "numeric-boundary"
+      ],
+      "sources": [
+        "Hoja de ruta p.2 A2",
+        "README Tethered Pin-Drop"
+      ],
+      "tags": [
+        "tether",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-TETHER-004",
+      "title": "Fuera hacia norte",
+      "requirement_id": "ROADMAP-A2",
+      "category": "robustness",
+      "adapter": "jest-contract",
+      "operation": "tether",
+      "input": {
+        "north": 100,
+        "east": 0,
+        "radius": 14,
+        "expectedDistance": 14
+      },
+      "expected": true,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "numeric-boundary"
+      ],
+      "sources": [
+        "Hoja de ruta p.2 A2",
+        "README Tethered Pin-Drop"
+      ],
+      "tags": [
+        "tether",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-TETHER-005",
+      "title": "Fuera hacia sur",
+      "requirement_id": "ROADMAP-A2",
+      "category": "robustness",
+      "adapter": "jest-contract",
+      "operation": "tether",
+      "input": {
+        "north": -100,
+        "east": 0,
+        "radius": 14,
+        "expectedDistance": 14
+      },
+      "expected": true,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "numeric-boundary"
+      ],
+      "sources": [
+        "Hoja de ruta p.2 A2",
+        "README Tethered Pin-Drop"
+      ],
+      "tags": [
+        "tether",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-TETHER-006",
+      "title": "Fuera hacia este",
+      "requirement_id": "ROADMAP-A2",
+      "category": "robustness",
+      "adapter": "jest-contract",
+      "operation": "tether",
+      "input": {
+        "north": 0,
+        "east": 100,
+        "radius": 14,
+        "expectedDistance": 14
+      },
+      "expected": true,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "numeric-boundary"
+      ],
+      "sources": [
+        "Hoja de ruta p.2 A2",
+        "README Tethered Pin-Drop"
+      ],
+      "tags": [
+        "tether",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-TETHER-007",
+      "title": "Fuera diagonal",
+      "requirement_id": "ROADMAP-A2",
+      "category": "robustness",
+      "adapter": "jest-contract",
+      "operation": "tether",
+      "input": {
+        "north": 100,
+        "east": 100,
+        "radius": 14,
+        "expectedDistance": 14
+      },
+      "expected": true,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "numeric-boundary"
+      ],
+      "sources": [
+        "Hoja de ruta p.2 A2",
+        "README Tethered Pin-Drop"
+      ],
+      "tags": [
+        "tether",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-TETHER-008",
+      "title": "Acotar dos veces no cambia el resultado",
+      "requirement_id": "ROADMAP-A2",
+      "category": "robustness",
+      "adapter": "jest-contract",
+      "operation": "tether",
+      "input": {
+        "north": 70,
+        "east": 80,
+        "radius": 14,
+        "idempotent": true
+      },
+      "expected": true,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "numeric-boundary"
+      ],
+      "sources": [
+        "Hoja de ruta p.2 A2",
+        "README Tethered Pin-Drop"
+      ],
+      "tags": [
+        "tether",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-TETHER-009",
+      "title": "Latitud alta produce coordenadas finitas",
+      "requirement_id": "ROADMAP-A2",
+      "category": "robustness",
+      "adapter": "jest-contract",
+      "operation": "tether",
+      "input": {
+        "anchor": {
+          "latitude": 84,
+          "longitude": -70
+        },
+        "north": 60,
+        "east": 60,
+        "radius": 14
+      },
+      "expected": true,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "numeric-boundary"
+      ],
+      "sources": [
+        "Hoja de ruta p.2 A2",
+        "README Tethered Pin-Drop"
+      ],
+      "tags": [
+        "tether",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-TETHER-010",
+      "title": "Mínimo operativo de 4 m del código actual",
+      "requirement_id": "ROADMAP-A2",
+      "category": "robustness",
+      "adapter": "jest-contract",
+      "operation": "tether",
+      "input": {
+        "north": 30,
+        "east": 0,
+        "radius": 0,
+        "expectedDistance": 4
+      },
+      "expected": true,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "numeric-boundary"
+      ],
+      "sources": [
+        "Hoja de ruta p.2 A2",
+        "README Tethered Pin-Drop"
+      ],
+      "tags": [
+        "tether",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-PNG-001",
+      "title": "Mediana impar",
+      "requirement_id": "NEC04.03",
+      "category": "integration",
+      "adapter": "jest-contract",
+      "operation": "evidence",
+      "input": {
+        "powers": [
+          -80,
+          -60,
+          -40
+        ]
+      },
+      "expected": -60,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "reference-statistic"
+      ],
+      "sources": [
+        "FDR NEC04",
+        "PDS componente 8",
+        "Hoja de ruta p.3 B5"
+      ],
+      "tags": [
+        "evidence",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-PNG-002",
+      "title": "Mediana par",
+      "requirement_id": "NEC04.03",
+      "category": "integration",
+      "adapter": "jest-contract",
+      "operation": "evidence",
+      "input": {
+        "powers": [
+          -80,
+          -60
+        ]
+      },
+      "expected": -70,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "reference-statistic"
+      ],
+      "sources": [
+        "FDR NEC04",
+        "PDS componente 8",
+        "Hoja de ruta p.3 B5"
+      ],
+      "tags": [
+        "evidence",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-PNG-003",
+      "title": "Una muestra",
+      "requirement_id": "NEC04.03",
+      "category": "integration",
+      "adapter": "jest-contract",
+      "operation": "evidence",
+      "input": {
+        "powers": [
+          -67
+        ]
+      },
+      "expected": -67,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "reference-statistic"
+      ],
+      "sources": [
+        "FDR NEC04",
+        "PDS componente 8",
+        "Hoja de ruta p.3 B5"
+      ],
+      "tags": [
+        "evidence",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-PNG-004",
+      "title": "Permutación conserva mediana",
+      "requirement_id": "NEC04.03",
+      "category": "integration",
+      "adapter": "jest-contract",
+      "operation": "evidence",
+      "input": {
+        "powers": [
+          -80,
+          -65,
+          -40
+        ],
+        "permutation": true
+      },
+      "expected": -65,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "reference-statistic"
+      ],
+      "sources": [
+        "FDR NEC04",
+        "PDS componente 8",
+        "Hoja de ruta p.3 B5"
+      ],
+      "tags": [
+        "evidence",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-PNG-005",
+      "title": "Snapshot conserva valores al editar origen",
+      "requirement_id": "NEC04.03",
+      "category": "integration",
+      "adapter": "jest-contract",
+      "operation": "evidence",
+      "input": {
+        "immutable": true
+      },
+      "expected": -60,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "reference-statistic"
+      ],
+      "sources": [
+        "FDR NEC04",
+        "PDS componente 8",
+        "Hoja de ruta p.3 B5"
+      ],
+      "tags": [
+        "evidence",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-PNG-006",
+      "title": "No incluye puntos fuera del encuadre",
+      "requirement_id": "NEC04.03",
+      "category": "integration",
+      "adapter": "jest-contract",
+      "operation": "evidence",
+      "input": {
+        "outside": true
+      },
+      "expected": -60,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "reference-statistic"
+      ],
+      "sources": [
+        "FDR NEC04",
+        "PDS componente 8",
+        "Hoja de ruta p.3 B5"
+      ],
+      "tags": [
+        "evidence",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-PNG-007",
+      "title": "Historial vacío no exporta",
+      "requirement_id": "NEC04.03",
+      "category": "integration",
+      "adapter": "jest-contract",
+      "operation": "evidence",
+      "input": {
+        "empty": true
+      },
+      "expected": null,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "reference-statistic"
+      ],
+      "sources": [
+        "FDR NEC04",
+        "PDS componente 8",
+        "Hoja de ruta p.3 B5"
+      ],
+      "tags": [
+        "evidence",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-PNG-008",
+      "title": "Ancho cero no exporta",
+      "requirement_id": "NEC04.03",
+      "category": "integration",
+      "adapter": "jest-contract",
+      "operation": "evidence",
+      "input": {
+        "invalidLayout": {
+          "width": 0,
+          "height": 200
+        }
+      },
+      "expected": null,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "reference-statistic"
+      ],
+      "sources": [
+        "FDR NEC04",
+        "PDS componente 8",
+        "Hoja de ruta p.3 B5"
+      ],
+      "tags": [
+        "evidence",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-PNG-009",
+      "title": "Alto negativo no exporta",
+      "requirement_id": "NEC04.03",
+      "category": "integration",
+      "adapter": "jest-contract",
+      "operation": "evidence",
+      "input": {
+        "invalidLayout": {
+          "width": 360,
+          "height": -1
+        }
+      },
+      "expected": null,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "reference-statistic"
+      ],
+      "sources": [
+        "FDR NEC04",
+        "PDS componente 8",
+        "Hoja de ruta p.3 B5"
+      ],
+      "tags": [
+        "evidence",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-MAP-001",
+      "title": "Vista válida",
+      "requirement_id": "NEC05.03",
+      "category": "robustness",
+      "adapter": "jest-contract",
+      "operation": "map",
+      "input": {
+        "kind": "bounds",
+        "region": {}
+      },
+      "expected": 1,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "FDR NEC04/NEC05",
+        "Hoja de ruta p.3 B1/B2"
+      ],
+      "tags": [
+        "map",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-MAP-002",
+      "title": "Área excesiva pide acercar",
+      "requirement_id": "NEC05.03",
+      "category": "robustness",
+      "adapter": "jest-contract",
+      "operation": "map",
+      "input": {
+        "kind": "bounds",
+        "region": {
+          "latitudeDelta": 3
+        }
+      },
+      "expected": 0,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "FDR NEC04/NEC05",
+        "Hoja de ruta p.3 B1/B2"
+      ],
+      "tags": [
+        "map",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-MAP-003",
+      "title": "Área cero inválida",
+      "requirement_id": "NEC05.03",
+      "category": "robustness",
+      "adapter": "jest-contract",
+      "operation": "map",
+      "input": {
+        "kind": "bounds",
+        "region": {
+          "longitudeDelta": 0
+        }
+      },
+      "expected": 0,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "FDR NEC04/NEC05",
+        "Hoja de ruta p.3 B1/B2"
+      ],
+      "tags": [
+        "map",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-MAP-004",
+      "title": "Antimeridiano divide consulta",
+      "requirement_id": "NEC05.03",
+      "category": "robustness",
+      "adapter": "jest-contract",
+      "operation": "map",
+      "input": {
+        "kind": "bounds",
+        "region": {
+          "longitude": 179.99,
+          "longitudeDelta": 0.1
+        }
+      },
+      "expected": 2,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "FDR NEC04/NEC05",
+        "Hoja de ruta p.3 B1/B2"
+      ],
+      "tags": [
+        "map",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-MAP-005",
+      "title": "Centro visible",
+      "requirement_id": "NEC05.03",
+      "category": "robustness",
+      "adapter": "jest-contract",
+      "operation": "map",
+      "input": {
+        "kind": "visible",
+        "point": {
+          "latitude": -33.4568,
+          "longitude": -70.6548
+        }
+      },
+      "expected": true,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "FDR NEC04/NEC05",
+        "Hoja de ruta p.3 B1/B2"
+      ],
+      "tags": [
+        "map",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-MAP-006",
+      "title": "Punto distante fuera",
+      "requirement_id": "NEC05.03",
+      "category": "robustness",
+      "adapter": "jest-contract",
+      "operation": "map",
+      "input": {
+        "kind": "visible",
+        "point": {
+          "latitude": 0,
+          "longitude": 0
+        }
+      },
+      "expected": false,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "FDR NEC04/NEC05",
+        "Hoja de ruta p.3 B1/B2"
+      ],
+      "tags": [
+        "map",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-MAP-007",
+      "title": "Longitud 180 equivale a -180",
+      "requirement_id": "NEC05.03",
+      "category": "robustness",
+      "adapter": "jest-contract",
+      "operation": "map",
+      "input": {
+        "kind": "wrap",
+        "longitude": 180
+      },
+      "expected": -180,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "FDR NEC04/NEC05",
+        "Hoja de ruta p.3 B1/B2"
+      ],
+      "tags": [
+        "map",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-MAP-008",
+      "title": "Normaliza 540 grados",
+      "requirement_id": "NEC05.03",
+      "category": "robustness",
+      "adapter": "jest-contract",
+      "operation": "map",
+      "input": {
+        "kind": "wrap",
+        "longitude": 540
+      },
+      "expected": -180,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "FDR NEC04/NEC05",
+        "Hoja de ruta p.3 B1/B2"
+      ],
+      "tags": [
+        "map",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-MAP-009",
+      "title": "Centro se proyecta al centro",
+      "requirement_id": "NEC05.03",
+      "category": "robustness",
+      "adapter": "jest-contract",
+      "operation": "map",
+      "input": {
+        "kind": "center"
+      },
+      "expected": true,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "FDR NEC04/NEC05",
+        "Hoja de ruta p.3 B1/B2"
+      ],
+      "tags": [
+        "map",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-MAP-010",
+      "title": "Encuadre contiene puntos",
+      "requirement_id": "NEC05.03",
+      "category": "robustness",
+      "adapter": "jest-contract",
+      "operation": "map",
+      "input": {
+        "kind": "fit",
+        "points": [
+          {
+            "latitude": -33.45,
+            "longitude": -70.65
+          },
+          {
+            "latitude": -33.451,
+            "longitude": -70.652
+          }
+        ]
+      },
+      "expected": true,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "FDR NEC04/NEC05",
+        "Hoja de ruta p.3 B1/B2"
+      ],
+      "tags": [
+        "map",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-GUIDE-001",
+      "title": "Globo dentro de 320x640, contenido 250",
+      "requirement_id": "ROADMAP-B5",
+      "category": "accessibility",
+      "adapter": "jest-contract",
+      "operation": "guide",
+      "input": {
+        "width": 320,
+        "height": 640,
+        "targetY": 80,
+        "cardHeight": 250
+      },
+      "expected": true,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "geometry-bounds"
+      ],
+      "sources": [
+        "Hoja de ruta p.3 B5",
+        "IDA accesibilidad"
+      ],
+      "tags": [
+        "guide",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-GUIDE-002",
+      "title": "Globo dentro de 360x640, contenido 250",
+      "requirement_id": "ROADMAP-B5",
+      "category": "accessibility",
+      "adapter": "jest-contract",
+      "operation": "guide",
+      "input": {
+        "width": 360,
+        "height": 640,
+        "targetY": 540,
+        "cardHeight": 250
+      },
+      "expected": true,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "geometry-bounds"
+      ],
+      "sources": [
+        "Hoja de ruta p.3 B5",
+        "IDA accesibilidad"
+      ],
+      "tags": [
+        "guide",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-GUIDE-003",
+      "title": "Globo dentro de 640x360, contenido 300",
+      "requirement_id": "ROADMAP-B5",
+      "category": "accessibility",
+      "adapter": "jest-contract",
+      "operation": "guide",
+      "input": {
+        "width": 640,
+        "height": 360,
+        "targetY": 80,
+        "cardHeight": 300
+      },
+      "expected": true,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "geometry-bounds"
+      ],
+      "sources": [
+        "Hoja de ruta p.3 B5",
+        "IDA accesibilidad"
+      ],
+      "tags": [
+        "guide",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-GUIDE-004",
+      "title": "Globo dentro de 320x640, contenido 500",
+      "requirement_id": "ROADMAP-B5",
+      "category": "accessibility",
+      "adapter": "jest-contract",
+      "operation": "guide",
+      "input": {
+        "width": 320,
+        "height": 640,
+        "targetY": 250,
+        "cardHeight": 500
+      },
+      "expected": true,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "geometry-bounds"
+      ],
+      "sources": [
+        "Hoja de ruta p.3 B5",
+        "IDA accesibilidad"
+      ],
+      "tags": [
+        "guide",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-GUIDE-005",
+      "title": "Globo dentro de 412x850, contenido 350",
+      "requirement_id": "ROADMAP-B5",
+      "category": "accessibility",
+      "adapter": "jest-contract",
+      "operation": "guide",
+      "input": {
+        "width": 412,
+        "height": 850,
+        "targetY": 400,
+        "cardHeight": 350
+      },
+      "expected": true,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "geometry-bounds"
+      ],
+      "sources": [
+        "Hoja de ruta p.3 B5",
+        "IDA accesibilidad"
+      ],
+      "tags": [
+        "guide",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-GUIDE-006",
+      "title": "Globo dentro de 800x400, contenido 200",
+      "requirement_id": "ROADMAP-B5",
+      "category": "accessibility",
+      "adapter": "jest-contract",
+      "operation": "guide",
+      "input": {
+        "width": 800,
+        "height": 400,
+        "targetY": 60,
+        "cardHeight": 200
+      },
+      "expected": true,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "geometry-bounds"
+      ],
+      "sources": [
+        "Hoja de ruta p.3 B5",
+        "IDA accesibilidad"
+      ],
+      "tags": [
+        "guide",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-META-001",
+      "title": "Una mejor señal Wi-Fi no reduce peso",
+      "requirement_id": "RISK-ROBUSTNESS",
+      "category": "metamorphic",
+      "adapter": "jest-contract",
+      "operation": "metamorphic",
+      "input": {
+        "kind": "quality-monotonic",
+        "metric": "wifi_rssi"
+      },
+      "expected": true,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "metamorphic-relation"
+      ],
+      "sources": [
+        "ISO 29119-1 resumen, diseño de pruebas",
+        "Guía Robot QA p.9"
+      ],
+      "tags": [
+        "metamorphic",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-META-002",
+      "title": "Una mejor señal LTE no reduce peso",
+      "requirement_id": "RISK-ROBUSTNESS",
+      "category": "metamorphic",
+      "adapter": "jest-contract",
+      "operation": "metamorphic",
+      "input": {
+        "kind": "quality-monotonic",
+        "metric": "lte_rsrp"
+      },
+      "expected": true,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "metamorphic-relation"
+      ],
+      "sources": [
+        "ISO 29119-1 resumen, diseño de pruebas",
+        "Guía Robot QA p.9"
+      ],
+      "tags": [
+        "metamorphic",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-META-003",
+      "title": "GPS impreciso nunca habilita captura",
+      "requirement_id": "RISK-ROBUSTNESS",
+      "category": "metamorphic",
+      "adapter": "jest-contract",
+      "operation": "metamorphic",
+      "input": {
+        "kind": "capture-accuracy",
+        "metric": null
+      },
+      "expected": true,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "metamorphic-relation"
+      ],
+      "sources": [
+        "ISO 29119-1 resumen, diseño de pruebas",
+        "Guía Robot QA p.9"
+      ],
+      "tags": [
+        "metamorphic",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-META-004",
+      "title": "Rotación de longitud no altera zona",
+      "requirement_id": "RISK-ROBUSTNESS",
+      "category": "metamorphic",
+      "adapter": "jest-contract",
+      "operation": "metamorphic",
+      "input": {
+        "kind": "longitude",
+        "metric": null
+      },
+      "expected": true,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "metamorphic-relation"
+      ],
+      "sources": [
+        "ISO 29119-1 resumen, diseño de pruebas",
+        "Guía Robot QA p.9"
+      ],
+      "tags": [
+        "metamorphic",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-META-005",
+      "title": "Origen de ventana no cambia resaltado",
+      "requirement_id": "RISK-ROBUSTNESS",
+      "category": "metamorphic",
+      "adapter": "jest-contract",
+      "operation": "metamorphic",
+      "input": {
+        "kind": "local-coordinates",
+        "metric": null
+      },
+      "expected": true,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "metamorphic-relation"
+      ],
+      "sources": [
+        "ISO 29119-1 resumen, diseño de pruebas",
+        "Guía Robot QA p.9"
+      ],
+      "tags": [
+        "metamorphic",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-UI-001",
+      "title": "Botón bloqueado sin GPS",
+      "requirement_id": "NEC01.03",
+      "category": "ui-contract",
+      "adapter": "jest-ui",
+      "operation": "ui",
+      "input": {
+        "reading": null
+      },
+      "expected": false,
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "ui-state"
+      ],
+      "sources": [
+        "FDR NEC01.03",
+        "IDA guardia antes de capturar",
+        "Hoja de ruta p.2 A1"
+      ],
+      "tags": [
+        "ui",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-UI-002",
+      "title": "Botón bloqueado con GPS 15 m",
+      "requirement_id": "NEC01.03",
+      "category": "ui-contract",
+      "adapter": "jest-ui",
+      "operation": "ui",
+      "input": {
+        "reading": {
+          "latitude": -33.45,
+          "longitude": -70.65,
+          "accuracyM": 15,
+          "powerDbm": -68,
+          "metric": "wifi_rssi",
+          "technology": "wifi",
+          "connection": "wifi_privada",
+          "validForMs": 4000,
+          "problem": null
+        },
+        "problem": "LOW_ACCURACY"
+      },
+      "expected": false,
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "ui-state"
+      ],
+      "sources": [
+        "FDR NEC01.03",
+        "IDA guardia antes de capturar",
+        "Hoja de ruta p.2 A1"
+      ],
+      "tags": [
+        "ui",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-UI-003",
+      "title": "Botón bloqueado con lectura vencida",
+      "requirement_id": "NEC01.03",
+      "category": "ui-contract",
+      "adapter": "jest-ui",
+      "operation": "ui",
+      "input": {
+        "reading": {
+          "latitude": -33.45,
+          "longitude": -70.65,
+          "accuracyM": 7,
+          "powerDbm": -68,
+          "metric": "wifi_rssi",
+          "technology": "wifi",
+          "connection": "wifi_privada",
+          "validForMs": 0,
+          "problem": "STALE_READING"
+        },
+        "problem": "STALE_READING"
+      },
+      "expected": false,
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "ui-state"
+      ],
+      "sources": [
+        "FDR NEC01.03",
+        "IDA guardia antes de capturar",
+        "Hoja de ruta p.2 A1"
+      ],
+      "tags": [
+        "ui",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-UI-004",
+      "title": "Botón bloqueado sin potencia",
+      "requirement_id": "NEC01.03",
+      "category": "ui-contract",
+      "adapter": "jest-ui",
+      "operation": "ui",
+      "input": {
+        "reading": {
+          "latitude": -33.45,
+          "longitude": -70.65,
+          "accuracyM": 7,
+          "powerDbm": null,
+          "metric": "wifi_rssi",
+          "technology": "wifi",
+          "connection": "wifi_privada",
+          "validForMs": 4000,
+          "problem": null
+        },
+        "problem": "NO_SIGNAL"
+      },
+      "expected": false,
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "ui-state"
+      ],
+      "sources": [
+        "FDR NEC01.03",
+        "IDA guardia antes de capturar",
+        "Hoja de ruta p.2 A1"
+      ],
+      "tags": [
+        "ui",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-UI-005",
+      "title": "Botón bloqueado mientras promedia",
+      "requirement_id": "NEC01.03",
+      "category": "ui-contract",
+      "adapter": "jest-ui",
+      "operation": "ui",
+      "input": {
+        "reading": {
+          "latitude": -33.45,
+          "longitude": -70.65,
+          "accuracyM": 7,
+          "powerDbm": -68,
+          "metric": "wifi_rssi",
+          "technology": "wifi",
+          "connection": "wifi_privada",
+          "validForMs": 4000,
+          "problem": null,
+          "sampleCount": 3,
+          "targetSamples": 8
+        }
+      },
+      "expected": false,
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "ui-state"
+      ],
+      "sources": [
+        "FDR NEC01.03",
+        "IDA guardia antes de capturar",
+        "Hoja de ruta p.2 A1"
+      ],
+      "tags": [
+        "ui",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-UI-006",
+      "title": "Botón habilitado con READY válido",
+      "requirement_id": "NEC01.03",
+      "category": "ui-contract",
+      "adapter": "jest-ui",
+      "operation": "ui",
+      "input": {
+        "reading": {
+          "latitude": -33.45,
+          "longitude": -70.65,
+          "accuracyM": 7,
+          "powerDbm": -68,
+          "metric": "wifi_rssi",
+          "technology": "wifi",
+          "connection": "wifi_privada",
+          "validForMs": 4000,
+          "problem": null
+        },
+        "status": "ready",
+        "canRecord": true
+      },
+      "expected": true,
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "ui-state"
+      ],
+      "sources": [
+        "FDR NEC01.03",
+        "IDA guardia antes de capturar",
+        "Hoja de ruta p.2 A1"
+      ],
+      "tags": [
+        "ui",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-UI-007",
+      "title": "Botón bloqueado en permiso",
+      "requirement_id": "NEC01.03",
+      "category": "ui-contract",
+      "adapter": "jest-ui",
+      "operation": "ui",
+      "input": {
+        "reading": null,
+        "status": "permission"
+      },
+      "expected": false,
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "ui-state"
+      ],
+      "sources": [
+        "FDR NEC01.03",
+        "IDA guardia antes de capturar",
+        "Hoja de ruta p.2 A1"
+      ],
+      "tags": [
+        "ui",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-UI-008",
+      "title": "Botón bloqueado con permiso denegado",
+      "requirement_id": "NEC01.03",
+      "category": "ui-contract",
+      "adapter": "jest-ui",
+      "operation": "ui",
+      "input": {
+        "reading": null,
+        "problem": "PERMISSION_DENIED"
+      },
+      "expected": false,
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "ui-state"
+      ],
+      "sources": [
+        "FDR NEC01.03",
+        "IDA guardia antes de capturar",
+        "Hoja de ruta p.2 A1"
+      ],
+      "tags": [
+        "ui",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-UI-009",
+      "title": "Botón bloqueado en pausa",
+      "requirement_id": "NEC01.03",
+      "category": "ui-contract",
+      "adapter": "jest-ui",
+      "operation": "ui",
+      "input": {
+        "enabled": false,
+        "reading": null,
+        "status": "idle"
+      },
+      "expected": false,
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "ui-state"
+      ],
+      "sources": [
+        "FDR NEC01.03",
+        "IDA guardia antes de capturar",
+        "Hoja de ruta p.2 A1"
+      ],
+      "tags": [
+        "ui",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-UI-010",
+      "title": "Botón bloqueado al cambiar la red",
+      "requirement_id": "NEC01.03",
+      "category": "ui-contract",
+      "adapter": "jest-ui",
+      "operation": "ui",
+      "input": {
+        "reading": {
+          "latitude": -33.45,
+          "longitude": -70.65,
+          "accuracyM": 7,
+          "powerDbm": -68,
+          "metric": "wifi_rssi",
+          "technology": "wifi",
+          "connection": "wifi_privada",
+          "validForMs": 4000,
+          "problem": null
+        },
+        "problem": "NETWORK_CHANGED"
+      },
+      "expected": false,
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "ui-state"
+      ],
+      "sources": [
+        "FDR NEC01.03",
+        "IDA guardia antes de capturar",
+        "Hoja de ruta p.2 A1"
+      ],
+      "tags": [
+        "ui",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-SRC-001",
+      "title": "Precisión nativa no se fuerza por debajo del umbral",
+      "requirement_id": "RISK-INTEGRITY",
+      "category": "integrity-static",
+      "adapter": "jest-contract",
+      "operation": "source",
+      "input": {
+        "path": "android/app/src/main/java/com/knowyoursignal/telemetry/TelemetryModule.kt",
+        "absent": "accuracyM\\s*=\\s*[^\\n,]*coerceIn\\(1\\.0,\\s*9\\.8\\)"
+      },
+      "expected": true,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "source-rule"
+      ],
+      "sources": [
+        "IDA §4 invariantes y trazabilidad",
+        "Guía Robot QA pp.9-11"
+      ],
+      "tags": [
+        "source",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-SRC-002",
+      "title": "GPS conserva la fecha monotónica original",
+      "requirement_id": "RISK-INTEGRITY",
+      "category": "integrity-static",
+      "adapter": "jest-contract",
+      "operation": "source",
+      "input": {
+        "path": "android/app/src/main/java/com/knowyoursignal/telemetry/LocationReader.kt",
+        "absent": "Position\\(latitude, longitude, accuracy\\.toDouble\\(\\), SystemClock\\.elapsedRealtime\\(\\)\\)"
+      },
+      "expected": true,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "source-rule"
+      ],
+      "sources": [
+        "IDA §4 invariantes y trazabilidad",
+        "Guía Robot QA pp.9-11"
+      ],
+      "tags": [
+        "source",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-SRC-003",
+      "title": "Un error nuevo no reutiliza silenciosamente latest",
+      "requirement_id": "RISK-INTEGRITY",
+      "category": "integrity-static",
+      "adapter": "jest-contract",
+      "operation": "source",
+      "input": {
+        "path": "android/app/src/main/java/com/knowyoursignal/telemetry/TelemetryModule.kt",
+        "absent": "displayObservation\\s*=\\s*latest"
+      },
+      "expected": true,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "source-rule"
+      ],
+      "sources": [
+        "IDA §4 invariantes y trazabilidad",
+        "Guía Robot QA pp.9-11"
+      ],
+      "tags": [
+        "source",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-SRC-004",
+      "title": "Módulo entrega contador de muestras reales",
+      "requirement_id": "RISK-INTEGRITY",
+      "category": "integrity-static",
+      "adapter": "jest-contract",
+      "operation": "source",
+      "input": {
+        "path": "android/app/src/main/java/com/knowyoursignal/telemetry/TelemetryModule.kt",
+        "present": "putInt\\(\"sampleCount\""
+      },
+      "expected": true,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "source-rule"
+      ],
+      "sources": [
+        "IDA §4 invariantes y trazabilidad",
+        "Guía Robot QA pp.9-11"
+      ],
+      "tags": [
+        "source",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-SRC-005",
+      "title": "Código funcional no detecta mocks del runner",
+      "requirement_id": "RISK-INTEGRITY",
+      "category": "integrity-static",
+      "adapter": "jest-contract",
+      "operation": "source",
+      "input": {
+        "path": "src/services/useCaptureSession.ts",
+        "absent": "_isMockFunction"
+      },
+      "expected": true,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "source-rule"
+      ],
+      "sources": [
+        "IDA §4 invariantes y trazabilidad",
+        "Guía Robot QA pp.9-11"
+      ],
+      "tags": [
+        "source",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-SRC-006",
+      "title": "Esquema mantiene RLS habilitado",
+      "requirement_id": "RISK-INTEGRITY",
+      "category": "integrity-static",
+      "adapter": "jest-contract",
+      "operation": "source",
+      "input": {
+        "path": "supabase/migrations/20261016000000_initial_schema.sql",
+        "present": "ENABLE ROW LEVEL SECURITY"
+      },
+      "expected": true,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "source-rule"
+      ],
+      "sources": [
+        "IDA §4 invariantes y trazabilidad",
+        "Guía Robot QA pp.9-11"
+      ],
+      "tags": [
+        "source",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-SRC-007",
+      "title": "Umbral nativo permanece estricto",
+      "requirement_id": "RISK-INTEGRITY",
+      "category": "integrity-static",
+      "adapter": "jest-contract",
+      "operation": "source",
+      "input": {
+        "path": "android/app/src/main/java/com/knowyoursignal/telemetry/CaptureValidator.kt",
+        "present": "position\\.accuracyM\\s*>=\\s*MAX_ACCURACY_M"
+      },
+      "expected": true,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "source-rule"
+      ],
+      "sources": [
+        "IDA §4 invariantes y trazabilidad",
+        "Guía Robot QA pp.9-11"
+      ],
+      "tags": [
+        "source",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-SRC-008",
+      "title": "Cliente no envía identificadores de equipo",
+      "requirement_id": "RISK-INTEGRITY",
+      "category": "integrity-static",
+      "adapter": "jest-contract",
+      "operation": "source",
+      "input": {
+        "path": "android/app/src/main/java/com/knowyoursignal/sync/PublicPayloadBuilder.kt",
+        "absent": "put\\(\"(?:ssid|bssid|imei|mac|device_id)\""
+      },
+      "expected": true,
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "source-rule"
+      ],
+      "sources": [
+        "IDA §4 invariantes y trazabilidad",
+        "Guía Robot QA pp.9-11"
+      ],
+      "tags": [
+        "source",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-HUM-001",
+      "title": "Dos teléfonos físicos distintos",
+      "requirement_id": "ROADMAP-A-PHONES",
+      "category": "human-acceptance",
+      "adapter": "human",
+      "operation": "human",
+      "input": {
+        "role": "A"
+      },
+      "expected": "Registrar modelo, Android, APK y SHA-256 de dos teléfonos. Probar sensores reales en ambos.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "human-rubric"
+      ],
+      "sources": [
+        "Hoja de ruta pp.1-4",
+        "C5 planificación QA",
+        "Guía Robot QA p.8"
+      ],
+      "tags": [
+        "human",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-HUM-002",
+      "title": "Muestreo estacionario, sonido y vibración",
+      "requirement_id": "ROADMAP-A-SAMPLES",
+      "category": "human-acceptance",
+      "adapter": "human",
+      "operation": "human",
+      "input": {
+        "role": "A"
+      },
+      "expected": "Contar 8 lecturas reales y comprobar retroalimentación al finalizar, sin parpadeos.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "human-rubric"
+      ],
+      "sources": [
+        "Hoja de ruta pp.1-4",
+        "C5 planificación QA",
+        "Guía Robot QA p.8"
+      ],
+      "tags": [
+        "human",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-HUM-003",
+      "title": "Pin-Drop en mapa real y controles cardinales",
+      "requirement_id": "ROADMAP-A2",
+      "category": "human-acceptance",
+      "adapter": "human",
+      "operation": "human",
+      "input": {
+        "role": "A"
+      },
+      "expected": "Mover pin y comprobar geocerca 2× precisión, sin confundir ajuste manual con precisión del GPS.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "human-rubric"
+      ],
+      "sources": [
+        "Hoja de ruta pp.1-4",
+        "C5 planificación QA",
+        "Guía Robot QA p.8"
+      ],
+      "tags": [
+        "human",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-HUM-004",
+      "title": "Anti-mock GPS y mensaje al usuario",
+      "requirement_id": "ROADMAP-A3",
+      "category": "human-acceptance",
+      "adapter": "human",
+      "operation": "human",
+      "input": {
+        "role": "A"
+      },
+      "expected": "En teléfono de pruebas, comprobar bloqueo y mensaje MOCK_LOCATION con proveedor simulado.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "human-rubric"
+      ],
+      "sources": [
+        "Hoja de ruta pp.1-4",
+        "C5 planificación QA",
+        "Guía Robot QA p.8"
+      ],
+      "tags": [
+        "human",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-HUM-005",
+      "title": "Clasificación Wi-Fi abierta/protegida y datos",
+      "requirement_id": "ROADMAP-A4",
+      "category": "human-acceptance",
+      "adapter": "human",
+      "operation": "human",
+      "input": {
+        "role": "A"
+      },
+      "expected": "Registrar una captura por categoría con datos autorizados y métrica coherente.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "human-rubric"
+      ],
+      "sources": [
+        "Hoja de ruta pp.1-4",
+        "C5 planificación QA",
+        "Guía Robot QA p.8"
+      ],
+      "tags": [
+        "human",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-HUM-006",
+      "title": "Sesión y pisos aislados",
+      "requirement_id": "ROADMAP-A5",
+      "category": "human-acceptance",
+      "adapter": "human",
+      "operation": "human",
+      "input": {
+        "role": "A"
+      },
+      "expected": "Crear segunda sesión y verificar 3 mediciones de piso 1 y 2 de piso 0 o -1, sin mezcla.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "human-rubric"
+      ],
+      "sources": [
+        "Hoja de ruta pp.1-4",
+        "C5 planificación QA",
+        "Guía Robot QA p.8"
+      ],
+      "tags": [
+        "human",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-HUM-007",
+      "title": "Degradados y orden visual",
+      "requirement_id": "ROADMAP-B2",
+      "category": "human-acceptance",
+      "adapter": "human",
+      "operation": "human",
+      "input": {
+        "role": "B"
+      },
+      "expected": "Comparar dos puntos cercanos y comprobar anillos, orden y legibilidad en teléfono.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "human-rubric"
+      ],
+      "sources": [
+        "Hoja de ruta pp.1-4",
+        "C5 planificación QA",
+        "Guía Robot QA p.8"
+      ],
+      "tags": [
+        "human",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-HUM-008",
+      "title": "Modo técnico y etiquetas",
+      "requirement_id": "ROADMAP-B3",
+      "category": "human-acceptance",
+      "adapter": "human",
+      "operation": "human",
+      "input": {
+        "role": "B"
+      },
+      "expected": "Al desactivar, no quedan cajas dBm. Mantener etiquetas ciudadanas accesibles.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "human-rubric"
+      ],
+      "sources": [
+        "Hoja de ruta pp.1-4",
+        "C5 planificación QA",
+        "Guía Robot QA p.8"
+      ],
+      "tags": [
+        "human",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-HUM-009",
+      "title": "Modo avión y reapertura real",
+      "requirement_id": "ROADMAP-B4",
+      "category": "human-acceptance",
+      "adapter": "human",
+      "operation": "human",
+      "input": {
+        "role": "B"
+      },
+      "expected": "Medir, guardar y consultar el plano sin internet. Reabrir y verificar datos conservados.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "human-rubric"
+      ],
+      "sources": [
+        "Hoja de ruta pp.1-4",
+        "C5 planificación QA",
+        "Guía Robot QA p.8"
+      ],
+      "tags": [
+        "human",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-HUM-010",
+      "title": "PNG exportado real",
+      "requirement_id": "ROADMAP-B5-PNG",
+      "category": "human-acceptance",
+      "adapter": "human",
+      "operation": "human",
+      "input": {
+        "role": "B"
+      },
+      "expected": "Revisar encuadre, texto, leyenda y menú de compartir; conservar PNG autorizado.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "human-rubric"
+      ],
+      "sources": [
+        "Hoja de ruta pp.1-4",
+        "C5 planificación QA",
+        "Guía Robot QA p.8"
+      ],
+      "tags": [
+        "human",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-HUM-011",
+      "title": "Guía, giro, TalkBack y movimiento reducido",
+      "requirement_id": "ROADMAP-B5-GUIDE",
+      "category": "human-acceptance",
+      "adapter": "human",
+      "operation": "human",
+      "input": {
+        "role": "B"
+      },
+      "expected": "Comprobar globos y controles en las pantallas, texto 150%, giro y TalkBack.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "human-rubric"
+      ],
+      "sources": [
+        "Hoja de ruta pp.1-4",
+        "C5 planificación QA",
+        "Guía Robot QA p.8"
+      ],
+      "tags": [
+        "human",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-HUM-012",
+      "title": "Sincronización Cloud autorizada",
+      "requirement_id": "ROADMAP-C1",
+      "category": "human-acceptance",
+      "adapter": "human",
+      "operation": "human",
+      "input": {
+        "role": "C"
+      },
+      "expected": "En staging, 3 pendientes pasan a confirmadas sin abrir Captura, conservando los mismos IDs.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "human-rubric"
+      ],
+      "sources": [
+        "Hoja de ruta pp.1-4",
+        "C5 planificación QA",
+        "Guía Robot QA p.8"
+      ],
+      "tags": [
+        "human",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-HUM-013",
+      "title": "Revocación offline y servidor",
+      "requirement_id": "ROADMAP-C2",
+      "category": "human-acceptance",
+      "adapter": "human",
+      "operation": "human",
+      "input": {
+        "role": "C"
+      },
+      "expected": "Cancelar pendientes sin borrar historial; reconectar y comprobar bloqueo remoto.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "human-rubric"
+      ],
+      "sources": [
+        "Hoja de ruta pp.1-4",
+        "C5 planificación QA",
+        "Guía Robot QA p.8"
+      ],
+      "tags": [
+        "human",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-HUM-014",
+      "title": "Mapa público, privacidad y rendimiento real",
+      "requirement_id": "ROADMAP-C4",
+      "category": "human-acceptance",
+      "adapter": "human",
+      "operation": "human",
+      "input": {
+        "role": "C"
+      },
+      "expected": "No mostrar grupos con menos de 5 UID técnicos. Medir toque a mapa utilizable, carga fría y caliente, en teléfono.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "human-rubric"
+      ],
+      "sources": [
+        "Hoja de ruta pp.1-4",
+        "C5 planificación QA",
+        "Guía Robot QA p.8"
+      ],
+      "tags": [
+        "human",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-HUM-015",
+      "title": "Cinco evidencias reales de cierre",
+      "requirement_id": "ROADMAP-D1",
+      "category": "human-acceptance",
+      "adapter": "human",
+      "operation": "human",
+      "input": {
+        "role": "D"
+      },
+      "expected": "Conservar Wizard, muestreo, Pin-Drop, mapa y PNG reales con versión y fecha.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "human-rubric"
+      ],
+      "sources": [
+        "Hoja de ruta pp.1-4",
+        "C5 planificación QA",
+        "Guía Robot QA p.8"
+      ],
+      "tags": [
+        "human",
+        "qa-only"
+      ]
+    },
+    {
+      "case_id": "KYS-HUM-016",
+      "title": "Acuerdo de criterios y discrepancias",
+      "requirement_id": "RISK-ORACLE",
+      "category": "human-acceptance",
+      "adapter": "human",
+      "operation": "human",
+      "input": {
+        "role": "D"
+      },
+      "expected": "Resolver 10 vs 25 m, 3 vs 8 muestras y nombre de tabla, sin modificar silenciosamente FDR o código.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "human-rubric"
+      ],
+      "sources": [
+        "Hoja de ruta pp.1-4",
+        "C5 planificación QA",
+        "Guía Robot QA p.8"
+      ],
+      "tags": [
+        "human",
+        "qa-only"
+      ]
+    }
+  ]
+}

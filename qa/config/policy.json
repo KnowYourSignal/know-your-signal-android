@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0",
+  "name": "Know Your Signal - QA independiente",
+  "repetitions": 3,
+  "max_repetitions": 10,
+  "command_timeout_seconds": 300,
+  "android_phase_timeout_seconds": 420,
+  "critical_failure_tolerance": 0,
+  "required_automatic_pass_rate": 1.0,
+  "require_human_signoff": true,
+  "map_e2e_budget_ms": 3000,
+  "model": null,
+  "prompt": null,
+  "ai_applicability": "La app Android no integra un LLM, RAG o agente. Sus métricas específicas no se inventan ni se declaran aprobadas. El robot adapta el proceso de la guía al SUT real.",
+  "gate_rationale": "No se acepta una versión con fallos automáticos obligatorios, P0 sin resolver, evidencia requerida ausente o aceptación humana pendiente. Es una política propuesta para este proyecto, no un umbral universal de ISO ni una certificación."
+}
