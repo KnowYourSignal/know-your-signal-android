@@ -275,6 +275,13 @@ class GateTests(unittest.TestCase):
 
 
 class ComparisonTests(unittest.TestCase):
+    def test_jest_report_destination_is_not_an_oracle_change(self):
+        before = report(case(adapter="trusted-command", input={"argv": ["node", "jest.js", "--outputFile", "/base/result.json"]}))
+        after = report(case(adapter="trusted-command", input={"argv": ["node", "jest.js", "--outputFile", "/candidate/result.json"]}))
+        self.assertEqual(compare_reports(before, after)["test_basis_changes"], [])
+        after["cases"][0]["input"]["argv"].append("--different-test-option")
+        self.assertEqual(len(compare_reports(before, after)["test_basis_changes"]), 1)
+
     def test_changing_the_oracle_is_not_a_product_improvement(self):
         diff = compare_reports(report(case(status="FAIL", expected=False)), report(case(expected=True)))
         self.assertFalse(diff["improvements"])

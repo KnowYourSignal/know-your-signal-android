@@ -350,12 +350,22 @@ def compare_reports(baseline: dict, candidate: dict) -> dict:
         or new[c["case_id"]].get("comparable") is False
     ]
     basis_fields = ("input", "expected", "evaluators", "adapter", "operation", "requirement_id", "required", "severity")
+    def case_basis(item):
+        basis = json.loads(json.dumps({k: item.get(k) for k in basis_fields}))
+        # The output JSON destination belongs to the evidence envelope, not the
+        # SUT input. Preserve all executable arguments and other options.
+        if item.get("adapter") == "trusted-command" and isinstance(basis["input"], dict):
+            argv = basis["input"].get("argv")
+            if isinstance(argv, list):
+                for i, value in enumerate(argv[:-1]):
+                    if value == "--outputFile":
+                        argv[i + 1] = "<QA_REPORT_OUTPUT>"
+        return canonical_hash(basis)
     basis_changes = [
         {"case_id": key, "before": old[key]["status"], "after": new[key]["status"],
          "reason": "Inputs, oracle, evaluator or required criterion changed"}
         for key in common
-        if canonical_hash({k: old[key].get(k) for k in basis_fields})
-        != canonical_hash({k: new[key].get(k) for k in basis_fields})
+        if case_basis(old[key]) != case_basis(new[key])
     ]
     changed_basis_ids = {c["case_id"] for c in basis_changes}
     comparable = [c for c in changes if c not in capability_changes and c["case_id"] not in changed_basis_ids]

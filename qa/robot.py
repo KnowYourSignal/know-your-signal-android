@@ -598,6 +598,12 @@ def main() -> int:
             args.candidate.read_text()
         )
         diff = compare_reports(old, new)
+        diff["comparison_tool"] = {
+            "robot_version": ROBOT_VERSION,
+            "revision": git(REPO, "rev-parse", "HEAD"),
+            "core_sha256": digest(QA / "core.py"),
+            "report_output_normalization": "Only --outputFile destination of trusted commands is excluded from the test basis",
+        }
         if args.output.exists():
             raise ValueError("Comparison output already exists")
         write_json(args.output, diff)
