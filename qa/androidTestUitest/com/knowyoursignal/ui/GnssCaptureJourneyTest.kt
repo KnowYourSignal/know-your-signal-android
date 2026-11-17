@@ -37,6 +37,15 @@ class GnssCaptureJourneyTest {
         listOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION).forEach {
             ui.instrumentation.uiAutomation.grantRuntimePermission(ui.context.packageName, it)
         }
+        // While-in-use location requires this target app in the foreground on
+        // recent Android. Establish that real UI state before listening to GNSS;
+        // do not grant background location or weaken the production policy.
+        ui.resetFixtures()
+        ui.launch()
+        repeat(3) { ui.action("Continuar") }
+        ui.find(By.descStartsWith("Solo uso personal.")).click()
+        ui.action("Comenzar")
+        ui.find(By.text("Medir señal"))
         val manager = ui.context.getSystemService(LocationManager::class.java)
         // A console fix is delivered only while a GPS client is listening. This
         // activates the emulator GPS; it does not replace a provider or its flags.
@@ -69,12 +78,6 @@ class GnssCaptureJourneyTest {
             val validFix = requireNotNull(actual)
             assumeTrue("[QA_CAPABILITY_BLOCKED] Console GNSS accuracy cannot establish a valid positive fixture", validFix.accuracy > 0 && validFix.accuracy < 10)
 
-            ui.resetFixtures()
-            ui.launch()
-            repeat(3) { ui.action("Continuar") }
-            ui.find(By.descStartsWith("Solo uso personal.")).click()
-            ui.action("Comenzar")
-            ui.find(By.text("Medir señal"))
             ui.screenshot("29-console-wizard")
             ui.action("Activar sensores")
             ui.action("Registrar señal", 120_000)
