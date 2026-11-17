@@ -51,6 +51,12 @@ al incluir también el contenedor de la suite; el robot no lo cuenta dos veces.
 | `native_backend.py --execute` | Diez comprobaciones SQL/concurrencia originales, en ambos esquemas PostGIS de CI | Base desechable protegida; no SLA de Android/Cloud |
 | Humano | Hoja de ruta, roles A/B/C/D y evidencia identificada | Pendiente hasta que una persona ejecute y firme |
 
+Tres observaciones estáticas (lectura anterior, contador nativo opcional y
+ruta de mocks) requieren interpretación: no se declaran defectos funcionales
+solo por su patrón. El resultado automático original se conserva en cada caso.
+`technical-review-template.csv` permite documentar la decisión de arquitectura;
+no convierte un fallo automático obligatorio en aprobado.
+
 Ocho evaluadores del catálogo: contrato exacto, frontera numérica, estadístico
 de referencia, geometría acotada, relación metamórfica, regla de código fuente,
 estado de interfaz y rúbrica humana. Consulte `docs/metodologia.md`.

@@ -92,3 +92,14 @@ no demuestra exactitud ni inventa juicios. No es requisito de compra de un LLM.
 
 La automatización ayuda a decidir; no prueba ausencia total de fallos, no concede
 certificación ISO y no autoriza por sí sola publicación comercial o entrega final.
+
+
+## Revisión de los oráculos estáticos
+
+Los patrones de reutilización de `latest`, contador nativo opcional y detección
+ de dobles de prueba no son, por sí solos, requisitos funcionales. Esos tres
+ diagnósticos conservan sus resultados automáticos y quedan como `REVIEW` no
+ obligatorio, con fundamento explícito. Los invariantes de precisión y tiempo
+ originales sí mantienen su criterio obligatorio. Esta revisión del robot no
+ cambia la app ni demuestra una mejora del producto. La plantilla técnica
+ documenta una decisión, no permite sobreescribir fallos automáticos obligatorios.

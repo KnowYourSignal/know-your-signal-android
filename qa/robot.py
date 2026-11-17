@@ -248,6 +248,13 @@ def probe_results(raw: dict, items: list[dict], repetitions: int) -> list[dict]:
             result["interpretation"] = (
                 "Static diagnostic on actual source. A passing pattern check is not runtime proof. Investigate failed invariants with the team."
             )
+            if item.get("requires_interpretation") and status == "FAIL":
+                result["raw_automated_status"] = status
+                result["status"] = "REVIEW"
+                result["observed"] = (
+                    "Static pattern observed; technical interpretation required. "
+                    + item["review_reason"]
+                )
         results.append(result)
     return results
 

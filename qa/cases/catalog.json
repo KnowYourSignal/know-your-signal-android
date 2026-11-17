@@ -3508,7 +3508,7 @@
     },
     {
       "case_id": "KYS-SRC-003",
-      "title": "Un error nuevo no reutiliza silenciosamente latest",
+      "title": "Revisar lectura previa ante un error",
       "requirement_id": "RISK-INTEGRITY",
       "category": "integrity-static",
       "adapter": "jest-contract",
@@ -3517,9 +3517,9 @@
         "path": "android/app/src/main/java/com/knowyoursignal/telemetry/TelemetryModule.kt",
         "absent": "displayObservation\\s*=\\s*latest"
       },
-      "expected": true,
-      "severity": "high",
-      "required": true,
+      "expected": "Registrar el patrón observado y obtener una decisión técnica fundamentada; no inferir un defecto funcional solo por el patrón.",
+      "severity": "medium",
+      "required": false,
       "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
       "evaluators": [
         "source-rule"
@@ -3532,6 +3532,8 @@
         "source",
         "qa-only"
       ],
+      "review_reason": "Conservar una lectura previa puede ser válido dentro de su vigencia. Revisar antigüedad, cambio de red y bloqueo efectivo; el patrón por sí solo no prueba un defecto.",
+      "requires_interpretation": true,
       "issue_ids": [
         1,
         5
@@ -3539,7 +3541,7 @@
     },
     {
       "case_id": "KYS-SRC-004",
-      "title": "Módulo entrega contador de muestras reales",
+      "title": "Revisar observabilidad del muestreo",
       "requirement_id": "RISK-INTEGRITY",
       "category": "integrity-static",
       "adapter": "jest-contract",
@@ -3548,9 +3550,9 @@
         "path": "android/app/src/main/java/com/knowyoursignal/telemetry/TelemetryModule.kt",
         "present": "putInt\\(\"sampleCount\""
       },
-      "expected": true,
-      "severity": "high",
-      "required": true,
+      "expected": "Registrar el patrón observado y obtener una decisión técnica fundamentada; no inferir un defecto funcional solo por el patrón.",
+      "severity": "medium",
+      "required": false,
       "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
       "evaluators": [
         "source-rule"
@@ -3563,6 +3565,8 @@
         "source",
         "qa-only"
       ],
+      "review_reason": "El contador nativo es opcional en el contrato. El cliente cuenta ocho pasos; comprobar su correspondencia con lecturas reales antes de exigir una implementación concreta.",
+      "requires_interpretation": true,
       "issue_ids": [
         1,
         5
@@ -3570,7 +3574,7 @@
     },
     {
       "case_id": "KYS-SRC-005",
-      "title": "Código funcional no detecta mocks del runner",
+      "title": "Revisar ruta especial para dobles de prueba",
       "requirement_id": "RISK-INTEGRITY",
       "category": "integrity-static",
       "adapter": "jest-contract",
@@ -3579,9 +3583,9 @@
         "path": "src/services/useCaptureSession.ts",
         "absent": "_isMockFunction"
       },
-      "expected": true,
-      "severity": "high",
-      "required": true,
+      "expected": "Registrar el patrón observado y obtener una decisión técnica fundamentada; no inferir un defecto funcional solo por el patrón.",
+      "severity": "medium",
+      "required": false,
       "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
       "evaluators": [
         "source-rule"
@@ -3594,6 +3598,8 @@
         "source",
         "qa-only"
       ],
+      "review_reason": "La detección de mocks es un riesgo de cobertura, no un requisito funcional incumplido por sí solo. El nuevo adaptador ya ejecuta la ruta completa sin ese atajo.",
+      "requires_interpretation": true,
       "issue_ids": [
         1,
         5

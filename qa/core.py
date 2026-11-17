@@ -127,6 +127,16 @@ def validate_catalog(catalog: dict) -> list[str]:
             errors.append(f"{ident}: invalid severity")
         if type(item.get("required")) is not bool:
             errors.append(f"{ident}: required must be boolean")
+        if item.get("requires_interpretation"):
+            if (
+                item.get("operation") != "source"
+                or item.get("required") is not False
+                or item.get("severity") == "critical"
+                or not item.get("review_reason")
+            ):
+                errors.append(
+                    f"{ident}: technical interpretation is allowed only for justified nonrequired static diagnostics"
+                )
         evaluators = item.get("evaluators", [])
         if (
             not isinstance(evaluators, list)
@@ -275,7 +285,13 @@ def summarize(cases: list[dict]) -> dict:
             c.get("severity") == "critical" and c.get("status") in {"FAIL", "ERROR"}
             for c in cases
         ),
-        "pending_human": sum(c.get("status") == "REVIEW" for c in cases),
+        "pending_human": sum(
+            c.get("status") == "REVIEW" and c.get("adapter") == "human" for c in cases
+        ),
+        "pending_technical_review": sum(
+            c.get("status") == "REVIEW" and c.get("requires_interpretation") is True
+            for c in cases
+        ),
     }
 
 

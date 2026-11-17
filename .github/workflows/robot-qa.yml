@@ -14,7 +14,7 @@ on:
         '.github/workflows/robot-qa.yml',
       ]
   push:
-    branches: [main, feat/android-issue-integration]
+    branches: [main]
     paths:
       [
         'qa/**',

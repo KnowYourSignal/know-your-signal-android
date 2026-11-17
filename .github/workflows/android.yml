@@ -110,16 +110,9 @@ jobs:
           bash gradlew "${gradle_args[@]}" :app:assembleQa
           bash gradlew "${gradle_args[@]}" -PkysTestBuildType=uitest :app:assembleUitest :app:assembleUitestAndroidTest
           git diff --exit-code -- app/schemas
-          # QA init script must add the new class only to the test APK.
-          unzip -p app/build/outputs/apk/androidTest/uitest/app-uitest-androidTest.apk 'classes*.dex' | strings | rg --fixed-strings 'GnssCaptureJourneyTest'
-          if unzip -p app/build/outputs/apk/qa/app-qa.apk 'classes*.dex' | strings | rg --fixed-strings 'GnssCaptureJourneyTest'; then
-            echo 'The QA journey must never be packaged in the application APK' >&2
-            exit 1
-          fi
-          if unzip -Z1 app/build/outputs/apk/qa/app-qa.apk | rg 'ui_test_ca|ui-test-key'; then
-            echo 'Test TLS fixtures must not be packaged in QA' >&2
-            exit 1
-          fi
+          python3 ../qa/verify_apk.py --app app/build/outputs/apk/qa/app-qa.apk \
+            --test app/build/outputs/apk/androidTest/uitest/app-uitest-androidTest.apk \
+            --output "$RUNNER_TEMP/kys-apk-verification.json"
       - name: Verify Room and the sync contract on Android
         working-directory: android
         run: |
@@ -179,6 +172,7 @@ jobs:
             ${{ runner.temp }}/kys-ui-verification
             ${{ runner.temp }}/kys-android-robot
             ${{ runner.temp }}/kys-room-robot
+            ${{ runner.temp }}/kys-apk-verification.json
             android/app/build/test-results/testDebugUnitTest
             ${{ runner.temp }}/kys-ui-*.log
             ${{ runner.temp }}/kys-instrumentation.log
@@ -236,7 +230,7 @@ jobs:
           "$tools/apksigner" verify --print-certs "$apk" > "$delivery/verification.txt"
           "$tools/zipalign" -c -P 16 4 "$apk" >> "$delivery/verification.txt"
           "$tools/aapt" dump badging "$apk" | head -6 >> "$delivery/verification.txt"
-          if unzip -Z1 "$apk" | rg 'ui_test_ca|ui-test-key'; then exit 1; fi
+          python3 qa/verify_apk.py --app "$apk" --output "$delivery/apk-content-verification.json"
           cp "$apk" "$delivery/KnowYourSignal-QA-arm64.apk"
           sha256sum "$delivery/KnowYourSignal-QA-arm64.apk" > "$delivery/sha256.txt"
       - uses: actions/upload-artifact@v4

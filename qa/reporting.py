@@ -103,6 +103,16 @@ def _csv(report: dict, output: Path):
         for c in report["cases"]:
             if c.get("adapter") == "human":
                 writer.writerow([report["run_id"], c["case_id"], "", "", "", ""])
+    with (output / "technical-review-template.csv").open(
+        "w", newline="", encoding="utf-8-sig"
+    ) as stream:
+        writer = csv.writer(stream)
+        writer.writerow(
+            ["run_id", "case_id", "reviewer", "decision", "evidence", "rationale"]
+        )
+        for c in report["cases"]:
+            if c.get("requires_interpretation"):
+                writer.writerow([report["run_id"], c["case_id"], "", "", "", ""])
 
 
 def safe_csv_cell(value):

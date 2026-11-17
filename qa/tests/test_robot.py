@@ -204,7 +204,10 @@ class MeasurementTests(unittest.TestCase):
             [
                 case(attempts=[{"status": "PASS"}] * 3),
                 case(
-                    case_id="KYS-HUM-001", status="REVIEW", evidence_kind="human_review"
+                    case_id="KYS-HUM-001",
+                    status="REVIEW",
+                    evidence_kind="human_review",
+                    adapter="human",
                 ),
             ]
         )
@@ -483,6 +486,21 @@ class AdapterTests(unittest.TestCase):
 
     def test_missing_suite_is_error_not_a_product_pass(self):
         self.assertEqual(probe_results({}, [case()], 3)[0]["status"], "ERROR")
+
+    def test_design_diagnostic_keeps_raw_failure_without_calling_it_a_functional_bug(
+        self,
+    ):
+        item = case(
+            operation="source",
+            required=False,
+            severity="medium",
+            requires_interpretation=True,
+            review_reason="Optional counter needs an architecture decision",
+        )
+        value = probe_results(self.probe("failed"), [item], 1)[0]
+        self.assertEqual(value["status"], "REVIEW")
+        self.assertEqual(value["raw_automated_status"], "FAIL")
+        self.assertEqual(value["attempts"][0]["status"], "FAIL")
 
     def test_command_failure_and_secret_logs_are_retained_safely(self):
         with tempfile.TemporaryDirectory() as temp:
