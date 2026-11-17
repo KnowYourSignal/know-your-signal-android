@@ -13,7 +13,12 @@ def verify(folder: Path) -> list[str]:
     if not isinstance(manifest, dict) or not manifest:
         return ["Missing/nonempty integrity manifest required"]
     for relative, expected in manifest.items():
-        if not isinstance(relative, str) or Path(relative).is_absolute() or ".." in Path(relative).parts or "\\" in relative:
+        if (
+            not isinstance(relative, str)
+            or Path(relative).is_absolute()
+            or ".." in Path(relative).parts
+            or "\\" in relative
+        ):
             errors.append("Unsafe manifest path")
             continue
         path = (folder / relative).resolve()
@@ -21,15 +26,23 @@ def verify(folder: Path) -> list[str]:
             errors.append("Manifest path escapes evidence directory")
         elif not path.is_file() or digest(path) != expected:
             errors.append("Missing or modified evidence: " + relative)
-    actual_files = {str(p.relative_to(folder)) for p in folder.rglob("*") if p.is_file() and p.name != "manifest.sha256.json"}
+    actual_files = {
+        str(p.relative_to(folder))
+        for p in folder.rglob("*")
+        if p.is_file() and p.name != "manifest.sha256.json"
+    }
     if actual_files != set(manifest):
         errors.append("Evidence file inventory differs from manifest")
     report = json.loads((folder / "report.json").read_text())
     validate_report(report)
     for case in report["cases"]:
         relative = case.get("evidence_file")
-        if relative not in manifest or case.get("evidence_sha256") != manifest.get(relative):
-            errors.append("Case evidence/hash missing from manifest: " + case["case_id"])
+        if relative not in manifest or case.get("evidence_sha256") != manifest.get(
+            relative
+        ):
+            errors.append(
+                "Case evidence/hash missing from manifest: " + case["case_id"]
+            )
     return errors
 
 

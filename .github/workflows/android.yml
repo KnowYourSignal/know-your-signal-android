@@ -102,7 +102,7 @@ jobs:
         working-directory: android
         run: |
           gradle_args=(
-            --no-daemon --max-workers=1 -PreactNativeArchitectures=x86_64
+            --no-daemon --max-workers=1 --init-script ../qa/gradle.init.gradle -PreactNativeArchitectures=x86_64
             '-Dorg.gradle.jvmargs=-Xmx1400m -XX:MaxMetaspaceSize=640m'
             -Pkotlin.compiler.execution.strategy=in-process
           )
@@ -110,6 +110,12 @@ jobs:
           bash gradlew "${gradle_args[@]}" :app:assembleQa
           bash gradlew "${gradle_args[@]}" -PkysTestBuildType=uitest :app:assembleUitest :app:assembleUitestAndroidTest
           git diff --exit-code -- app/schemas
+          # QA init script must add the new class only to the test APK.
+          unzip -p app/build/outputs/apk/androidTest/uitest/app-uitest-androidTest.apk 'classes*.dex' | strings | rg --fixed-strings 'GnssCaptureJourneyTest'
+          if unzip -p app/build/outputs/apk/qa/app-qa.apk 'classes*.dex' | strings | rg --fixed-strings 'GnssCaptureJourneyTest'; then
+            echo 'The QA journey must never be packaged in the application APK' >&2
+            exit 1
+          fi
           if unzip -Z1 app/build/outputs/apk/qa/app-qa.apk | rg 'ui_test_ca|ui-test-key'; then
             echo 'Test TLS fixtures must not be packaged in QA' >&2
             exit 1
@@ -148,8 +154,10 @@ jobs:
           adb shell input keyevent 82
           adb install app/build/outputs/apk/debug/app-debug.apk
           adb install app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
-          timeout 300 adb shell am instrument -w com.knowyoursignal.test/androidx.test.runner.AndroidJUnitRunner | tee "$RUNNER_TEMP/kys-instrumentation.log"
-          awk '/^OK \([0-9]+ tests?\)/ {passed=1} END {exit !passed}' "$RUNNER_TEMP/kys-instrumentation.log"
+          native_exit=0
+          timeout 300 adb shell am instrument -w -r com.knowyoursignal.test/androidx.test.runner.AndroidJUnitRunner | tee "$RUNNER_TEMP/kys-instrumentation.log" || native_exit=$?
+          python3 ../qa/instrumentation.py --input "$RUNNER_TEMP/kys-instrumentation.log" --output "$RUNNER_TEMP/kys-room-robot" --producer-revision "$GITHUB_SHA" || native_exit=$?
+          awk '/^OK \([0-9]+ tests?\)/ {passed=1} END {exit !passed}' "$RUNNER_TEMP/kys-instrumentation.log" || native_exit=1
           adb install app/build/outputs/apk/uitest/app-uitest.apk
           adb install app/build/outputs/apk/androidTest/uitest/app-uitest-androidTest.apk
           # Run independent journeys even if another journey fails; dependent
@@ -160,6 +168,7 @@ jobs:
           adb shell am start -n com.knowyoursignal.qa/com.knowyoursignal.MainActivity
           sleep 20
           adb shell pidof com.knowyoursignal.qa
+          if test "$native_exit" -ne 0; then exit "$native_exit"; fi
           exit "$robot_exit"
       - name: Keep synthetic UI evidence and test logs
         if: always()
@@ -169,6 +178,8 @@ jobs:
           path: |
             ${{ runner.temp }}/kys-ui-verification
             ${{ runner.temp }}/kys-android-robot
+            ${{ runner.temp }}/kys-room-robot
+            android/app/build/test-results/testDebugUnitTest
             ${{ runner.temp }}/kys-ui-*.log
             ${{ runner.temp }}/kys-instrumentation.log
           if-no-files-found: ignore

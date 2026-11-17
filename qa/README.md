@@ -31,18 +31,24 @@ cambie el esperado ni el producto solo para ponerlo verde.
 
 ## Qué comprueba
 
-`cases/catalog.json` versiona 133 casos únicos: 117 automatizados y 16 de
-aceptación humana. Las tres repeticiones son **351 ejecuciones**, no 351 casos.
-El perfil `portable` añade cinco señales: tipos/lint, suite JavaScript existente,
-tipos backend y suite de handler/base de datos en PostgreSQL WASM aislado.
+`cases/catalog.json` versiona 215 casos únicos: 199 automatizados y 16 de
+aceptación humana. Las tres repeticiones son **597 ejecuciones**, no 597 casos.
+El perfil `portable` añade cuatro señales: tipos/lint, suite JavaScript existente,
+tipos backend. Además, los 68 contratos hoja del backend se reportan individualmente
+en PostgreSQL WASM/PostGIS aislado, tres veces cada uno. Node cuenta 69 resultados
+al incluir también el contenedor de la suite; el robot no lo cuenta dos veces.
 
 | Adaptador | Evidencia | Límite |
 |---|---|---|
 | `contracts.probe.jsx` | Código real: captura, límites, pisos, potencia, Pin-Drop, mapa, PNG, globo y relaciones metamórficas con semilla fija | Contratos y geometría; no prueba sensores ni dibujado físico |
 | `ui.probe.jsx` | Componente Wizard real, hook controlado y estado del botón | Fixture explícito; no certifica el GPS ni el flujo nativo |
+| `sampling.probe.jsx` | Hook de captura real con proveedores sin atajo de mocks: ocho lecturas, cancelación, permisos, caducidad y métricas coherentes | Entradas nativas y reloj controlados; no sensores físicos |
 | Análisis estático | Invariantes identificadas en archivos reales | Un patrón presente/ausente es un diagnóstico, no una prueba funcional completa |
-| Suites existentes | 54 pruebas JS y suite backend del commit, con logs reales | Se reportan como suites; no se suman artificialmente al catálogo |
-| `android.py` | Ocho recorridos UiAutomator originales, capturas y XML por fase | Emulador, GPS/servidor sintéticos; no teléfonos físicos ni Cloud real |
+| `backend.py` | 68 contratos hoja originales del handler/SQL con JUnit real por caso | No cambia sus aserciones ni prueba el Supabase desplegado |
+| Suite JS existente | 54 pruebas del producto con su JSON/log real | Se reporta como suite adicional, sin duplicar el catálogo |
+| `android.py` | Ocho recorridos originales, un ensayo positivo con GNSS de consola y un indicador de tiempo; evidencia por fase | Emulador, GPS/servidor sintéticos; no teléfonos físicos ni Cloud real |
+| `instrumentation.py` | Quince contratos nativos Room/sincronización originales, con resultados `-r` identificados | Emulador y servidor local; no Cloud real |
+| `native_backend.py --execute` | Diez comprobaciones SQL/concurrencia originales, en ambos esquemas PostGIS de CI | Base desechable protegida; no SLA de Android/Cloud |
 | Humano | Hoja de ruta, roles A/B/C/D y evidencia identificada | Pendiente hasta que una persona ejecute y firme |
 
 Ocho evaluadores del catálogo: contrato exacto, frontera numérica, estadístico
@@ -51,7 +57,8 @@ estado de interfaz y rúbrica humana. Consulte `docs/metodologia.md`.
 
 ## Comparar versiones, sin fusionarlas
 
-El mismo robot puede apuntar a un checkout separado con sus dependencias:
+El mismo robot puede apuntar a un checkout separado con sus dependencias (también
+`tests/backend/node_modules` si ejecuta el perfil completo):
 
 ```sh
 python3 qa/robot.py run --sut-root /ruta/checkout-anterior --profile probes --output qa/reports/base
@@ -71,7 +78,11 @@ evidencia ejecutable; no demuestra por sí solo un nuevo defecto de la app.
 CI construye los mismos APK y conserva las mismas aserciones. El adaptador nuevo
 continúa con escenarios independientes tras un fallo. Historial offline,
 accesibilidad con PNG e historial sin permiso dependen de las dos mediciones del
-recorrido de captura: si faltan, se marcan `BLOCKED`, no fallos adicionales.
+recorrido de captura: si faltan, se marcan `BLOCKED`, no fallos adicionales. Un
+ensayo positivo adicional usa `adb emu geo fix` sin desactivar el anti-mock. Si
+ese emulador marca la posición como mock, el ensayo queda bloqueado. Si consigue
+guardar dos mediciones mediante la UI real, se registra como precondición de los
+recorridos dependientes; el fallo del recorrido original nunca se borra.
 
 ```sh
 python3 qa/android.py --serial emulator-5554 --output /tmp/kys-android-evidence
@@ -81,6 +92,18 @@ Requiere los APK `uitest`/instrumentation ya instalados, el entorno Android del
 workflow y emulador verificado. El adaptador rechaza teléfonos físicos, seriales
 ambiguos y paquetes distintos. Sus cambios de permisos/conectividad ocurren solo
 en el emulador aislado. No use ese comando sobre el teléfono del evaluador.
+
+Las capturas creadas dentro del journey se preservan tras cada fase. Las
+pantallas posteriores a cerrar instrumentation se identifican por separado y
+pueden mostrar el launcher. El indicador de 1000 celdas mide hasta una etiqueta
+accesible e incluye la sobrecarga del driver; es un diagnóstico opcional, no la
+aceptación física de C4. `gradle.init.gradle` añade únicamente el nuevo test al
+APK de instrumentación `uitest`; no modifica fuentes del APK principal ni sus
+validaciones.
+
+El adaptador de PostgreSQL ejecuta los scripts originales y sus protecciones de
+base desechable. Una importación manual sin `--execute` se identifica como
+evidencia sin vincular al checkout actual; no se inventa su procedencia.
 
 ## Aceptación y resultados honestos
 
@@ -94,7 +117,9 @@ no con el tiempo de SQL aislado.
 La app actual no integra LLM/RAG/agentes. La guía de Robot QA se aplica al proceso
 y arquitectura de pruebas; sus métricas de alucinación, prompts y coste por
 token quedan expresamente fuera de alcance. No se declaran aprobadas ni se añade
-una IA ficticia al producto. Tampoco se afirma certificación ISO.
+una IA ficticia al producto. Tampoco se afirma certificación ISO. El objetivo
+académico específico IA/LLM requiere acordar la adaptación con el docente; este
+trabajo no lo declara satisfecho.
 
 Para registrar una aceptación real, complete `human-review-template.csv` (persona,
 PASS/FAIL, evidencia y observación; no deje campos vacíos) y genere otro informe:

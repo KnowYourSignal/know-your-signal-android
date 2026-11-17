@@ -6,12 +6,30 @@ import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from core import digest
-from reporting import write_report
+from reporting import safe_csv_cell, write_report
 from verify import verify
 from test_robot import case, report, POLICY
 
 
 class IntegrityTests(unittest.TestCase):
+    def test_unsafe_case_id_is_refused_before_any_evidence_is_written(self):
+        with tempfile.TemporaryDirectory() as temp:
+            output = Path(temp) / "out"
+            with self.assertRaises(ValueError):
+                write_report(report(case(case_id="../../escape")), output, POLICY)
+            self.assertFalse(output.exists())
+
+    def test_csv_is_data_not_a_spreadsheet_formula(self):
+        for value in (
+            '=HYPERLINK("https://example.invalid")',
+            "+1+1",
+            "-1+1",
+            "@SUM(1)",
+            "  =1+1",
+        ):
+            self.assertTrue(safe_csv_cell(value).startswith("'"))
+        self.assertEqual(safe_csv_cell("KYS-CAP-001"), "KYS-CAP-001")
+
     def test_complete_report_is_verifiable(self):
         with tempfile.TemporaryDirectory() as temp:
             output = Path(temp)
@@ -22,14 +40,14 @@ class IntegrityTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             output = Path(temp)
             write_report(report(case()), output, POLICY)
-            (output / "evidence/KYS-CAP-001.json").write_text('{}')
+            (output / "evidence/KYS-CAP-001.json").write_text("{}")
             self.assertTrue(verify(output))
 
     def test_extra_or_missing_file_is_detected(self):
         with tempfile.TemporaryDirectory() as temp:
             output = Path(temp)
             write_report(report(case()), output, POLICY)
-            (output / "hidden-extra.txt").write_text('unrecorded')
+            (output / "hidden-extra.txt").write_text("unrecorded")
             self.assertTrue(verify(output))
             (output / "hidden-extra.txt").unlink()
             (output / "traceability.csv").unlink()
@@ -41,11 +59,11 @@ class IntegrityTests(unittest.TestCase):
             write_report(report(case()), output, POLICY)
             path = output / "report.json"
             value = json.loads(path.read_text())
-            value['cases'][0]['evidence_sha256'] = 'fake'
+            value["cases"][0]["evidence_sha256"] = "fake"
             path.write_text(json.dumps(value))
             manifest_path = output / "manifest.sha256.json"
             manifest = json.loads(manifest_path.read_text())
-            manifest['report.json'] = digest(path)
+            manifest["report.json"] = digest(path)
             manifest_path.write_text(json.dumps(manifest))
             self.assertTrue(verify(output))
 
@@ -58,12 +76,13 @@ class IntegrityTests(unittest.TestCase):
             (output / "link.txt").symlink_to(external)
             path = output / "manifest.sha256.json"
             manifest = json.loads(path.read_text())
-            manifest['../external.txt'] = digest(external)
-            manifest['link.txt'] = digest(external)
+            manifest["../external.txt"] = digest(external)
+            manifest["link.txt"] = digest(external)
             path.write_text(json.dumps(manifest))
             errors = verify(output)
             self.assertIn("Unsafe manifest path", errors)
             self.assertIn("Manifest path escapes evidence directory", errors)
 
 
-if __name__ == "__main__": unittest.main()
+if __name__ == "__main__":
+    unittest.main()

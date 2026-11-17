@@ -26,7 +26,7 @@ prueba, no instrucciones ejecutables. No se copian al repositorio.
 
 ## Arquitectura del robot
 
-`cases/catalog.json` → `robot.py` → adaptadores Jest / suites / Android →
+`cases/catalog.json` → `robot.py` → adaptadores Jest / backend por caso / suites / Android →
 evaluadores → agregación y compuerta (`core.py`) → JSON + HTML + JUnit + CSV
 (`reporting.py`) → artefactos CI e integridad (`verify.py`).
 
@@ -34,6 +34,13 @@ No hay modelo evaluador oculto, llamadas LLM, telemetría externa o comandos she
 obtenidos desde el catálogo. El runner usa argumentos de proceso definidos en
 código. La ejecución tiene timeout, repeticiones acotadas y semilla registrada.
 Los timeouts terminan el grupo de procesos para evitar trabajo huérfano.
+
+**Límite académico:** el objetivo literal de la guía es evaluar sistemas con IA o
+LLM. Know Your Signal no incorpora uno. Este trabajo acredita la automatización
+para la app y adapta la arquitectura de la guía; no acredita la evaluación de un
+modelo IA/LLM. El equipo debe dejar acordada esa adaptación con el docente. No se
+agrega una IA ficticia ni se marca ese apartado como cumplido para aparentar
+suficiencia.
 
 ## Evaluadores y oráculos
 
@@ -51,7 +58,9 @@ Los timeouts terminan el grupo de procesos para evitar trabajo huérfano.
 La tabla explica evaluaciones distintas; no ocho jueces humanos ni ocho modelos.
 Los patrones estáticos indican riesgos a investigar. No prueban por sí solos que
 se haya guardado un dato inválido. Los casos de UI verifican contrato del estado
-del botón, no una captura de sensor físico. El backend aislado valida handler,
+del botón, no una captura de sensor físico. El hook usa proveedores nativos controlados sin el atributo de mock que activa
+un atajo en el producto, y así ejecuta el bucle real de ocho muestras.
+El backend aislado valida handler,
 RLS/SQL y casos de integración según sus fixtures; no el estado desplegado actual.
 
 ## Controles de calidad del propio robot

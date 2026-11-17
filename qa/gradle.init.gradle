@@ -1,0 +1,11 @@
+// QA-only source registration. Main/QA APK source sets are never changed.
+// Invoke with --init-script ../qa/gradle.init.gradle from android/.
+gradle.beforeProject { project ->
+    project.pluginManager.withPlugin('com.android.application') {
+        project.extensions.getByName('android').sourceSets.configureEach { sourceSet ->
+            if (sourceSet.name == 'androidTestUitest') {
+                sourceSet.java.srcDir(new File(project.rootProject.projectDir.parentFile, 'qa/androidTestUitest'))
+            }
+        }
+    }
+}

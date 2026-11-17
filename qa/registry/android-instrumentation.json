@@ -1,0 +1,170 @@
+{
+  "schema_version": "1.0",
+  "cases": [
+    {
+      "case_id": "KYS-ROOM-001",
+      "class": "com.knowyoursignal.FieldMigrationTest",
+      "method": "upgradePreservesHistoryConsentQueueAndPayloadOrigins",
+      "source": "android/app/src/androidTest/java/com/knowyoursignal/FieldMigrationTest.kt",
+      "issue_ids": [
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "case_id": "KYS-ROOM-002",
+      "class": "com.knowyoursignal.LocalFieldworkTest",
+      "method": "offlineCaptureAndExplicitConsentNeverPublishOldHistory",
+      "source": "android/app/src/androidTest/java/com/knowyoursignal/LocalFieldworkTest.kt",
+      "issue_ids": [
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "case_id": "KYS-ROOM-003",
+      "class": "com.knowyoursignal.LocalFieldworkTest",
+      "method": "revocationPreservesLocalRowsAndRejectsStaleReceipts",
+      "source": "android/app/src/androidTest/java/com/knowyoursignal/LocalFieldworkTest.kt",
+      "issue_ids": [
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "case_id": "KYS-ROOM-004",
+      "class": "com.knowyoursignal.LocalFieldworkTest",
+      "method": "failureToQueueRollsBackTheHistoryInsert",
+      "source": "android/app/src/androidTest/java/com/knowyoursignal/LocalFieldworkTest.kt",
+      "issue_ids": [
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "case_id": "KYS-ROOM-005",
+      "class": "com.knowyoursignal.LocalFieldworkTest",
+      "method": "payloadAndReceiptsFollowTheStrictBackendContract",
+      "source": "android/app/src/androidTest/java/com/knowyoursignal/LocalFieldworkTest.kt",
+      "issue_ids": [
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "case_id": "KYS-ROOM-006",
+      "class": "com.knowyoursignal.LocalFieldworkTest",
+      "method": "aFrozenCaptureCannotInheritALaterConsent",
+      "source": "android/app/src/androidTest/java/com/knowyoursignal/LocalFieldworkTest.kt",
+      "issue_ids": [
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "case_id": "KYS-ROOM-007",
+      "class": "com.knowyoursignal.LocalFieldworkTest",
+      "method": "queueWakesOnlyWhenAnEmptyBatchGetsWork",
+      "source": "android/app/src/androidTest/java/com/knowyoursignal/LocalFieldworkTest.kt",
+      "issue_ids": [
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "case_id": "KYS-ROOM-008",
+      "class": "com.knowyoursignal.LocalFieldworkTest",
+      "method": "diskHistoryAndConsentSurviveClosingAndReopeningRoom",
+      "source": "android/app/src/androidTest/java/com/knowyoursignal/LocalFieldworkTest.kt",
+      "issue_ids": [
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "case_id": "KYS-ROOM-009",
+      "class": "com.knowyoursignal.LocalFieldworkTest",
+      "method": "manualWifiClassificationIsHonestDurableAndIdempotent",
+      "source": "android/app/src/androidTest/java/com/knowyoursignal/LocalFieldworkTest.kt",
+      "issue_ids": [
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "case_id": "KYS-ROOM-010",
+      "class": "com.knowyoursignal.LocalFieldworkTest",
+      "method": "unknownWifiStaysUnknownAndSystemReadingsCannotBeReclassified",
+      "source": "android/app/src/androidTest/java/com/knowyoursignal/LocalFieldworkTest.kt",
+      "issue_ids": [
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "case_id": "KYS-ROOM-011",
+      "class": "com.knowyoursignal.SyncIntegrationTest",
+      "method": "expiredAccessRefreshesRotatingTokensAndDuplicateReceiptSettlesOnce",
+      "source": "android/app/src/androidTest/java/com/knowyoursignal/SyncIntegrationTest.kt",
+      "issue_ids": [
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "case_id": "KYS-ROOM-012",
+      "class": "com.knowyoursignal.SyncIntegrationTest",
+      "method": "rateLimitRetainsQueueAndRetryUsesTheSameMeasurementId",
+      "source": "android/app/src/androidTest/java/com/knowyoursignal/SyncIntegrationTest.kt",
+      "issue_ids": [
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "case_id": "KYS-ROOM-013",
+      "class": "com.knowyoursignal.SyncIntegrationTest",
+      "method": "partialReceiptAndServerFailurePreserveOnlyRetryableRows",
+      "source": "android/app/src/androidTest/java/com/knowyoursignal/SyncIntegrationTest.kt",
+      "issue_ids": [
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "case_id": "KYS-ROOM-014",
+      "class": "com.knowyoursignal.SyncIntegrationTest",
+      "method": "incompleteReceiptNeverDiscardsAPendingCapture",
+      "source": "android/app/src/androidTest/java/com/knowyoursignal/SyncIntegrationTest.kt",
+      "issue_ids": [
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "case_id": "KYS-ROOM-015",
+      "class": "com.knowyoursignal.SyncIntegrationTest",
+      "method": "revocationDuringUploadCancelsAndKeepsHistoryPrivate",
+      "source": "android/app/src/androidTest/java/com/knowyoursignal/SyncIntegrationTest.kt",
+      "issue_ids": [
+        2,
+        3,
+        4
+      ]
+    }
+  ]
+}

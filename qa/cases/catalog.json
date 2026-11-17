@@ -26,6 +26,10 @@
       "tags": [
         "capture",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -51,6 +55,10 @@
       "tags": [
         "capture",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -78,6 +86,10 @@
       "tags": [
         "capture",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -105,6 +117,10 @@
       "tags": [
         "capture",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -132,6 +148,10 @@
       "tags": [
         "capture",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -159,6 +179,10 @@
       "tags": [
         "capture",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -186,6 +210,10 @@
       "tags": [
         "capture",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -213,6 +241,10 @@
       "tags": [
         "capture",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -240,6 +272,10 @@
       "tags": [
         "capture",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -267,6 +303,10 @@
       "tags": [
         "capture",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -294,6 +334,10 @@
       "tags": [
         "capture",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -321,6 +365,10 @@
       "tags": [
         "capture",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -348,6 +396,10 @@
       "tags": [
         "capture",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -375,6 +427,10 @@
       "tags": [
         "capture",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -402,6 +458,10 @@
       "tags": [
         "capture",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -429,6 +489,10 @@
       "tags": [
         "capture",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -456,6 +520,10 @@
       "tags": [
         "capture",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -483,6 +551,10 @@
       "tags": [
         "capture",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -511,6 +583,10 @@
       "tags": [
         "capture",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -539,6 +615,10 @@
       "tags": [
         "capture",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -567,6 +647,10 @@
       "tags": [
         "capture",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -595,6 +679,10 @@
       "tags": [
         "capture",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -623,6 +711,10 @@
       "tags": [
         "capture",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -650,6 +742,10 @@
       "tags": [
         "capture",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -677,6 +773,10 @@
       "tags": [
         "capture",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -704,6 +804,10 @@
       "tags": [
         "capture",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -731,6 +835,10 @@
       "tags": [
         "capture",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -758,6 +866,10 @@
       "tags": [
         "capture",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -785,6 +897,10 @@
       "tags": [
         "capture",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -809,6 +925,9 @@
       "tags": [
         "floor",
         "qa-only"
+      ],
+      "issue_ids": [
+        5
       ]
     },
     {
@@ -833,6 +952,9 @@
       "tags": [
         "floor",
         "qa-only"
+      ],
+      "issue_ids": [
+        5
       ]
     },
     {
@@ -857,6 +979,9 @@
       "tags": [
         "floor",
         "qa-only"
+      ],
+      "issue_ids": [
+        5
       ]
     },
     {
@@ -881,6 +1006,9 @@
       "tags": [
         "floor",
         "qa-only"
+      ],
+      "issue_ids": [
+        5
       ]
     },
     {
@@ -905,6 +1033,9 @@
       "tags": [
         "floor",
         "qa-only"
+      ],
+      "issue_ids": [
+        5
       ]
     },
     {
@@ -929,6 +1060,9 @@
       "tags": [
         "floor",
         "qa-only"
+      ],
+      "issue_ids": [
+        5
       ]
     },
     {
@@ -953,6 +1087,9 @@
       "tags": [
         "floor",
         "qa-only"
+      ],
+      "issue_ids": [
+        5
       ]
     },
     {
@@ -977,6 +1114,9 @@
       "tags": [
         "floor",
         "qa-only"
+      ],
+      "issue_ids": [
+        5
       ]
     },
     {
@@ -1001,6 +1141,9 @@
       "tags": [
         "floor",
         "qa-only"
+      ],
+      "issue_ids": [
+        5
       ]
     },
     {
@@ -1025,6 +1168,9 @@
       "tags": [
         "floor",
         "qa-only"
+      ],
+      "issue_ids": [
+        5
       ]
     },
     {
@@ -1049,6 +1195,9 @@
       "tags": [
         "floor",
         "qa-only"
+      ],
+      "issue_ids": [
+        5
       ]
     },
     {
@@ -1073,6 +1222,9 @@
       "tags": [
         "floor",
         "qa-only"
+      ],
+      "issue_ids": [
+        5
       ]
     },
     {
@@ -1097,6 +1249,9 @@
       "tags": [
         "floor",
         "qa-only"
+      ],
+      "issue_ids": [
+        5
       ]
     },
     {
@@ -1121,6 +1276,9 @@
       "tags": [
         "floor",
         "qa-only"
+      ],
+      "issue_ids": [
+        5
       ]
     },
     {
@@ -1145,6 +1303,9 @@
       "tags": [
         "floor",
         "qa-only"
+      ],
+      "issue_ids": [
+        5
       ]
     },
     {
@@ -1169,6 +1330,9 @@
       "tags": [
         "floor",
         "qa-only"
+      ],
+      "issue_ids": [
+        5
       ]
     },
     {
@@ -1196,6 +1360,10 @@
       "tags": [
         "quality",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -1223,6 +1391,10 @@
       "tags": [
         "quality",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -1250,6 +1422,10 @@
       "tags": [
         "quality",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -1277,6 +1453,10 @@
       "tags": [
         "quality",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -1304,6 +1484,10 @@
       "tags": [
         "quality",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -1331,6 +1515,10 @@
       "tags": [
         "quality",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -1358,6 +1546,10 @@
       "tags": [
         "quality",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -1385,6 +1577,10 @@
       "tags": [
         "quality",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -1412,6 +1608,10 @@
       "tags": [
         "quality",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        9
       ]
     },
     {
@@ -1439,6 +1639,10 @@
       "tags": [
         "quality",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        9
       ]
     },
     {
@@ -1466,6 +1670,10 @@
       "tags": [
         "quality",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        9
       ]
     },
     {
@@ -1493,6 +1701,10 @@
       "tags": [
         "quality",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        9
       ]
     },
     {
@@ -1520,6 +1732,10 @@
       "tags": [
         "quality",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        9
       ]
     },
     {
@@ -1547,6 +1763,10 @@
       "tags": [
         "quality",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        9
       ]
     },
     {
@@ -1577,6 +1797,10 @@
       "tags": [
         "tether",
         "qa-only"
+      ],
+      "issue_ids": [
+        5,
+        9
       ]
     },
     {
@@ -1606,6 +1830,10 @@
       "tags": [
         "tether",
         "qa-only"
+      ],
+      "issue_ids": [
+        5,
+        9
       ]
     },
     {
@@ -1635,6 +1863,10 @@
       "tags": [
         "tether",
         "qa-only"
+      ],
+      "issue_ids": [
+        5,
+        9
       ]
     },
     {
@@ -1664,6 +1896,10 @@
       "tags": [
         "tether",
         "qa-only"
+      ],
+      "issue_ids": [
+        5,
+        9
       ]
     },
     {
@@ -1693,6 +1929,10 @@
       "tags": [
         "tether",
         "qa-only"
+      ],
+      "issue_ids": [
+        5,
+        9
       ]
     },
     {
@@ -1722,6 +1962,10 @@
       "tags": [
         "tether",
         "qa-only"
+      ],
+      "issue_ids": [
+        5,
+        9
       ]
     },
     {
@@ -1751,6 +1995,10 @@
       "tags": [
         "tether",
         "qa-only"
+      ],
+      "issue_ids": [
+        5,
+        9
       ]
     },
     {
@@ -1780,6 +2028,10 @@
       "tags": [
         "tether",
         "qa-only"
+      ],
+      "issue_ids": [
+        5,
+        9
       ]
     },
     {
@@ -1812,6 +2064,10 @@
       "tags": [
         "tether",
         "qa-only"
+      ],
+      "issue_ids": [
+        5,
+        9
       ]
     },
     {
@@ -1841,6 +2097,10 @@
       "tags": [
         "tether",
         "qa-only"
+      ],
+      "issue_ids": [
+        5,
+        9
       ]
     },
     {
@@ -1872,6 +2132,9 @@
       "tags": [
         "evidence",
         "qa-only"
+      ],
+      "issue_ids": [
+        6
       ]
     },
     {
@@ -1902,6 +2165,9 @@
       "tags": [
         "evidence",
         "qa-only"
+      ],
+      "issue_ids": [
+        6
       ]
     },
     {
@@ -1931,6 +2197,9 @@
       "tags": [
         "evidence",
         "qa-only"
+      ],
+      "issue_ids": [
+        6
       ]
     },
     {
@@ -1963,6 +2232,9 @@
       "tags": [
         "evidence",
         "qa-only"
+      ],
+      "issue_ids": [
+        6
       ]
     },
     {
@@ -1990,6 +2262,9 @@
       "tags": [
         "evidence",
         "qa-only"
+      ],
+      "issue_ids": [
+        6
       ]
     },
     {
@@ -2017,6 +2292,9 @@
       "tags": [
         "evidence",
         "qa-only"
+      ],
+      "issue_ids": [
+        6
       ]
     },
     {
@@ -2044,6 +2322,9 @@
       "tags": [
         "evidence",
         "qa-only"
+      ],
+      "issue_ids": [
+        6
       ]
     },
     {
@@ -2074,6 +2355,9 @@
       "tags": [
         "evidence",
         "qa-only"
+      ],
+      "issue_ids": [
+        6
       ]
     },
     {
@@ -2104,6 +2388,9 @@
       "tags": [
         "evidence",
         "qa-only"
+      ],
+      "issue_ids": [
+        6
       ]
     },
     {
@@ -2131,6 +2418,9 @@
       "tags": [
         "map",
         "qa-only"
+      ],
+      "issue_ids": [
+        9
       ]
     },
     {
@@ -2160,6 +2450,9 @@
       "tags": [
         "map",
         "qa-only"
+      ],
+      "issue_ids": [
+        9
       ]
     },
     {
@@ -2189,6 +2482,9 @@
       "tags": [
         "map",
         "qa-only"
+      ],
+      "issue_ids": [
+        9
       ]
     },
     {
@@ -2219,6 +2515,9 @@
       "tags": [
         "map",
         "qa-only"
+      ],
+      "issue_ids": [
+        9
       ]
     },
     {
@@ -2249,6 +2548,9 @@
       "tags": [
         "map",
         "qa-only"
+      ],
+      "issue_ids": [
+        9
       ]
     },
     {
@@ -2279,6 +2581,9 @@
       "tags": [
         "map",
         "qa-only"
+      ],
+      "issue_ids": [
+        9
       ]
     },
     {
@@ -2306,6 +2611,9 @@
       "tags": [
         "map",
         "qa-only"
+      ],
+      "issue_ids": [
+        9
       ]
     },
     {
@@ -2333,6 +2641,9 @@
       "tags": [
         "map",
         "qa-only"
+      ],
+      "issue_ids": [
+        9
       ]
     },
     {
@@ -2359,6 +2670,9 @@
       "tags": [
         "map",
         "qa-only"
+      ],
+      "issue_ids": [
+        9
       ]
     },
     {
@@ -2395,6 +2709,9 @@
       "tags": [
         "map",
         "qa-only"
+      ],
+      "issue_ids": [
+        9
       ]
     },
     {
@@ -2424,6 +2741,10 @@
       "tags": [
         "guide",
         "qa-only"
+      ],
+      "issue_ids": [
+        4,
+        5
       ]
     },
     {
@@ -2453,6 +2774,10 @@
       "tags": [
         "guide",
         "qa-only"
+      ],
+      "issue_ids": [
+        4,
+        5
       ]
     },
     {
@@ -2482,6 +2807,10 @@
       "tags": [
         "guide",
         "qa-only"
+      ],
+      "issue_ids": [
+        4,
+        5
       ]
     },
     {
@@ -2511,6 +2840,10 @@
       "tags": [
         "guide",
         "qa-only"
+      ],
+      "issue_ids": [
+        4,
+        5
       ]
     },
     {
@@ -2540,6 +2873,10 @@
       "tags": [
         "guide",
         "qa-only"
+      ],
+      "issue_ids": [
+        4,
+        5
       ]
     },
     {
@@ -2569,6 +2906,10 @@
       "tags": [
         "guide",
         "qa-only"
+      ],
+      "issue_ids": [
+        4,
+        5
       ]
     },
     {
@@ -2596,6 +2937,11 @@
       "tags": [
         "metamorphic",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5,
+        9
       ]
     },
     {
@@ -2623,6 +2969,11 @@
       "tags": [
         "metamorphic",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5,
+        9
       ]
     },
     {
@@ -2650,6 +3001,11 @@
       "tags": [
         "metamorphic",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5,
+        9
       ]
     },
     {
@@ -2677,6 +3033,11 @@
       "tags": [
         "metamorphic",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5,
+        9
       ]
     },
     {
@@ -2704,6 +3065,11 @@
       "tags": [
         "metamorphic",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5,
+        9
       ]
     },
     {
@@ -2731,6 +3097,9 @@
       "tags": [
         "ui",
         "qa-only"
+      ],
+      "issue_ids": [
+        5
       ]
     },
     {
@@ -2769,6 +3138,9 @@
       "tags": [
         "ui",
         "qa-only"
+      ],
+      "issue_ids": [
+        5
       ]
     },
     {
@@ -2807,6 +3179,9 @@
       "tags": [
         "ui",
         "qa-only"
+      ],
+      "issue_ids": [
+        5
       ]
     },
     {
@@ -2845,6 +3220,9 @@
       "tags": [
         "ui",
         "qa-only"
+      ],
+      "issue_ids": [
+        5
       ]
     },
     {
@@ -2884,6 +3262,9 @@
       "tags": [
         "ui",
         "qa-only"
+      ],
+      "issue_ids": [
+        5
       ]
     },
     {
@@ -2923,6 +3304,9 @@
       "tags": [
         "ui",
         "qa-only"
+      ],
+      "issue_ids": [
+        5
       ]
     },
     {
@@ -2951,6 +3335,9 @@
       "tags": [
         "ui",
         "qa-only"
+      ],
+      "issue_ids": [
+        5
       ]
     },
     {
@@ -2979,6 +3366,9 @@
       "tags": [
         "ui",
         "qa-only"
+      ],
+      "issue_ids": [
+        5
       ]
     },
     {
@@ -3008,6 +3398,9 @@
       "tags": [
         "ui",
         "qa-only"
+      ],
+      "issue_ids": [
+        5
       ]
     },
     {
@@ -3046,6 +3439,9 @@
       "tags": [
         "ui",
         "qa-only"
+      ],
+      "issue_ids": [
+        5
       ]
     },
     {
@@ -3073,6 +3469,10 @@
       "tags": [
         "source",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -3100,6 +3500,10 @@
       "tags": [
         "source",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -3127,6 +3531,10 @@
       "tags": [
         "source",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -3154,6 +3562,10 @@
       "tags": [
         "source",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -3181,6 +3593,10 @@
       "tags": [
         "source",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -3208,6 +3624,10 @@
       "tags": [
         "source",
         "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
       ]
     },
     {
@@ -3235,6 +3655,10 @@
       "tags": [
         "source",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -3262,6 +3686,484 @@
       "tags": [
         "source",
         "qa-only"
+      ],
+      "issue_ids": [
+        3,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-SAMPLING-001",
+      "title": "Muestreo usa ocho lecturas sin atajo de mocks",
+      "requirement_id": "ROADMAP-A-SAMPLES",
+      "category": "session-integration",
+      "adapter": "jest-hook",
+      "operation": "sampling",
+      "input": {
+        "scenario": "eight-samples"
+      },
+      "expected": {
+        "reads": 8,
+        "average": -67
+      },
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Hoja de ruta p.2 A1",
+        "IDA captura coherente y vigencia",
+        "FDR NEC01.01/NEC01.03"
+      ],
+      "tags": [
+        "sampling",
+        "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
+      ]
+    },
+    {
+      "case_id": "KYS-SAMPLING-002",
+      "title": "La pausa cancela un muestreo en curso",
+      "requirement_id": "ROADMAP-A-SAMPLES",
+      "category": "session-integration",
+      "adapter": "jest-hook",
+      "operation": "sampling",
+      "input": {
+        "scenario": "pause-capture"
+      },
+      "expected": {
+        "freezeCalls": 0,
+        "result": null
+      },
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Hoja de ruta p.2 A1",
+        "IDA captura coherente y vigencia",
+        "FDR NEC01.01/NEC01.03"
+      ],
+      "tags": [
+        "sampling",
+        "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
+      ]
+    },
+    {
+      "case_id": "KYS-SAMPLING-003",
+      "title": "Salir de la pantalla cancela el muestreo",
+      "requirement_id": "ROADMAP-A-SAMPLES",
+      "category": "session-integration",
+      "adapter": "jest-hook",
+      "operation": "sampling",
+      "input": {
+        "scenario": "blur-capture"
+      },
+      "expected": {
+        "freezeCalls": 0,
+        "result": null
+      },
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Hoja de ruta p.2 A1",
+        "IDA captura coherente y vigencia",
+        "FDR NEC01.01/NEC01.03"
+      ],
+      "tags": [
+        "sampling",
+        "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
+      ]
+    },
+    {
+      "case_id": "KYS-SAMPLING-004",
+      "title": "Doble toque no duplica el congelado",
+      "requirement_id": "ROADMAP-A-SAMPLES",
+      "category": "session-integration",
+      "adapter": "jest-hook",
+      "operation": "sampling",
+      "input": {
+        "scenario": "double-capture"
+      },
+      "expected": {
+        "freezeCalls": 1
+      },
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Hoja de ruta p.2 A1",
+        "IDA captura coherente y vigencia",
+        "FDR NEC01.01/NEC01.03"
+      ],
+      "tags": [
+        "sampling",
+        "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
+      ]
+    },
+    {
+      "case_id": "KYS-SAMPLING-005",
+      "title": "Permiso denegado mantiene sensores detenidos",
+      "requirement_id": "ROADMAP-A-SAMPLES",
+      "category": "session-integration",
+      "adapter": "jest-hook",
+      "operation": "sampling",
+      "input": {
+        "scenario": "permission-denied"
+      },
+      "expected": {
+        "canRecord": false,
+        "enabled": false,
+        "problem": "PERMISSION_DENIED"
+      },
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Hoja de ruta p.2 A1",
+        "IDA captura coherente y vigencia",
+        "FDR NEC01.01/NEC01.03"
+      ],
+      "tags": [
+        "sampling",
+        "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
+      ]
+    },
+    {
+      "case_id": "KYS-SAMPLING-006",
+      "title": "Error de permiso se representa sin congelar",
+      "requirement_id": "ROADMAP-A-SAMPLES",
+      "category": "session-integration",
+      "adapter": "jest-hook",
+      "operation": "sampling",
+      "input": {
+        "scenario": "permission-error"
+      },
+      "expected": {
+        "enabled": false,
+        "problem": "PERMISSION_DENIED"
+      },
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Hoja de ruta p.2 A1",
+        "IDA captura coherente y vigencia",
+        "FDR NEC01.01/NEC01.03"
+      ],
+      "tags": [
+        "sampling",
+        "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
+      ]
+    },
+    {
+      "case_id": "KYS-SAMPLING-007",
+      "title": "No se captura si la pantalla no está enfocada",
+      "requirement_id": "ROADMAP-A-SAMPLES",
+      "category": "session-integration",
+      "adapter": "jest-hook",
+      "operation": "sampling",
+      "input": {
+        "scenario": "unfocused"
+      },
+      "expected": {
+        "result": null,
+        "freezeCalls": 0
+      },
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Hoja de ruta p.2 A1",
+        "IDA captura coherente y vigencia",
+        "FDR NEC01.01/NEC01.03"
+      ],
+      "tags": [
+        "sampling",
+        "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
+      ]
+    },
+    {
+      "case_id": "KYS-SAMPLING-008",
+      "title": "No se captura en segundo plano",
+      "requirement_id": "ROADMAP-A-SAMPLES",
+      "category": "session-integration",
+      "adapter": "jest-hook",
+      "operation": "sampling",
+      "input": {
+        "scenario": "background"
+      },
+      "expected": {
+        "result": null,
+        "freezeCalls": 0
+      },
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Hoja de ruta p.2 A1",
+        "IDA captura coherente y vigencia",
+        "FDR NEC01.01/NEC01.03"
+      ],
+      "tags": [
+        "sampling",
+        "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
+      ]
+    },
+    {
+      "case_id": "KYS-SAMPLING-009",
+      "title": "La lectura caducada deja de ser válida",
+      "requirement_id": "ROADMAP-A-SAMPLES",
+      "category": "session-integration",
+      "adapter": "jest-hook",
+      "operation": "sampling",
+      "input": {
+        "scenario": "expiration"
+      },
+      "expected": {
+        "canRecord": false,
+        "problem": "STALE_READING"
+      },
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Hoja de ruta p.2 A1",
+        "IDA captura coherente y vigencia",
+        "FDR NEC01.01/NEC01.03"
+      ],
+      "tags": [
+        "sampling",
+        "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
+      ]
+    },
+    {
+      "case_id": "KYS-SAMPLING-010",
+      "title": "Estabilización sin GPS vence en 60 segundos",
+      "requirement_id": "ROADMAP-A-SAMPLES",
+      "category": "session-integration",
+      "adapter": "jest-hook",
+      "operation": "sampling",
+      "input": {
+        "scenario": "gps-timeout"
+      },
+      "expected": {
+        "enabled": false,
+        "problem": "LOCATION_TIMEOUT"
+      },
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Hoja de ruta p.2 A1",
+        "IDA captura coherente y vigencia",
+        "FDR NEC01.01/NEC01.03"
+      ],
+      "tags": [
+        "sampling",
+        "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
+      ]
+    },
+    {
+      "case_id": "KYS-SAMPLING-011",
+      "title": "La pausa elimina valores y detiene la lectura",
+      "requirement_id": "ROADMAP-A-SAMPLES",
+      "category": "session-integration",
+      "adapter": "jest-hook",
+      "operation": "sampling",
+      "input": {
+        "scenario": "pause"
+      },
+      "expected": {
+        "reading": null,
+        "enabled": false
+      },
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Hoja de ruta p.2 A1",
+        "IDA captura coherente y vigencia",
+        "FDR NEC01.01/NEC01.03"
+      ],
+      "tags": [
+        "sampling",
+        "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
+      ]
+    },
+    {
+      "case_id": "KYS-SAMPLING-012",
+      "title": "Descarta respuestas pendientes después de salir",
+      "requirement_id": "ROADMAP-A-SAMPLES",
+      "category": "session-integration",
+      "adapter": "jest-hook",
+      "operation": "sampling",
+      "input": {
+        "scenario": "late-read"
+      },
+      "expected": {
+        "reading": null,
+        "canRecord": false
+      },
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Hoja de ruta p.2 A1",
+        "IDA captura coherente y vigencia",
+        "FDR NEC01.01/NEC01.03"
+      ],
+      "tags": [
+        "sampling",
+        "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
+      ]
+    },
+    {
+      "case_id": "KYS-SAMPLING-013",
+      "title": "No promedia muestras con error dentro de una captura",
+      "requirement_id": "ROADMAP-A-SAMPLES",
+      "category": "session-integration",
+      "adapter": "jest-hook",
+      "operation": "sampling",
+      "input": {
+        "scenario": "invalid-samples"
+      },
+      "expected": {
+        "average": -70
+      },
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Hoja de ruta p.2 A1",
+        "IDA captura coherente y vigencia",
+        "FDR NEC01.01/NEC01.03"
+      ],
+      "tags": [
+        "sampling",
+        "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
+      ]
+    },
+    {
+      "case_id": "KYS-SAMPLING-014",
+      "title": "No mezcla métricas Wi-Fi y LTE al promediar",
+      "requirement_id": "ROADMAP-A-SAMPLES",
+      "category": "session-integration",
+      "adapter": "jest-hook",
+      "operation": "sampling",
+      "input": {
+        "scenario": "mixed-metrics"
+      },
+      "expected": {
+        "result": null
+      },
+      "severity": "critical",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Hoja de ruta p.2 A1",
+        "IDA captura coherente y vigencia",
+        "FDR NEC01.01/NEC01.03"
+      ],
+      "tags": [
+        "sampling",
+        "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        5
       ]
     },
     {
@@ -3289,6 +4191,17 @@
       "tags": [
         "human",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
       ]
     },
     {
@@ -3316,6 +4229,17 @@
       "tags": [
         "human",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
       ]
     },
     {
@@ -3343,6 +4267,17 @@
       "tags": [
         "human",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
       ]
     },
     {
@@ -3370,6 +4305,17 @@
       "tags": [
         "human",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
       ]
     },
     {
@@ -3397,6 +4343,17 @@
       "tags": [
         "human",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
       ]
     },
     {
@@ -3424,6 +4381,17 @@
       "tags": [
         "human",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
       ]
     },
     {
@@ -3451,6 +4419,10 @@
       "tags": [
         "human",
         "qa-only"
+      ],
+      "issue_ids": [
+        6,
+        9
       ]
     },
     {
@@ -3478,6 +4450,10 @@
       "tags": [
         "human",
         "qa-only"
+      ],
+      "issue_ids": [
+        6,
+        9
       ]
     },
     {
@@ -3505,6 +4481,10 @@
       "tags": [
         "human",
         "qa-only"
+      ],
+      "issue_ids": [
+        6,
+        9
       ]
     },
     {
@@ -3532,6 +4512,10 @@
       "tags": [
         "human",
         "qa-only"
+      ],
+      "issue_ids": [
+        6,
+        9
       ]
     },
     {
@@ -3559,6 +4543,10 @@
       "tags": [
         "human",
         "qa-only"
+      ],
+      "issue_ids": [
+        6,
+        9
       ]
     },
     {
@@ -3586,6 +4574,13 @@
       "tags": [
         "human",
         "qa-only"
+      ],
+      "issue_ids": [
+        3,
+        4,
+        7,
+        8,
+        9
       ]
     },
     {
@@ -3613,6 +4608,13 @@
       "tags": [
         "human",
         "qa-only"
+      ],
+      "issue_ids": [
+        3,
+        4,
+        7,
+        8,
+        9
       ]
     },
     {
@@ -3640,6 +4642,13 @@
       "tags": [
         "human",
         "qa-only"
+      ],
+      "issue_ids": [
+        3,
+        4,
+        7,
+        8,
+        9
       ]
     },
     {
@@ -3667,6 +4676,17 @@
       "tags": [
         "human",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
       ]
     },
     {
@@ -3694,6 +4714,2329 @@
       "tags": [
         "human",
         "qa-only"
+      ],
+      "issue_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-001",
+      "title": "hardening preserves existing measurements without inventing consent",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "hardening preserves existing measurements without inventing consent",
+        "classname": "PostgreSQL/PostGIS migrations, permissions and domain contract",
+        "file": "tests/backend/database.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-002",
+      "title": "all migrations apply and PostGIS 4326 is available",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "all migrations apply and PostGIS 4326 is available",
+        "classname": "PostgreSQL/PostGIS migrations, permissions and domain contract",
+        "file": "tests/backend/database.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-003",
+      "title": "projection cache is derived, consistent and cannot be overridden",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "projection cache is derived, consistent and cannot be overridden",
+        "classname": "PostgreSQL/PostGIS migrations, permissions and domain contract",
+        "file": "tests/backend/database.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-004",
+      "title": "consent is required even for direct RPC calls",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "consent is required even for direct RPC calls",
+        "classname": "PostgreSQL/PostGIS migrations, permissions and domain contract",
+        "file": "tests/backend/database.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-005",
+      "title": "no JWT identity is rejected",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "no JWT identity is rejected",
+        "classname": "PostgreSQL/PostGIS migrations, permissions and domain contract",
+        "file": "tests/backend/database.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-006",
+      "title": "projection cache preserves ingestion at geographic extremes",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "projection cache preserves ingestion at geographic extremes",
+        "classname": "PostgreSQL/PostGIS migrations, permissions and domain contract",
+        "file": "tests/backend/database.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-007",
+      "title": "raw measurements and private policy are inaccessible",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "raw measurements and private policy are inaccessible",
+        "classname": "PostgreSQL/PostGIS migrations, permissions and domain contract",
+        "file": "tests/backend/database.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-008",
+      "title": "legacy owner-injection RPC has no API execute grant",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "legacy owner-injection RPC has no API execute grant",
+        "classname": "PostgreSQL/PostGIS migrations, permissions and domain contract",
+        "file": "tests/backend/database.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-009",
+      "title": "floor zero persists, exact retries duplicate, mutations conflict",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "floor zero persists, exact retries duplicate, mutations conflict",
+        "classname": "PostgreSQL/PostGIS migrations, permissions and domain contract",
+        "file": "tests/backend/database.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-010",
+      "title": "RLS exposes only the caller consent and versions are immutable",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "RLS exposes only the caller consent and versions are immutable",
+        "classname": "PostgreSQL/PostGIS migrations, permissions and domain contract",
+        "file": "tests/backend/database.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-011",
+      "title": "direct RPC rejects array/null envelope with a client error",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "direct RPC rejects array/null envelope with a client error",
+        "classname": "PostgreSQL/PostGIS migrations, permissions and domain contract",
+        "file": "tests/backend/database.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-012",
+      "title": "SQL independently rejects invalid domain values",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "SQL independently rejects invalid domain values",
+        "classname": "PostgreSQL/PostGIS migrations, permissions and domain contract",
+        "file": "tests/backend/database.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-013",
+      "title": "null batch item rejects the complete envelope before writes",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "null batch item rejects the complete envelope before writes",
+        "classname": "PostgreSQL/PostGIS migrations, permissions and domain contract",
+        "file": "tests/backend/database.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-014",
+      "title": "mixed valid/invalid items have independent results",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "mixed valid/invalid items have independent results",
+        "classname": "PostgreSQL/PostGIS migrations, permissions and domain contract",
+        "file": "tests/backend/database.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-015",
+      "title": "shared fixtures match actual SQL responses",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "shared fixtures match actual SQL responses",
+        "classname": "PostgreSQL/PostGIS migrations, permissions and domain contract",
+        "file": "tests/backend/database.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-016",
+      "title": "notice version and revoked consent prevent new contributions",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "notice version and revoked consent prevent new contributions",
+        "classname": "PostgreSQL/PostGIS migrations, permissions and domain contract",
+        "file": "tests/backend/database.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-017",
+      "title": "map hides single contributor cells and preserves floor/metric filters",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "map hides single contributor cells and preserves floor/metric filters",
+        "classname": "PostgreSQL/PostGIS migrations, permissions and domain contract",
+        "file": "tests/backend/database.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-018",
+      "title": "five distinct accounts publish a fixed cell center and median",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "five distinct accounts publish a fixed cell center and median",
+        "classname": "PostgreSQL/PostGIS migrations, permissions and domain contract",
+        "file": "tests/backend/database.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-019",
+      "title": "invalid map parameters are rejected rather than dividing by zero",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "invalid map parameters are rejected rather than dividing by zero",
+        "classname": "PostgreSQL/PostGIS migrations, permissions and domain contract",
+        "file": "tests/backend/database.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-020",
+      "title": "large viewport coarsens resolution instead of truncating cells",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "large viewport coarsens resolution instead of truncating cells",
+        "classname": "PostgreSQL/PostGIS migrations, permissions and domain contract",
+        "file": "tests/backend/database.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-021",
+      "title": "rate limiting is enforced by SQL, including direct callers",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "rate limiting is enforced by SQL, including direct callers",
+        "classname": "PostgreSQL/PostGIS migrations, permissions and domain contract",
+        "file": "tests/backend/database.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-022",
+      "title": "projected cell selection preserves high-latitude, dateline and origin points",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "projected cell selection preserves high-latitude, dateline and origin points",
+        "classname": "PostgreSQL/PostGIS migrations, permissions and domain contract",
+        "file": "tests/backend/database.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-023",
+      "title": "unexpected SQL failure rolls back earlier inserts in the batch",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "unexpected SQL failure rolls back earlier inserts in the batch",
+        "classname": "PostgreSQL/PostGIS migrations, permissions and domain contract",
+        "file": "tests/backend/database.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-024",
+      "title": "floor zero is valid and a batch uses one scoped RPC",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "floor zero is valid and a batch uses one scoped RPC",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-025",
+      "title": "manual Wi-Fi declarations and unclassified readings retain their origin",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "manual Wi-Fi declarations and unclassified readings retain their origin",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-026",
+      "title": "validator rejects latitude",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "validator rejects latitude",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-027",
+      "title": "validator rejects numeric string",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "validator rejects numeric string",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-028",
+      "title": "validator rejects NaN",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "validator rejects NaN",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-029",
+      "title": "validator rejects accuracy",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "validator rejects accuracy",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-030",
+      "title": "validator rejects power",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "validator rejects power",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-031",
+      "title": "validator rejects fractional power",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "validator rejects fractional power",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-032",
+      "title": "validator rejects metric technology",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "validator rejects metric technology",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-033",
+      "title": "validator rejects connection",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "validator rejects connection",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-034",
+      "title": "validator rejects fractional floor",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "validator rejects fractional floor",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-035",
+      "title": "validator rejects zone",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "validator rejects zone",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-036",
+      "title": "validator rejects timestamp",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "validator rejects timestamp",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-037",
+      "title": "validator rejects id",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "validator rejects id",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-038",
+      "title": "validator rejects sensitive extra field",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "validator rejects sensitive extra field",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-039",
+      "title": "validator rejects owner injection",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "validator rejects owner injection",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-040",
+      "title": "validator rejects classification",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "validator rejects classification",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-041",
+      "title": "missing mandatory fields are not silently defaulted",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "missing mandatory fields are not silently defaulted",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-042",
+      "title": "cellular metric and network must match",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "cellular metric and network must match",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-043",
+      "title": "handler rejects null body before writes",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "handler rejects null body before writes",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-044",
+      "title": "handler rejects array body before writes",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "handler rejects array body before writes",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-045",
+      "title": "handler rejects unknown schema before writes",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "handler rejects unknown schema before writes",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-046",
+      "title": "handler rejects extra envelope property before writes",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "handler rejects extra envelope property before writes",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-047",
+      "title": "handler rejects empty batch before writes",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "handler rejects empty batch before writes",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-048",
+      "title": "handler rejects oversized batch before writes",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "handler rejects oversized batch before writes",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-049",
+      "title": "handler rejects malformed batch before writes",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "handler rejects malformed batch before writes",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-050",
+      "title": "invalid JSON is a client error, not 500",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "invalid JSON is a client error, not 500",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-051",
+      "title": "partial domain rejection preserves valid items and stable error fields",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "partial domain rejection preserves valid items and stable error fields",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-052",
+      "title": "all-invalid batch performs no database writes",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "all-invalid batch performs no database writes",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-053",
+      "title": "SQL dynamic-policy rejections and duplicates pass through unchanged",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "SQL dynamic-policy rejections and duplicates pass through unchanged",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-054",
+      "title": "stream body limit does not trust Content-Length",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "stream body limit does not trust Content-Length",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-055",
+      "title": "declared oversized body is rejected",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "declared oversized body is rejected",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-056",
+      "title": "missing auth",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "missing auth",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-057",
+      "title": "API key as raw auth",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "API key as raw auth",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-058",
+      "title": "wrong content type",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "wrong content type",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-059",
+      "title": "wrong method",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "wrong method",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-060",
+      "title": "backend error UNAUTHORIZED is classified",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "backend error UNAUTHORIZED is classified",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-061",
+      "title": "backend error CONSENT_REQUIRED is classified",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "backend error CONSENT_REQUIRED is classified",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-062",
+      "title": "backend error RATE_LIMITED is classified",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "backend error RATE_LIMITED is classified",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-063",
+      "title": "backend error SERVICE_UNAVAILABLE is classified",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "backend error SERVICE_UNAVAILABLE is classified",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-064",
+      "title": "unexpected errors do not disclose tokens or database messages",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "unexpected errors do not disclose tokens or database messages",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-065",
+      "title": "preflight has no auth or database side effects",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "preflight has no auth or database side effects",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-066",
+      "title": "transport keeps user JWT and sends only scoped payload",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "transport keeps user JWT and sends only scoped payload",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-067",
+      "title": "transport maps transient errors instead of acknowledging rejected items",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "transport maps transient errors instead of acknowledging rejected items",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "case_id": "KYS-BACKEND-068",
+      "title": "transport treats failed anonymous signup tokens as unauthorized",
+      "requirement_id": "ISSUE-7-8",
+      "category": "backend-integration",
+      "adapter": "node-backend",
+      "operation": "backend",
+      "input": {
+        "test_name": "transport treats failed anonymous signup tokens as unauthorized",
+        "classname": "test",
+        "file": "tests/backend/handler.test.mjs"
+      },
+      "expected": "All assertions of the existing named leaf test pass, with no skip or missing execution.",
+      "severity": "high",
+      "required": true,
+      "setup": "Datos sintéticos controlados. Sin escrituras en app, teléfono personal ni Supabase alojado.",
+      "evaluators": [
+        "exact-contract"
+      ],
+      "sources": [
+        "Issues #7/#8 criterios originales",
+        "FDR NEC05",
+        "PDS consentimiento y sincronización",
+        "Suite backend existente"
+      ],
+      "tags": [
+        "backend",
+        "qa-only"
+      ],
+      "issue_ids": [
+        7,
+        8
       ]
     }
   ]

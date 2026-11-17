@@ -5,6 +5,7 @@
   "max_repetitions": 10,
   "command_timeout_seconds": 300,
   "android_phase_timeout_seconds": 420,
+  "android_campaign_budget_seconds": 1080,
   "critical_failure_tolerance": 0,
   "required_automatic_pass_rate": 1.0,
   "require_human_signoff": true,
