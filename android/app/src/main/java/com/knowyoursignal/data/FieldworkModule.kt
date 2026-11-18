@@ -152,9 +152,9 @@ internal class FieldworkModule(private val context: ReactApplicationContext) : N
     }
 
     private suspend fun status() = database.withTransaction {
+        val (session, sessionCount) = repository.ensureNormalizedActiveSession()
         val consent = dao.consent()
         val counts = dao.counts()
-        val session = dao.latestSession()
         Arguments.createMap().apply {
             putString("choice", when (consent?.enabled) {
                 true -> "community"
@@ -169,8 +169,10 @@ internal class FieldworkModule(private val context: ReactApplicationContext) : N
             putInt("pending", counts.pending)
             putInt("synced", counts.synced)
             putInt("failed", counts.failed)
-            putString("activeSessionId", session?.id ?: DEFAULT_SESSION_ID)
-            putString("activeSessionName", session?.name ?: DEFAULT_SESSION_NAME)
+            putString("activeSessionId", session.id)
+            putString("activeSessionName", session.name)
+            putString("activeSessionStartedAt", session.startedAt)
+            putInt("activeSessionCount", sessionCount)
         }
     }
 

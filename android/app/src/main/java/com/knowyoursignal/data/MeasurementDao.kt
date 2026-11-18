@@ -23,11 +23,32 @@ internal interface MeasurementDao {
     @Query("SELECT * FROM sessions ORDER BY startedAt DESC, id DESC LIMIT 1")
     suspend fun latestSession(): SessionEntity?
 
+    @Query("SELECT * FROM sessions WHERE startedAt <= :capturedAt ORDER BY startedAt DESC, id DESC LIMIT 1")
+    suspend fun sessionForTimestamp(capturedAt: String): SessionEntity?
+
     @Query("SELECT COUNT(*) FROM sessions")
     suspend fun sessionCount(): Int
 
+    @Query("SELECT COUNT(*) FROM measurements WHERE sessionId = :sessionId")
+    suspend fun sessionMeasurementCount(sessionId: String): Int
+
+    @Query("SELECT * FROM sessions ORDER BY startedAt ASC, id ASC")
+    suspend fun sessionsOldestFirst(): List<SessionEntity>
+
     @Query("SELECT * FROM sessions ORDER BY startedAt DESC, id DESC")
     suspend fun sessions(): List<SessionEntity>
+
+    @Query("UPDATE sessions SET name = :name WHERE id = :id")
+    suspend fun renameSession(id: String, name: String)
+
+    @Query("DELETE FROM sessions WHERE id != :keepId AND id NOT IN (SELECT DISTINCT sessionId FROM measurements)")
+    suspend fun purgeEmptySessionsExcept(keepId: String)
+
+    @Query("DELETE FROM outbox WHERE measurementId IN (SELECT id FROM measurements WHERE sessionId = :sessionId)")
+    suspend fun removeSessionFromOutbox(sessionId: String)
+
+    @Query("DELETE FROM sessions WHERE id = :sessionId")
+    suspend fun deleteSession(sessionId: String)
 
     @Insert
     suspend fun enqueue(entry: OutboxEntity)

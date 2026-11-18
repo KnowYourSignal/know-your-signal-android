@@ -13,6 +13,7 @@ import kotlin.math.cos
 import kotlin.math.sqrt
 
 internal const val MAX_HISTORY_POINTS = 750
+internal const val MIN_SESSION_MEASUREMENTS = 4
 internal val METRICS = setOf("wifi_rssi", "lte_rsrp", "nr_ss_rsrp", "celular_dbm")
 internal val ZONE_SIZES = setOf("pequeno", "mediano", "grande", "muy_grande")
 
@@ -53,11 +54,11 @@ internal class LocalRepository(private val database: FieldDatabase) {
             if (connectionChoice != null && draft.reading.signal.connection != "wifi_desconocida") {
                 throw CaptureException("INVALID_CLASSIFICATION")
             }
-            val session = dao.latestSession() ?: SessionEntity(
-                id = DEFAULT_SESSION_ID,
-                name = DEFAULT_SESSION_NAME,
-                startedAt = draft.capturedAt,
-            ).also { dao.insertSession(it) }
+            val nowIso = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.ROOT).apply {
+                timeZone = TimeZone.getTimeZone("UTC")
+            }.format(Date())
+            val activeSession = normalizeSessions(draft.capturedAt.ifEmpty { nowIso })
+            val session = dao.sessionForTimestamp(draft.capturedAt) ?: activeSession
             val consent = dao.consent()?.takeIf {
                 it.enabled && it.server == server && server.isNotEmpty() && draft.shareRevision == it.revision
             }
@@ -88,22 +89,71 @@ internal class LocalRepository(private val database: FieldDatabase) {
             SavedCapture(measurement, wake)
         }
 
+    private suspend fun normalizeSessions(nowIso: String): SessionEntity {
+        val currentLatest = dao.latestSession()
+        if (currentLatest == null) {
+            val initial = SessionEntity(DEFAULT_SESSION_ID, DEFAULT_SESSION_NAME, nowIso)
+            dao.insertSession(initial)
+            return initial
+        }
+        dao.purgeEmptySessionsExcept(currentLatest.id)
+        val ordered = dao.sessionsOldestFirst()
+        if (ordered.isEmpty()) {
+            val initial = SessionEntity(DEFAULT_SESSION_ID, DEFAULT_SESSION_NAME, nowIso)
+            dao.insertSession(initial)
+            return initial
+        }
+        val autoNameRegex = Regex("^Sesi[oó]n\\s+\\d+$", RegexOption.IGNORE_CASE)
+        ordered.forEachIndexed { index, item ->
+            val expectedName = "Sesión ${index + 1}"
+            if (autoNameRegex.matches(item.name.trim()) && item.name != expectedName) {
+                dao.renameSession(item.id, expectedName)
+            }
+        }
+        return dao.latestSession() ?: ordered.last()
+    }
+
+    suspend fun ensureNormalizedActiveSession(): Pair<SessionEntity, Int> =
+        database.withTransaction {
+            val now = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.ROOT).apply {
+                timeZone = TimeZone.getTimeZone("UTC")
+            }.format(Date())
+            val active = normalizeSessions(now)
+            active to dao.sessionMeasurementCount(active.id)
+        }
+
     suspend fun startSession(name: String? = null): SessionEntity =
         database.withTransaction {
             val now = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.ROOT).apply {
                 timeZone = TimeZone.getTimeZone("UTC")
             }.format(Date())
-            if (dao.sessionCount() == 0) {
-                dao.insertSession(SessionEntity(DEFAULT_SESSION_ID, DEFAULT_SESSION_NAME, now))
+            val trimmed = name?.trim().orEmpty()
+            if (trimmed.startsWith("__DELETE__:")) {
+                val targetId = trimmed.removePrefix("__DELETE__:").trim()
+                if (targetId.isNotEmpty()) {
+                    dao.removeSessionFromOutbox(targetId)
+                    dao.deleteSession(targetId)
+                }
+                return@withTransaction normalizeSessions(now)
+            }
+            val latest = normalizeSessions(now)
+            if (dao.sessionMeasurementCount(latest.id) < MIN_SESSION_MEASUREMENTS) {
+                return@withTransaction latest
             }
             val nextNumber = dao.sessionCount() + 1
-            val label = name?.trim()?.takeIf { it.isNotEmpty() }?.take(60) ?: "Sesión $nextNumber"
+            val label = trimmed.takeIf { it.isNotEmpty() }?.take(60) ?: "Sesión $nextNumber"
             val created = SessionEntity(UUID.randomUUID().toString(), label, now)
             dao.insertSession(created)
             created
         }
 
-    suspend fun listSessions(): List<SessionEntity> = dao.sessions()
+    suspend fun listSessions(): List<SessionEntity> = database.withTransaction {
+        val now = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.ROOT).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        }.format(Date())
+        normalizeSessions(now)
+        dao.sessions()
+    }
 
     suspend fun list(floor: Double, metric: String): List<MeasurementEntity> {
         if (metric !in METRICS) throw CaptureException("INVALID_METRIC")

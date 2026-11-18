@@ -9,13 +9,14 @@ import {
 } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import MapView, { Circle, Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { Circle, PROVIDER_GOOGLE } from 'react-native-maps';
 
 import { EvidenceCard } from '../components/EvidenceCard';
 import { GeoPlane } from '../components/GeoPlane';
 import { SignalLegend } from '../components/HeatmapLayer';
 import { Icon } from '../components/Icon';
 import { Reveal } from '../components/Motion';
+import { SignalDbmMarker } from '../components/SignalDbmMarker';
 import {
   Button,
   Chip,
@@ -96,8 +97,8 @@ export function PersonalMapScreen({
   const [previewReady, setPreviewReady] = useState(false);
   const [exportError, setExportError] = useState(false);
   const [mapConfig, setMapConfig] = useState<MapConfiguration | null>(null);
-  const [showBaseMap, setShowBaseMap] = useState(false);
   const [creatingSession, setCreatingSession] = useState(false);
+  const [sessionNotice, setSessionNotice] = useState<string | null>(null);
   const cardRef = useRef<React.ComponentRef<typeof View>>(null);
   const sharing = useRef(false);
   const requested = useRef<string | null>(null);
@@ -210,18 +211,22 @@ export function PersonalMapScreen({
   const sessions = useMemo(() => {
     const groups = new Map<
       string,
-      { key: string; label: string; count: number }
+      { key: string; label: string; count: number; startedAt: string }
     >();
     for (const point of allPoints) {
       const sessionKey = point.sessionId ?? dateKey(point.capturedAt);
       const existing = groups.get(sessionKey);
       if (existing) {
         existing.count += 1;
+        if (point.capturedAt < existing.startedAt) {
+          existing.startedAt = point.capturedAt;
+        }
       } else {
         groups.set(sessionKey, {
           key: sessionKey,
           label: point.sessionName ?? formatDate(point.capturedAt),
           count: 1,
+          startedAt: point.capturedAt,
         });
       }
     }
@@ -231,6 +236,9 @@ export function PersonalMapScreen({
     sessionFilter && sessions.some(session => session.key === sessionFilter)
       ? sessionFilter
       : null;
+  const activeSessionMeta = sessions.find(
+    session => session.key === activeSession,
+  );
   const points = useMemo(
     () =>
       activeSession
@@ -266,11 +274,38 @@ export function PersonalMapScreen({
 
   async function createNewSession() {
     if (creatingSession) return;
+    const currentCount = settings?.activeSessionCount ?? 0;
+    if (currentCount < 4) {
+      setSessionNotice(
+        `La sesión activa tiene ${currentCount} de 4 mediciones mínimas. Registra al menos 4 capturas antes de abrir otra.`,
+      );
+      return;
+    }
     setCreatingSession(true);
+    setSessionNotice(null);
     try {
       await fieldwork().startSession?.(null);
       await refresh();
       navigation.navigate('Medir');
+    } catch {
+      // Ignore if local storage is busy.
+    } finally {
+      setCreatingSession(false);
+    }
+  }
+
+  async function deleteSelectedSession() {
+    if (creatingSession || !activeSession) return;
+    setCreatingSession(true);
+    setSessionNotice(null);
+    try {
+      await fieldwork().startSession?.('__DELETE__:' + activeSession);
+      setSelectedId(null);
+      setSessionFilter(null);
+      setRegion(null);
+      await refresh();
+      setReload(value => value + 1);
+      setSessionNotice('Sesión eliminada y numeración actualizada.');
     } catch {
       // Ignore if local storage is busy.
     } finally {
@@ -392,61 +427,81 @@ export function PersonalMapScreen({
               )}
             </View>
             {sessions.length > 0 && (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={s.filterRow}
-                style={s.filters}
-              >
-                <Chip
-                  label={'Todas (' + allPoints.length + ')'}
-                  selected={activeSession === null}
-                  onPress={() => {
-                    setSelectedId(null);
-                    setRegion(null);
-                    setSessionFilter(null);
-                  }}
-                />
-                {sessions.map(session => (
+              <>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={s.filterRow}
+                  style={s.filters}
+                >
                   <Chip
-                    key={session.key}
-                    label={session.label + ' (' + session.count + ')'}
-                    selected={activeSession === session.key}
+                    label={'Todas (' + allPoints.length + ')'}
+                    selected={activeSession === null}
                     onPress={() => {
                       setSelectedId(null);
                       setRegion(null);
-                      setSessionFilter(session.key);
+                      setSessionFilter(null);
+                      setSessionNotice(null);
                     }}
                   />
-                ))}
-                <Chip
-                  label={creatingSession ? 'Iniciando...' : '+ Nueva sesión'}
-                  selected={false}
-                  disabled={creatingSession}
-                  onPress={createNewSession}
-                />
-              </ScrollView>
+                  {sessions.map(session => (
+                    <Chip
+                      key={session.key}
+                      label={
+                        session.label +
+                        (session.count < 4
+                          ? ` (${session.count}/4 mín.)`
+                          : ` (${session.count})`)
+                      }
+                      selected={activeSession === session.key}
+                      onPress={() => {
+                        setSelectedId(null);
+                        setRegion(null);
+                        setSessionFilter(session.key);
+                        setSessionNotice(null);
+                      }}
+                    />
+                  ))}
+                  {activeSession !== null && (
+                    <Chip
+                      label={
+                        creatingSession ? 'Eliminando...' : 'Eliminar sesión'
+                      }
+                      selected={false}
+                      disabled={creatingSession}
+                      onPress={deleteSelectedSession}
+                    />
+                  )}
+                  <Chip
+                    label={creatingSession ? 'Iniciando...' : '+ Nueva sesión'}
+                    selected={false}
+                    disabled={creatingSession}
+                    onPress={createNewSession}
+                  />
+                </ScrollView>
+                {activeSessionMeta && (
+                  <Text style={g.caption}>
+                    {activeSessionMeta.label} · Creada el{' '}
+                    {formatDate(activeSessionMeta.startedAt)} ·{' '}
+                    {activeSessionMeta.count >= 4
+                      ? `Sesión válida (${activeSessionMeta.count} mediciones)`
+                      : `En curso (${activeSessionMeta.count}/4 mediciones mínimas)`}
+                  </Text>
+                )}
+                {sessionNotice && <Text style={g.caption}>{sessionNotice}</Text>}
+              </>
             )}
             <View style={[g.card, s.mapCard]}>
               <View style={s.mapHeading}>
                 <Text style={g.sectionTitle}>Plano de señal</Text>
-                <View style={s.filterRow}>
-                  {mapConfig?.mapTiles && (
-                    <Chip
-                      label={showBaseMap ? 'Ver plano' : 'Ver mapa base'}
-                      selected={showBaseMap}
-                      onPress={() => setShowBaseMap(previous => !previous)}
-                    />
-                  )}
-                  <StatusPill
-                    label={
-                      current
-                        ? points.length +
-                          (points.length === 1 ? ' medición' : ' mediciones')
-                        : 'Cargando'
-                    }
-                  />
-                </View>
+                <StatusPill
+                  label={
+                    current
+                      ? points.length +
+                        (points.length === 1 ? ' medición' : ' mediciones')
+                      : 'Cargando'
+                  }
+                />
               </View>
               {!current ? (
                 <StatePanel
@@ -455,7 +510,7 @@ export function PersonalMapScreen({
                   body="Leyendo el piso seleccionado."
                   busy
                 />
-              ) : showBaseMap && mapConfig?.mapTiles ? (
+              ) : mapConfig?.mapTiles ? (
                 <View
                   style={[s.mapFrame, { height: mapHeight }]}
                   onLayout={event => setMapLayout(event.nativeEvent.layout)}
@@ -520,30 +575,13 @@ export function PersonalMapScreen({
                             zIndex={active ? 6 : 3}
                           />
                           {(settings?.technicalMode ?? false) && (
-                            <Marker
+                            <SignalDbmMarker
                               coordinate={center}
-                              anchor={{ x: 0.5, y: 0.5 }}
-                              tracksViewChanges={false}
-                              zIndex={active ? 10 : 7}
+                              dbm={point.powerDbm}
+                              color={color}
+                              selected={active}
                               onPress={() => setSelectedId(point.id)}
-                            >
-                              <View
-                                style={[
-                                  s.dbmBadge,
-                                  { borderColor: active ? COLORS.navy : color },
-                                  active && s.dbmBadgeActive,
-                                ]}
-                              >
-                                <Text
-                                  style={[
-                                    s.dbmText,
-                                    active && s.dbmTextActive,
-                                  ]}
-                                >
-                                  {point.powerDbm} dBm
-                                </Text>
-                              </View>
-                            </Marker>
+                            />
                           )}
                         </React.Fragment>
                       );
@@ -732,22 +770,4 @@ const s = StyleSheet.create({
   filters: { flexGrow: 0 },
   grow: { flex: 1 },
   error: { color: COLORS.danger, fontSize: 13 },
-  dbmBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 999,
-    borderWidth: 1.5,
-    backgroundColor: '#FFFFFFEB',
-  },
-  dbmBadgeActive: {
-    backgroundColor: COLORS.navy,
-  },
-  dbmText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: COLORS.navy,
-  },
-  dbmTextActive: {
-    color: '#FFFFFF',
-  },
 });

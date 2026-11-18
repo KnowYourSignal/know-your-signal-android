@@ -12,6 +12,8 @@ export type FieldStatus = {
   syncProblem: string | null;
   activeSessionId?: string;
   activeSessionName?: string;
+  activeSessionStartedAt?: string;
+  activeSessionCount?: number;
 };
 
 export type MeasurementSession = {

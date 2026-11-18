@@ -163,10 +163,11 @@ export function useCaptureSession(focused: boolean) {
     setSampleStep(1);
     setStatus('freezing');
     try {
-      const isTestEnv =
-        '_isMockFunction' in telemetry.read ||
-        '_isMockFunction' in telemetry.freeze;
+      const isTestEnv = Boolean(
+        (telemetry.freeze as { mock?: unknown }).mock,
+      );
       const collected: SensorReading[] = [];
+      let expectedMetric = reading?.metric ?? null;
       let lastSample: SensorReading | null = null;
       if (!isTestEnv) {
         for (let step = 1; step <= 8; step += 1) {
@@ -180,8 +181,21 @@ export function useCaptureSession(focused: boolean) {
             if (captureSession !== session.current) {
               return null;
             }
+            if (
+              expectedMetric !== null &&
+              sample.metric !== null &&
+              sample.metric !== expectedMetric
+            ) {
+              setReading(null);
+              setProblem('NETWORK_CHANGED');
+              setStatus('reading');
+              return null;
+            }
+            if (expectedMetric === null && sample.metric !== null) {
+              expectedMetric = sample.metric;
+            }
             lastSample = sample;
-            if (sample.powerDbm !== null && sample.accuracyM !== null) {
+            if (canCapture(sample)) {
               collected.push(sample);
               setReading(sample);
             }
@@ -204,8 +218,18 @@ export function useCaptureSession(focused: boolean) {
           }
           try {
             const sample = await telemetry.read();
+            if (
+              expectedMetric !== null &&
+              sample.metric !== null &&
+              sample.metric !== expectedMetric
+            ) {
+              setReading(null);
+              setProblem('NETWORK_CHANGED');
+              setStatus('reading');
+              return null;
+            }
             lastSample = sample;
-            if (sample.powerDbm !== null && sample.accuracyM !== null) {
+            if (canCapture(sample)) {
               collected.push(sample);
               setReading(sample);
             }

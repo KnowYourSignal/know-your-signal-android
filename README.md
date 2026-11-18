@@ -32,15 +32,16 @@ La versión actual es **1.2 (código 3)**. El flujo [Android client](https://git
 
 ## Descarga de la Aplicación (Versión Beta para Pruebas)
 
-La versión instalable para dispositivos Android (**v1.2.0-beta.1 · ARM64**) se encuentra disponible directamente en la sección [**Releases**](https://github.com/KnowYourSignal/know-your-signal-android/releases) de este repositorio:
+La versión instalable para dispositivos Android (**v1.2.0-beta.2 · ARM64**) se encuentra disponible directamente en la sección [**Releases**](https://github.com/KnowYourSignal/know-your-signal-android/releases) de este repositorio:
 
-- **Archivo APK autónomo:** `KnowYourSignal-v1.2.0-beta.1-arm64.apk` (incluye el bundle JavaScript compilado con Hermes, integración con Supabase/PostGIS y soporte de mapas Google Maps + plano geométrico offline; no requiere servidor de desarrollo Metro).
+- **Archivo APK autónomo:** `KnowYourSignal-v1.2.0-beta.2-arm64.apk` (incluye el bundle JavaScript compilado con Hermes, integración con Supabase/PostGIS y soporte directo de Google Maps; no requiere servidor de desarrollo Metro).
 
 ## Documentación del Proyecto y Entregables Oficiales (`docs/`)
 
 Todos los documentos formales del proyecto y los informes de cierre por equipo se encuentran en la carpeta [`docs/`](docs/):
 
-- **Informes de Cierre y Validación Técnica (Entrega Actual):**
+- **Informes de Cierre, Validación Técnica y Presentación QA (Entrega Actual):**
+  - [Presentación Ejecutiva de Avances QA, Depuración y Benchmarks (PPTX)](<docs/Presentacion_Avances_QA_y_Benchmarks.pptx>)
   - [Informe de Cierre y Validación Técnica - Grupo 10 (Capa Móvil y Experiencia de Usuario)](<docs/Informe_de_Cierre_y_Validacion_Tecnica_G10.docx>)
   - [Informe de Cierre y Validación Técnica - Grupo 11 (Arquitectura Cloud y Modelado Espacial)](<docs/Informe_de_Cierre_y_Validacion_Tecnica_G11.docx>)
 - **Documentos Base de Ingeniería y Diseño:**

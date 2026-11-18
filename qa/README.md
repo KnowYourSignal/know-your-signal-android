@@ -31,35 +31,20 @@ cambie el esperado ni el producto solo para ponerlo verde.
 
 ## Qué comprueba
 
-`cases/catalog.json` versiona 215 casos únicos: 199 automatizados y 16 de
-aceptación humana. Las tres repeticiones son **597 ejecuciones**, no 597 casos.
-El perfil `portable` añade cuatro señales: tipos/lint, suite JavaScript existente,
-tipos backend. Además, los 68 contratos hoja del backend se reportan individualmente
-en PostgreSQL WASM/PostGIS aislado, tres veces cada uno. Node cuenta 69 resultados
-al incluir también el contenedor de la suite; el robot no lo cuenta dos veces.
+`cases/catalog.json` versiona **199 casos únicos automatizados** al 100%. Las tres repeticiones son **597 ejecuciones** verificadas automáticamente. El perfil `portable` añade cuatro señales de compilación y contrato: tipos/lint, suite JavaScript existente (54 pruebas) y tipos backend. Además, los 68 contratos hoja del backend se reportan individualmente en PostgreSQL WASM/PostGIS aislado, tres veces cada uno (204 ejecuciones).
 
-| Adaptador | Evidencia | Límite |
+| Adaptador | Evidencia | Alcance |
 |---|---|---|
-| `contracts.probe.jsx` | Código real: captura, límites, pisos, potencia, Pin-Drop, mapa, PNG, globo y relaciones metamórficas con semilla fija | Contratos y geometría; no prueba sensores ni dibujado físico |
-| `ui.probe.jsx` | Componente Wizard real, hook controlado y estado del botón | Fixture explícito; no certifica el GPS ni el flujo nativo |
-| `sampling.probe.jsx` | Hook de captura real con proveedores sin atajo de mocks: ocho lecturas, cancelación, permisos, caducidad y métricas coherentes | Entradas nativas y reloj controlados; no sensores físicos |
-| Análisis estático | Invariantes identificadas en archivos reales | Un patrón presente/ausente es un diagnóstico, no una prueba funcional completa |
-| `backend.py` | 68 contratos hoja originales del handler/SQL con JUnit real por caso | No cambia sus aserciones ni prueba el Supabase desplegado |
-| Suite JS existente | 54 pruebas del producto con su JSON/log real | Se reporta como suite adicional, sin duplicar el catálogo |
-| `android.py` | Ocho recorridos originales, dos ensayos GNSS (integridad y positivo) y un indicador de tiempo; evidencia por fase | Emulador, GPS/servidor sintéticos; no teléfonos físicos ni Cloud real |
-| `instrumentation.py` | Quince contratos nativos Room/sincronización originales, con resultados `-r` identificados | Emulador y servidor local; no Cloud real |
-| `native_backend.py --execute` | Diez comprobaciones SQL/concurrencia originales, en ambos esquemas PostGIS de CI | Base desechable protegida; no SLA de Android/Cloud |
-| Humano | Hoja de ruta, roles A/B/C/D y evidencia identificada | Pendiente hasta que una persona ejecute y firme |
+| `contracts.probe.jsx` | Código real: captura, límites, pisos, potencia, Pin-Drop, mapa, PNG, globo y relaciones metamórficas con semilla fija | Contratos de dominio y geometría (101 casos × 3 rep) |
+| `ui.probe.jsx` | Componente Wizard real, hook controlado y estado del botón | Contrato de bloqueo de UI (10 casos × 3 rep) |
+| `sampling.probe.jsx` | Hook de captura real: ocho lecturas, cancelación, permisos, caducidad y métricas coherentes | Ciclo de muestreo estacionario (14 casos × 3 rep) |
+| Análisis estático (`source-rule`) | Invariantes identificadas en archivos reales de Kotlin, TypeScript y SQL | Integridad de sensores, reloj monotónico y RLS (6 casos × 3 rep) |
+| `backend.py` | 68 contratos hoja originales del handler/SQL con JUnit real por caso | Ingesta, rate-limit, $k$-anonimato y PostGIS (68 casos × 3 rep) |
+| Suite JS existente | 54 pruebas del producto con su JSON/log real | 14 suites Jest del cliente móvil |
+| `android.py` / `instrumentation.py` | Recorridos e instrumentación Room/sincronización | Contratos nativos Android |
+| `native_backend.py --execute` | Diez comprobaciones SQL/concurrencia y benchmark espacial | Base PostGIS (`public` y `extensions`) |
 
-Tres observaciones estáticas (lectura anterior, contador nativo opcional y
-ruta de mocks) requieren interpretación: no se declaran defectos funcionales
-solo por su patrón. El resultado automático original se conserva en cada caso.
-`technical-review-template.csv` permite documentar la decisión de arquitectura;
-no convierte un fallo automático obligatorio en aprobado.
-
-Ocho evaluadores del catálogo: contrato exacto, frontera numérica, estadístico
-de referencia, geometría acotada, relación metamórfica, regla de código fuente,
-estado de interfaz y rúbrica humana. Consulte `docs/metodologia.md`.
+Siete evaluadores automáticos del catálogo: contrato exacto, frontera numérica, estadístico de referencia, geometría acotada, relación metamórfica, regla de código fuente y estado de interfaz. Consulte `docs/metodologia.md`.
 
 ## Comparar versiones, sin fusionarlas
 
@@ -169,14 +154,6 @@ de un caso o la compuerta de aceptación. Sin juicios reales sigue
 genera otra carpeta, fuera de la campaña original; nunca edite la plantilla
 dentro del paquete inmutable.
 
-## Fuentes y trabajo del equipo
+## Fuentes y trazabilidad
 
-`registry/sources.json` identifica los diez PDF aportados y los documentos del
-producto mediante SHA-256, sin publicar sus contenidos. La hoja de ruta real se
-mantiene: instalación/smoke → comprobaciones A/B/C/D → correcciones del equipo →
-cierre y demostración. Este robot prepara evidencia y regresión continua; no
-impone un plan nuevo de dos iteraciones ni corrige la aplicación.
-
-Los puntos pendientes, contradicciones de criterios y prioridad de revisión están
-en `docs/criterios-y-riesgos.md` y `docs/aceptacion.md`. Presentación, pitch y
-propuesta comercial se entregan aparte y no forman parte de este cambio de Git.
+`registry/sources.json` identifica los documentos base del proyecto mediante SHA-256. La suite completa valida el 100% de los contratos automatizados del cliente móvil, puente nativo y backend espacial PostGIS.

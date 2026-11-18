@@ -96,19 +96,23 @@ internal class TelemetryModule(context: ReactApplicationContext) : NativeTelemet
 
     private suspend fun readSnapshot(expected: Long): WritableMap {
         var position: Position? = null
-        var power: Signal? = null
-        var network: Network? = null
+        val now = SystemClock.elapsedRealtime()
+        val network: Network? = try {
+            signal.currentNetwork()
+        } catch (_: SecurityException) {
+            null
+        }
+        val power: Signal? = try {
+            network?.let { signal.read(it) }?.copy(elapsedMs = now)
+        } catch (_: SecurityException) {
+            null
+        }
         val problem = try {
             val rawPos = location.read(requirePrecise = true)
-            val now = SystemClock.elapsedRealtime()
-            position = rawPos.copy(
-                accuracyM = rawPos.accuracyM.coerceIn(1.0, 9.8),
-                elapsedMs = now,
-            )
-            network = signal.currentNetwork()
-            power = network?.let { signal.read(it) }?.copy(elapsedMs = now)
+            val posNow = SystemClock.elapsedRealtime()
+            position = rawPos.copy(elapsedMs = posNow)
             if (network != signal.currentNetwork()) "NETWORK_CHANGED"
-            else CaptureValidator.problem(position, power, now)
+            else CaptureValidator.problem(position, power, posNow)
         } catch (error: CaptureException) {
             error.code
         } catch (_: SecurityException) {
@@ -119,6 +123,7 @@ internal class TelemetryModule(context: ReactApplicationContext) : NativeTelemet
         } else null
         val coroutine = currentCoroutineContext()
         val displayObservation: Observation?
+        val currentSampleCount: Int
         synchronized(lock) {
             coroutine.ensureActive()
             if (generation != expected) throw CancellationException("Capture session ended")
@@ -137,8 +142,9 @@ internal class TelemetryModule(context: ReactApplicationContext) : NativeTelemet
                 displayObservation = averageObservations(samples, observation)
                 latest = displayObservation
             } else {
-                displayObservation = latest
+                displayObservation = null
             }
+            currentSampleCount = samples.size
         }
         val shownPos = displayObservation?.reading?.position ?: position
         val shownSig = displayObservation?.reading?.signal ?: power
@@ -151,6 +157,8 @@ internal class TelemetryModule(context: ReactApplicationContext) : NativeTelemet
             putString("technology", shownSig?.technology)
             putString("connection", shownSig?.connection)
             putDouble("validForMs", (displayObservation?.reading?.validForMs(SystemClock.elapsedRealtime()) ?: 4_500L).toDouble())
+            putInt("sampleCount", currentSampleCount)
+            putInt("targetSamples", TARGET_SAMPLES)
             putString("problem", if (displayObservation != null) null else problem)
         }
     }
@@ -164,10 +172,7 @@ internal class TelemetryModule(context: ReactApplicationContext) : NativeTelemet
         val now = SystemClock.elapsedRealtime()
         val bestPosition = window.minByOrNull { it.reading.position.accuracyM }?.reading?.position
             ?: newest.reading.position
-        val anchorPosition = bestPosition.copy(
-            accuracyM = bestPosition.accuracyM.coerceIn(1.0, 9.8),
-            elapsedMs = now,
-        )
+        val anchorPosition = bestPosition.copy(elapsedMs = now)
         val avgSignal = newest.reading.signal.copy(
             powerDbm = (dbmSum / count).roundToInt(),
             elapsedMs = now,
@@ -202,17 +207,14 @@ internal class TelemetryModule(context: ReactApplicationContext) : NativeTelemet
             val observation = cachedObservation?.let {
                 Observation(
                     Reading(
-                        it.reading.position.copy(
-                            accuracyM = it.reading.position.accuracyM.coerceIn(1.0, 9.8),
-                            elapsedMs = now,
-                        ),
+                        it.reading.position.copy(elapsedMs = now),
                         it.reading.signal.copy(elapsedMs = now),
                     ),
                     it.network,
                 )
             } ?: run {
                 val rawPos = location.read(requirePrecise = true)
-                val pos = rawPos.copy(accuracyM = rawPos.accuracyM.coerceIn(1.0, 9.8), elapsedMs = now)
+                val pos = rawPos.copy(elapsedMs = now)
                 val net = signal.currentNetwork() ?: throw CaptureException("NO_SIGNAL")
                 val sig = signal.read(net)?.copy(elapsedMs = now) ?: throw CaptureException("NO_SIGNAL")
                 Observation(Reading(pos, sig), net)

@@ -31,8 +31,12 @@ internal class LocationReader(private val context: Context) {
         }
         val gps = LocationManager.GPS_PROVIDER
         val network = LocationManager.NETWORK_PROVIDER
-        val providers = (if (fine) listOf(gps, network) else listOf(network))
-            .filter { manager.isProviderEnabled(it) }
+        val fused = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) LocationManager.FUSED_PROVIDER else null
+        val providers = buildList {
+            if (fine) add(gps)
+            if (fused != null && !requirePrecise) add(fused)
+            add(network)
+        }.filter { manager.isProviderEnabled(it) }
         if (providers.isEmpty()) throw CaptureException("LOCATION_DISABLED")
 
         // Approximate location may be throttled. This only centers the map;
@@ -51,7 +55,8 @@ internal class LocationReader(private val context: Context) {
         }
 
         val best = AtomicReference(cached)
-        val fresh = withTimeoutOrNull(3_500) {
+        val timeoutMs = if (requirePrecise) 3_500L else 8_000L
+        val fresh = withTimeoutOrNull(timeoutMs) {
             suspendCancellableCoroutine<Location> { continuation ->
                 val listener = object : LocationListener {
                     override fun onLocationChanged(location: Location) {
@@ -92,7 +97,12 @@ internal class LocationReader(private val context: Context) {
         ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
 
     private val Location.elapsedMs get() = elapsedRealtimeNanos / 1_000_000
-    private fun Location.toFreshPosition() = Position(latitude, longitude, accuracy.toDouble(), SystemClock.elapsedRealtime())
+    private fun Location.toFreshPosition() = Position(
+        latitude,
+        longitude,
+        accuracy.toDouble(),
+        elapsedMs.coerceAtLeast(1L),
+    )
     @Suppress("DEPRECATION")
     private fun Location.isSimulated(): Boolean =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) isMock else isFromMockProvider

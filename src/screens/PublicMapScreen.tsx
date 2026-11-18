@@ -116,7 +116,6 @@ export function PublicMapScreen() {
   const [floorEdit, setFloorEdit] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mapLayout, setMapLayout] = useState<MapLayout | null>(null);
-  const [preferPlane, setPreferPlane] = useState(false);
   const autoLocated = useRef(false);
   const map = useRef<MapView>(null);
   const { hasViewport, current, cells, loading, reload } = usePublicCells(
@@ -155,7 +154,7 @@ export function PublicMapScreen() {
     return counts;
   }, [cells, filters.metric]);
 
-  const showTileMap = Boolean(configuration?.mapTiles && !preferPlane);
+  const showTileMap = Boolean(configuration?.mapTiles);
 
   function center(next: Region) {
     setSelectedId(null);
@@ -243,28 +242,19 @@ export function PublicMapScreen() {
         <View style={[g.card, s.mapCard]}>
           <View style={s.mapHeading}>
             <Text style={g.sectionTitle}>Zona visible</Text>
-            <View style={s.filters}>
-              {configuration?.mapTiles && (
-                <Chip
-                  label={preferPlane ? 'Ver mapa base' : 'Ver plano'}
-                  selected={preferPlane}
-                  onPress={() => setPreferPlane(previous => !previous)}
-                />
-              )}
-              <StatusPill
-                label={
-                  loading
-                    ? 'Consultando'
-                    : current?.error && cells.length
-                    ? 'Última consulta'
-                    : current?.cached
-                    ? 'En caché'
-                    : resolution
-                    ? resolution + ' m por celda'
-                    : 'Vista agregada'
-                }
-              />
-            </View>
+            <StatusPill
+              label={
+                loading
+                  ? 'Consultando'
+                  : current?.error && cells.length
+                  ? 'Última consulta'
+                  : current?.cached
+                  ? 'En caché'
+                  : resolution
+                  ? resolution + ' m por celda'
+                  : 'Vista agregada'
+              }
+            />
           </View>
           {showTileMap ? (
             <View

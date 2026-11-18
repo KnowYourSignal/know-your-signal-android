@@ -125,6 +125,8 @@ export function WizardScreen({ navigation }: Props) {
   const guide = useGuide();
   const session = useCaptureSession(focused && !guide.active);
   const [startingSession, setStartingSession] = useState(false);
+  const [sessionNotice, setSessionNotice] = useState<string | null>(null);
+  const activeCount = settings?.activeSessionCount ?? 0;
   useAutoGuide(
     'overview',
     focused && !session.enabled && session.status !== 'permission',
@@ -142,12 +144,41 @@ export function WizardScreen({ navigation }: Props) {
 
   async function createSession() {
     if (startingSession) return;
+    if (activeCount < 4) {
+      setSessionNotice(
+        `La sesión actual tiene ${activeCount} de 4 mediciones mínimas. Completa al menos 4 capturas para iniciar una nueva sesión.`,
+      );
+      return;
+    }
     setStartingSession(true);
+    setSessionNotice(null);
     try {
-      await fieldwork().startSession?.(null);
+      const created = await fieldwork().startSession?.(null);
+      if (created && created.id === settings?.activeSessionId) {
+        setSessionNotice(
+          `La sesión actual tiene ${activeCount} de 4 mediciones mínimas. Completa al menos 4 capturas para iniciar una nueva sesión.`,
+        );
+      }
       await refresh();
     } catch {
       // Keep current session if local storage is busy.
+    } finally {
+      setStartingSession(false);
+    }
+  }
+
+  async function deleteActiveSession() {
+    if (startingSession || !settings?.activeSessionId) return;
+    setStartingSession(true);
+    setSessionNotice(null);
+    try {
+      await fieldwork().startSession?.(
+        '__DELETE__:' + settings.activeSessionId,
+      );
+      await refresh();
+      setSessionNotice('Sesión eliminada y numeración actualizada.');
+    } catch {
+      // Ignore if local storage is busy.
     } finally {
       setStartingSession(false);
     }
@@ -176,16 +207,31 @@ export function WizardScreen({ navigation }: Props) {
         <View style={s.sessionRow}>
           <StatusPill
             label={
-              'Sesión activa: ' + (settings?.activeSessionName ?? 'Sesión 1')
+              'Sesión activa: ' +
+              (settings?.activeSessionName ?? 'Sesión 1') +
+              (activeCount < 4
+                ? ` (${activeCount}/4 mín.)`
+                : ` (${activeCount} med.)`)
             }
           />
-          <Chip
-            label={startingSession ? 'Creando...' : '+ Nueva sesión'}
-            selected={false}
-            disabled={startingSession}
-            onPress={createSession}
-          />
+          <View style={s.sessionActions}>
+            {activeCount > 0 && (
+              <Chip
+                label="Eliminar sesión"
+                selected={false}
+                disabled={startingSession}
+                onPress={deleteActiveSession}
+              />
+            )}
+            <Chip
+              label={startingSession ? 'Creando...' : '+ Nueva sesión'}
+              selected={false}
+              disabled={startingSession}
+              onPress={createSession}
+            />
+          </View>
         </View>
+        {sessionNotice && <Text style={g.caption}>{sessionNotice}</Text>}
 
         <View style={g.card}>
           <GuideTarget id="accuracy">
@@ -212,12 +258,7 @@ export function WizardScreen({ navigation }: Props) {
           <CaptureButton
             status={session.status}
             active={session.enabled}
-            ready={
-              session.enabled &&
-              !guide.active &&
-              session.status !== 'permission' &&
-              !needsSettings
-            }
+            ready={session.canRecord && !guide.active}
             onStart={session.start}
             onCapture={capture}
           />
@@ -280,6 +321,12 @@ const s = StyleSheet.create({
     justifyContent: 'space-between',
     flexWrap: 'wrap',
     gap: 8,
+  },
+  sessionActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 6,
   },
   averagingBox: {
     gap: 12,

@@ -1,9 +1,9 @@
 import React, { memo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { Circle, Marker } from 'react-native-maps';
+import { Circle } from 'react-native-maps';
 import { signalQuality, signalWeight } from '../domain/Measurement';
 import type { PublicCell } from '../services/PublicMapService';
 import { COLORS, SIGNAL_COLORS } from '../theme/theme';
+import { SignalDbmMarker } from './SignalDbmMarker';
 
 const Cell = memo(function CellShape({
   cell,
@@ -47,24 +47,12 @@ const Cell = memo(function CellShape({
         zIndex={selected ? 6 : 3}
       />
       {technical && (
-        <Marker
+        <SignalDbmMarker
           coordinate={center}
-          anchor={{ x: 0.5, y: 0.5 }}
-          tracksViewChanges={false}
-          zIndex={selected ? 10 : 7}
-        >
-          <View
-            style={[
-              s.badge,
-              { borderColor: selected ? COLORS.navy : color },
-              selected && s.badgeActive,
-            ]}
-          >
-            <Text style={[s.badgeText, selected && s.badgeTextActive]}>
-              {cell.powerDbm} dBm
-            </Text>
-          </View>
-        </Marker>
+          dbm={cell.powerDbm}
+          color={color}
+          selected={selected}
+        />
       )}
     </>
   );
@@ -92,24 +80,3 @@ export function PublicCellLayer({
     />
   ));
 }
-
-const s = StyleSheet.create({
-  badge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 999,
-    borderWidth: 1.5,
-    backgroundColor: '#FFFFFFEB',
-  },
-  badgeActive: {
-    backgroundColor: COLORS.navy,
-  },
-  badgeText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: COLORS.navy,
-  },
-  badgeTextActive: {
-    color: '#FFFFFF',
-  },
-});
