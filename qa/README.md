@@ -29,6 +29,21 @@ Código de salida: **0** = todos los criterios obligatorios del alcance aprobado
 configuración. Un trabajo rojo puede ser un hallazgo real del producto. Nunca
 cambie el esperado ni el producto solo para ponerlo verde.
 
+## Benchmark con cifras y fundamento
+
+Para convertir el paquete de evidencias descargado en una tabla de indicadores
+y un informe más explícito, sin ejecutar otra campaña:
+
+```sh
+python3 qa/benchmark.py --evidence-root /ruta/KYS_Robot_QA_Evidencias --output /ruta/benchmark-nuevo --verbose
+```
+
+Genera HTML, JSON y CSV. Muestra aprobados/total, revisiones, repeticiones,
+observado/objetivo y alcance. Valida la integridad antes de calcular. El código
+de salida indica si pudo generar el benchmark y no reemplaza el gate del producto.
+Definiciones, fórmulas, limitaciones del muestreo y protocolo físico:
+[`docs/benchmark-y-metricas.md`](docs/benchmark-y-metricas.md).
+
 ## Qué comprueba
 
 `cases/catalog.json` versiona **199 casos únicos automatizados** al 100%. Las tres repeticiones son **597 ejecuciones** verificadas automáticamente. El perfil `portable` añade cuatro señales de compilación y contrato: tipos/lint, suite JavaScript existente (54 pruebas) y tipos backend. Además, los 68 contratos hoja del backend se reportan individualmente en PostgreSQL WASM/PostGIS aislado, tres veces cada uno (204 ejecuciones).
