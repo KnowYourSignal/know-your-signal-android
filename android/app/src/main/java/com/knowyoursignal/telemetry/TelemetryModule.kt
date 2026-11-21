@@ -96,24 +96,20 @@ internal class TelemetryModule(context: ReactApplicationContext) : NativeTelemet
 
     private suspend fun readSnapshot(expected: Long): WritableMap {
         var position: Position? = null
-        val now = SystemClock.elapsedRealtime()
-        val network: Network? = try {
-            signal.currentNetwork()
-        } catch (_: SecurityException) {
-            null
-        }
-        val power: Signal? = try {
-            network?.let { signal.read(it) }?.copy(elapsedMs = now)
-        } catch (_: SecurityException) {
-            null
-        }
+        var network: Network? = null
+        var power: Signal? = null
         val problem = try {
             val rawPos = location.read(requirePrecise = true)
             val posNow = SystemClock.elapsedRealtime()
-            position = rawPos.copy(elapsedMs = posNow)
+            position = rawPos
+            network = signal.currentNetwork()
+            power = network?.let { signal.read(it) }?.copy(elapsedMs = posNow)
             if (network != signal.currentNetwork()) "NETWORK_CHANGED"
             else CaptureValidator.problem(position, power, posNow)
         } catch (error: CaptureException) {
+            val fallbackNow = SystemClock.elapsedRealtime()
+            network = try { signal.currentNetwork() } catch (_: SecurityException) { null }
+            power = try { network?.let { signal.read(it) }?.copy(elapsedMs = fallbackNow) } catch (_: SecurityException) { null }
             error.code
         } catch (_: SecurityException) {
             "PERMISSION_DENIED"
@@ -169,13 +165,13 @@ internal class TelemetryModule(context: ReactApplicationContext) : NativeTelemet
             dbmSum += item.reading.signal.powerDbm
         }
         val count = window.size.coerceAtLeast(1)
-        val now = SystemClock.elapsedRealtime()
-        val bestPosition = window.minByOrNull { it.reading.position.accuracyM }?.reading?.position
+        val signalNow = newest.reading.signal.elapsedMs
+        val freshPositions = window.map { it.reading.position }
+            .filter { signalNow - it.elapsedMs in 0..MAX_READING_SKEW_MS }
+        val anchorPosition = freshPositions.minByOrNull { it.accuracyM }
             ?: newest.reading.position
-        val anchorPosition = bestPosition.copy(elapsedMs = now)
         val avgSignal = newest.reading.signal.copy(
             powerDbm = (dbmSum / count).roundToInt(),
-            elapsedMs = now,
         )
         return Observation(Reading(anchorPosition, avgSignal), newest.network)
     }
@@ -204,20 +200,15 @@ internal class TelemetryModule(context: ReactApplicationContext) : NativeTelemet
                 generation to value
             }
             val now = SystemClock.elapsedRealtime()
-            val observation = cachedObservation?.let {
-                Observation(
-                    Reading(
-                        it.reading.position.copy(elapsedMs = now),
-                        it.reading.signal.copy(elapsedMs = now),
-                    ),
-                    it.network,
-                )
+            val observation = cachedObservation?.takeIf {
+                CaptureValidator.problem(it.reading.position, it.reading.signal, now) == null
             } ?: run {
                 val rawPos = location.read(requirePrecise = true)
-                val pos = rawPos.copy(elapsedMs = now)
                 val net = signal.currentNetwork() ?: throw CaptureException("NO_SIGNAL")
-                val sig = signal.read(net)?.copy(elapsedMs = now) ?: throw CaptureException("NO_SIGNAL")
-                Observation(Reading(pos, sig), net)
+                val sigNow = SystemClock.elapsedRealtime()
+                val sig = signal.read(net)?.copy(elapsedMs = sigNow) ?: throw CaptureException("NO_SIGNAL")
+                CaptureValidator.problem(rawPos, sig, sigNow)?.let { throw CaptureException(it) }
+                Observation(Reading(rawPos, sig), net)
             }
             val reading = observation.reading
             val shareRevision = server?.let { endpoint ->

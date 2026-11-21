@@ -196,3 +196,108 @@ test('a capture keeps the explicit session and resumes a fresh reading only on r
     jest.useRealTimers();
   }
 });
+
+test('stationary burst rejects all-invalid windows (A03) and metric changes on freeze retry (A02)', async () => {
+  jest.useFakeTimers();
+  const originalFreeze = telemetry.freeze;
+  const originalRead = telemetry.read;
+  let root: ReactTestRenderer.ReactTestRenderer | undefined;
+  let session!: ReturnType<typeof useCaptureSession>;
+  function Capture({ active }: { active: boolean }) {
+    session = useCaptureSession(active);
+    return null;
+  }
+  try {
+    // A03: 13 LOW_ACCURACY samples during burst must return null without freezing
+    let freezeCalls = 0;
+    let burstPhase = false;
+    telemetry.read = (async () =>
+      burstPhase
+        ? { ...ready, accuracyM: 30, powerDbm: -120, problem: 'LOW_ACCURACY' }
+        : ready) as typeof telemetry.read;
+    telemetry.freeze = (async () => {
+      freezeCalls += 1;
+      return {
+        id: 'stale-draft',
+        accuracyM: 6,
+        powerDbm: -68,
+        metric: 'wifi_rssi',
+        technology: 'wifi',
+        connection: 'wifi_privada',
+        capturedAt: '2026-11-21T00:00:00.000Z',
+      };
+    }) as typeof telemetry.freeze;
+
+    await act(async () => {
+      root = ReactTestRenderer.create(<Capture active />);
+    });
+    await act(async () => {
+      await session.start();
+    });
+    expect(session.canRecord).toBe(true);
+    burstPhase = true;
+    let promise!: Promise<unknown>;
+    await act(async () => {
+      promise = session.capture();
+    });
+    for (let i = 0; i < 20; i += 1) {
+      await act(async () => {
+        await jest.advanceTimersByTimeAsync(300);
+      });
+    }
+    expect(await promise).toBeNull();
+    expect(freezeCalls).toBe(0);
+    expect(session.problem).toBe('LOW_ACCURACY');
+
+    // A02: Wi-Fi during 8 samples, then freeze fails and retry reads LTE -> must return null
+    burstPhase = false;
+    await act(async () => {
+      await jest.advanceTimersByTimeAsync(1500);
+    });
+    let sampleReads = 0;
+    telemetry.read = (async () => {
+      sampleReads += 1;
+      if (sampleReads <= 8) {
+        return { ...ready, powerDbm: -70, metric: 'wifi_rssi' };
+      }
+      return {
+        ...ready,
+        powerDbm: -110,
+        metric: 'lte_rsrp',
+        technology: 'lte',
+        connection: 'datos_moviles',
+      };
+    }) as typeof telemetry.read;
+    let firstFreeze = true;
+    telemetry.freeze = (async () => {
+      if (firstFreeze) {
+        firstFreeze = false;
+        throw new Error('STALE_READING');
+      }
+      return {
+        id: 'mixed-draft',
+        accuracyM: 6,
+        powerDbm: -110,
+        metric: 'lte_rsrp',
+        technology: 'lte',
+        connection: 'datos_moviles',
+        capturedAt: '2026-11-21T00:00:00.000Z',
+      };
+    }) as typeof telemetry.freeze;
+
+    await act(async () => {
+      promise = session.capture();
+    });
+    for (let i = 0; i < 20; i += 1) {
+      await act(async () => {
+        await jest.advanceTimersByTimeAsync(300);
+      });
+    }
+    expect(await promise).toBeNull();
+  } finally {
+    telemetry.freeze = originalFreeze;
+    telemetry.read = originalRead;
+    await act(async () => root?.unmount());
+    jest.useRealTimers();
+  }
+});

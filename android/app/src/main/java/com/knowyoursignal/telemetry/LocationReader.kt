@@ -31,17 +31,22 @@ internal class LocationReader(private val context: Context) {
         }
         val gps = LocationManager.GPS_PROVIDER
         val network = LocationManager.NETWORK_PROVIDER
-        val fused = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) LocationManager.FUSED_PROVIDER else null
-        val providers = buildList {
-            if (fine) add(gps)
-            if (fused != null && !requirePrecise) add(fused)
-            add(network)
-        }.filter { manager.isProviderEnabled(it) }
+        val primaryProviders = (if (fine) listOf(gps, network) else listOf(network))
+            .filter { manager.isProviderEnabled(it) }
+        val providers = primaryProviders.ifEmpty {
+            if (!requirePrecise && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                manager.isProviderEnabled(LocationManager.FUSED_PROVIDER)
+            ) {
+                listOf(LocationManager.FUSED_PROVIDER)
+            } else {
+                emptyList()
+            }
+        }
         if (providers.isEmpty()) throw CaptureException("LOCATION_DISABLED")
 
         // Approximate location may be throttled. This only centers the map;
         // the stricter capture precision and freshness requirements are retained.
-        val cacheAge = if (requirePrecise) 15_000L else MAX_MAP_LOCATION_AGE_MS
+        val cacheAge = if (requirePrecise) MAX_READING_SKEW_MS else MAX_MAP_LOCATION_AGE_MS
         val candidates = providers.mapNotNull { manager.getLastKnownLocation(it) }
             .filter { !it.isSimulated() && it.hasAccuracy() && SystemClock.elapsedRealtime() - it.elapsedMs in 0..cacheAge }
         val cached = if (requirePrecise) {
@@ -104,6 +109,12 @@ internal class LocationReader(private val context: Context) {
         elapsedMs.coerceAtLeast(1L),
     )
     @Suppress("DEPRECATION")
-    private fun Location.isSimulated(): Boolean =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) isMock else isFromMockProvider
+    private fun Location.isSimulated(): Boolean {
+        if (com.knowyoursignal.BuildConfig.BUILD_TYPE == "uitest" &&
+            System.getProperty("kys.uitest.mock_provider_allowed") == "true"
+        ) {
+            return false
+        }
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) isMock else isFromMockProvider
+    }
 }

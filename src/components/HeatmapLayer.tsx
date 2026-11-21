@@ -89,11 +89,12 @@ export const HeatmapLayer = memo(function HeatmapArtwork({
 }) {
   const { paths, orderedDots } = useMemo(() => {
     const groups = {
-      good: { glow: '', inner: '' },
-      fair: { glow: '', inner: '' },
-      weak: { glow: '', inner: '' },
+      good: { glow: '', inner: '', dots: '' },
+      fair: { glow: '', inner: '', dots: '' },
+      weak: { glow: '', inner: '', dots: '' },
     };
     const dots: Array<{ key: string; d: string; color: string }> = [];
+    const batchDots = points.length > 60;
     // Points arrive ordered newest-first (capturedAt DESC). Iterate oldest-first
     // so newer measurements in the same spot always render on top of older ones.
     for (let index = points.length - 1; index >= 0; index -= 1) {
@@ -105,13 +106,17 @@ export const HeatmapLayer = memo(function HeatmapArtwork({
       const quality = signalQuality(point.powerDbm, metric);
       const group = groups[quality];
       const radius = Math.round(12 + signalWeight(point.powerDbm, metric) * 9);
+      const dotPath = disk(x, y, 4);
       group.glow += disk(x, y, radius);
       group.inner += disk(x, y, Math.round(radius * 0.57));
-      dots.push({
-        key: point.id,
-        d: disk(x, y, 4),
-        color: SIGNAL_COLORS[quality],
-      });
+      group.dots += dotPath;
+      if (!batchDots) {
+        dots.push({
+          key: point.id,
+          d: dotPath,
+          color: SIGNAL_COLORS[quality],
+        });
+      }
     }
     return { paths: groups, orderedDots: dots };
   }, [points, region, metric, width, height]);
@@ -147,15 +152,28 @@ export const HeatmapLayer = memo(function HeatmapArtwork({
           </React.Fragment>
         ) : null;
       })}
-      {orderedDots.map(dot => (
-        <Path
-          key={dot.key}
-          d={dot.d}
-          fill={dot.color}
-          stroke="#FFF"
-          strokeWidth={0.9}
-        />
-      ))}
+      {orderedDots.length > 0
+        ? orderedDots.map(dot => (
+            <Path
+              key={dot.key}
+              d={dot.d}
+              fill={dot.color}
+              stroke="#FFF"
+              strokeWidth={0.9}
+            />
+          ))
+        : (['weak', 'fair', 'good'] as const).map(quality => {
+            const group = paths[quality];
+            return group.dots ? (
+              <Path
+                key={`dots-${quality}`}
+                d={group.dots}
+                fill={SIGNAL_COLORS[quality]}
+                stroke="#FFF"
+                strokeWidth={0.9}
+              />
+            ) : null;
+          })}
       {focus && (
         <Circle
           cx={focus.x}

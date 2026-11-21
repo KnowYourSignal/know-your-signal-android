@@ -157,6 +157,7 @@ internal class UiTestDriver {
             }
         }
         device.executeShellCommand("appops set ${context.packageName} android:mock_location allow")
+        System.setProperty("kys.uitest.mock_provider_allowed", "true")
         val manager = context.getSystemService(LocationManager::class.java)
         val network = provider == LocationManager.NETWORK_PROVIDER
         manager.addTestProvider(provider, network, !network, network, false,
@@ -186,6 +187,7 @@ internal class UiTestDriver {
         return AutoCloseable {
             running.set(false)
             thread.join(2_000)
+            System.clearProperty("kys.uitest.mock_provider_allowed")
             manager.removeTestProvider(provider)
         }
     }

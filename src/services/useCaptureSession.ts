@@ -228,6 +228,9 @@ export function useCaptureSession(focused: boolean) {
               setStatus('reading');
               return null;
             }
+            if (expectedMetric === null && sample.metric !== null) {
+              expectedMetric = sample.metric;
+            }
             lastSample = sample;
             if (canCapture(sample)) {
               collected.push(sample);
@@ -237,15 +240,42 @@ export function useCaptureSession(focused: boolean) {
             // Retry before freezing.
           }
         }
+        if (collected.length === 0) {
+          setReading(null);
+          setProblem(lastSample?.problem ?? 'LOW_ACCURACY');
+          setStatus('reading');
+          return null;
+        }
       }
       let saved = await telemetry.freeze().catch(async () => {
         const retrySample = await telemetry.read();
-        if (retrySample.powerDbm !== null && retrySample.accuracyM !== null) {
-          collected.push(retrySample);
+        if (
+          expectedMetric !== null &&
+          retrySample.metric !== null &&
+          retrySample.metric !== expectedMetric
+        ) {
+          throw Object.assign(new Error('NETWORK_CHANGED'), {
+            code: 'NETWORK_CHANGED',
+          });
         }
+        if (!canCapture(retrySample)) {
+          const code = retrySample.problem ?? 'STALE_READING';
+          throw Object.assign(new Error(code), { code });
+        }
+        collected.push(retrySample);
         return telemetry.freeze();
       });
       if (captureSession !== session.current) {
+        return null;
+      }
+      if (
+        !isTestEnv &&
+        expectedMetric !== null &&
+        saved.metric !== expectedMetric
+      ) {
+        setReading(null);
+        setProblem('NETWORK_CHANGED');
+        setStatus('reading');
         return null;
       }
       if (collected.length > 0) {

@@ -32,9 +32,9 @@ La versión actual es **1.2 (código 3)**. El flujo [Android client](https://git
 
 ## Descarga de la Aplicación (Versión Beta para Pruebas)
 
-La versión instalable para dispositivos Android (**v1.2.0-beta.2 · ARM64**) se encuentra disponible directamente en la sección [**Releases**](https://github.com/KnowYourSignal/know-your-signal-android/releases) de este repositorio:
+La versión instalable para dispositivos Android (**v1.2.0-beta.3 · ARM64**) se encuentra disponible directamente en la sección [**Releases**](https://github.com/KnowYourSignal/know-your-signal-android/releases) de este repositorio:
 
-- **Archivo APK autónomo:** `KnowYourSignal-v1.2.0-beta.2-arm64.apk` (incluye el bundle JavaScript compilado con Hermes, integración con Supabase/PostGIS y soporte directo de Google Maps; no requiere servidor de desarrollo Metro).
+- **Archivo APK autónomo:** `KnowYourSignal-v1.2.0-beta.3-arm64.apk` (incluye el bundle JavaScript compilado con Hermes, integración con Supabase/PostGIS y soporte directo de Google Maps; no requiere servidor de desarrollo Metro).
 
 ## Documentación del Proyecto y Entregables Oficiales (`docs/`)
 
