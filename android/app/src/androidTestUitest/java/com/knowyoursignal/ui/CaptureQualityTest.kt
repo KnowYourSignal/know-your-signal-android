@@ -26,7 +26,7 @@ class CaptureQualityTest {
             ui.screenshot("12-low-accuracy-blocked")
         }
         ui.mockGps(5f).use {
-            ui.find(By.text("Tu señal está lista"))
+            ui.find(By.text("±5.0 m"))
             assertTrue(ui.reveal(By.desc("Registrar señal")).isEnabled)
             assertEquals(before, ui.database.measurements().counts().total)
             ui.action("Pausar lectura")

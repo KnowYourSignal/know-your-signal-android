@@ -72,6 +72,23 @@ function disk(x: number, y: number, radius: number): string {
   );
 }
 
+function box(x: number, y: number, radius: number): string {
+  const size = radius * 2;
+  return (
+    'M' +
+    (x - radius).toFixed(1) +
+    ' ' +
+    (y - radius).toFixed(1) +
+    'h' +
+    size +
+    'v' +
+    size +
+    'h-' +
+    size +
+    'Z'
+  );
+}
+
 export const HeatmapLayer = memo(function HeatmapArtwork({
   points,
   region,
@@ -106,11 +123,13 @@ export const HeatmapLayer = memo(function HeatmapArtwork({
       const quality = signalQuality(point.powerDbm, metric);
       const group = groups[quality];
       const radius = Math.round(12 + signalWeight(point.powerDbm, metric) * 9);
-      const dotPath = disk(x, y, 4);
-      group.glow += disk(x, y, radius);
-      group.inner += disk(x, y, Math.round(radius * 0.57));
-      group.dots += dotPath;
-      if (!batchDots) {
+      if (batchDots) {
+        group.glow += box(x, y, Math.round(radius * 0.7));
+        group.dots += box(x, y, 3);
+      } else {
+        const dotPath = disk(x, y, 4);
+        group.glow += disk(x, y, radius);
+        group.inner += disk(x, y, Math.round(radius * 0.57));
         dots.push({
           key: point.id,
           d: dotPath,
@@ -148,7 +167,9 @@ export const HeatmapLayer = memo(function HeatmapArtwork({
         return group.glow ? (
           <React.Fragment key={quality}>
             <Path d={group.glow} fill={color} opacity={0.13} />
-            <Path d={group.inner} fill={color} opacity={0.25} />
+            {group.inner ? (
+              <Path d={group.inner} fill={color} opacity={0.25} />
+            ) : null}
           </React.Fragment>
         ) : null;
       })}
@@ -169,8 +190,6 @@ export const HeatmapLayer = memo(function HeatmapArtwork({
                 key={`dots-${quality}`}
                 d={group.dots}
                 fill={SIGNAL_COLORS[quality]}
-                stroke="#FFF"
-                strokeWidth={0.9}
               />
             ) : null;
           })}
