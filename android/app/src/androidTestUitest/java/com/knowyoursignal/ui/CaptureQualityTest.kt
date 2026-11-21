@@ -27,7 +27,8 @@ class CaptureQualityTest {
         }
         ui.mockGps(5f).use {
             ui.find(By.text("±5.0 m"))
-            assertTrue(ui.reveal(By.desc("Registrar señal")).isEnabled)
+            ui.reveal(By.desc("Registrar señal"))
+            assertTrue(ui.find(By.desc("Registrar señal").enabled(true)).isEnabled)
             assertEquals(before, ui.database.measurements().counts().total)
             ui.action("Pausar lectura")
         }
