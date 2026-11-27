@@ -33,7 +33,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 
-private const val TARGET_SAMPLES = 8
+private const val TARGET_SAMPLES = 2
 
 internal data class CaptureDraft(
     val id: String,
@@ -77,6 +77,7 @@ internal class TelemetryModule(context: ReactApplicationContext) : NativeTelemet
     override fun onHostDestroy() = onHostPause()
 
     override fun readSensors(promise: Promise) {
+        location.startContinuousTracking()
         synchronized(lock) {
             pendingRead?.cancel()
             val currentGeneration = generation
@@ -85,6 +86,7 @@ internal class TelemetryModule(context: ReactApplicationContext) : NativeTelemet
     }
 
     override fun stopReading() {
+        location.stopContinuousTracking()
         val job = synchronized(lock) {
             generation += 1
             latest = null

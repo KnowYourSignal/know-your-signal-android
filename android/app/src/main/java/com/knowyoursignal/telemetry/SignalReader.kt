@@ -45,9 +45,9 @@ internal class SignalReader(private val context: Context) {
                 manager = manager.createForSubscriptionId(dataSubscription)
             }
         }
-        bestFreshSignal(manager.allCellInfo.orEmpty(), 1_500)?.let { return it }
+        bestFreshSignal(manager.allCellInfo.orEmpty(), 2_000)?.let { return it }
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-            return bestFreshSignal(manager.allCellInfo.orEmpty(), MAX_READING_SKEW_MS)
+            return bestFreshSignal(manager.allCellInfo.orEmpty(), 4_000L)
         }
         val cells = withTimeoutOrNull(1_750) {
             suspendCancellableCoroutine<List<CellInfo>> { continuation ->
@@ -70,7 +70,7 @@ internal class SignalReader(private val context: Context) {
                 }
             }
         }.orEmpty()
-        return bestFreshSignal(cells, MAX_READING_SKEW_MS)
+        return bestFreshSignal(cells, 4_000L)
     }
 
     private fun bestFreshSignal(cells: List<CellInfo>, maxAgeMs: Long): Signal? {

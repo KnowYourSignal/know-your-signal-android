@@ -1,3 +1,4 @@
+import { signalQuality } from './Measurement';
 import type { SavedMeasurement } from '../specs/NativeFieldwork';
 import { isVisible, type MapLayout, type Region } from '../state/MapFilters';
 
@@ -8,6 +9,10 @@ export type EvidenceSnapshot = {
   medianDbm: number;
   minDbm: number;
   maxDbm: number;
+  avgAccuracyM: number;
+  qualityCounts: Record<'good' | 'fair' | 'weak', number>;
+  sessionLabel: string;
+  mapImageUri?: string | null;
 };
 
 export function createEvidenceSnapshot(
@@ -30,6 +35,22 @@ export function createEvidenceSnapshot(
     return null;
   }
   const powers = visible.map(point => point.powerDbm).sort((a, b) => a - b);
+  const qualityCounts = { good: 0, fair: 0, weak: 0 };
+  let accSum = 0;
+  const sessionNames = new Set<string>();
+  for (const item of visible) {
+    qualityCounts[signalQuality(item.powerDbm, item.metric)] += 1;
+    accSum += item.accuracyM;
+    if (item.sessionName) {
+      sessionNames.add(item.sessionName);
+    }
+  }
+  const sessionLabel =
+    sessionNames.size === 1
+      ? Array.from(sessionNames)[0]
+      : sessionNames.size > 1
+      ? `${sessionNames.size} sesiones`
+      : 'Sesión local';
   return {
     measurements: visible,
     region: { ...region },
@@ -40,5 +61,8 @@ export function createEvidenceSnapshot(
       2,
     minDbm: powers[0],
     maxDbm: powers[powers.length - 1],
+    avgAccuracyM: Number((accSum / visible.length).toFixed(1)),
+    qualityCounts,
+    sessionLabel,
   };
 }

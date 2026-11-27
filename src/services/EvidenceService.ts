@@ -6,7 +6,11 @@ import { fieldwork } from './LocalRepositoryAdapter';
 export async function shareEvidence(
   card: ComponentRef<typeof View>,
 ): Promise<void> {
-  const path = await captureRef(card, { format: 'png', result: 'tmpfile' });
+  const path = await captureRef(card, {
+    format: 'png',
+    quality: 1,
+    result: 'tmpfile',
+  });
   try {
     await fieldwork().shareEvidence(path);
   } finally {

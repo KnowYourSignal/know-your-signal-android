@@ -98,12 +98,21 @@ export function useCaptureSession(focused: boolean) {
           sample.sampleCount != null &&
           sample.targetSamples != null &&
           sample.sampleCount < sample.targetSamples;
+        const liveHardwareResponse =
+          sample.problem !== 'LOCATION_TIMEOUT' &&
+          (sample.accuracyM !== null || sample.powerDbm !== null);
         if (averaging) {
           nextDelay = 650;
+          armStabilizationTimeout();
+        } else if (liveHardwareResponse) {
+          // Sensors are actively reporting readings (e.g. indoors converging
+          // toward < 10 m); keep the session alive while keeping the 60 s
+          // timeout intact if LOCATION_TIMEOUT persists without any fix.
           armStabilizationTimeout();
         }
         setStatus(ready ? 'ready' : 'reading');
         if (ready) {
+          nextDelay = Math.min(1_350, Math.max(450, sample.validForMs - 600));
           if (stabilizationTimeout) {
             clearTimeout(stabilizationTimeout);
             stabilizationTimeout = undefined;

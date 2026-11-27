@@ -22,6 +22,93 @@ private const val MAX_MAP_LOCATION_AGE_MS = 10 * 60 * 1_000L
 
 internal class LocationReader(private val context: Context) {
     private val manager = context.getSystemService(LocationManager::class.java)
+    private val trackingLock = Any()
+    private val latestTracked = AtomicReference<Location?>()
+    private var trackingListener: LocationListener? = null
+
+    @Suppress("MissingPermission")
+    fun startContinuousTracking() {
+        val fine = has(Manifest.permission.ACCESS_FINE_LOCATION)
+        if (!fine) return
+        val providers = activeProviders(fine = true, requirePrecise = true)
+        if (providers.isEmpty()) return
+        synchronized(trackingLock) {
+            if (trackingListener != null) return
+            val listener = object : LocationListener {
+                override fun onLocationChanged(location: Location) {
+                    if (location.isSimulated() || !location.hasAccuracy() || location.accuracy <= 0f) return
+                    val now = SystemClock.elapsedRealtime()
+                    val previous = latestTracked.get()
+                    if (isBetterFix(location, previous, now)) {
+                        latestTracked.set(location)
+                    }
+                }
+
+                override fun onProviderEnabled(provider: String) = Unit
+                override fun onProviderDisabled(provider: String) = Unit
+                @Deprecated("Legacy Android callback")
+                override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) = Unit
+            }
+            try {
+                providers.forEach { provider ->
+                    manager.requestLocationUpdates(provider, 500L, 0f, listener, Looper.getMainLooper())
+                }
+                trackingListener = listener
+            } catch (_: SecurityException) {
+                runCatching { manager.removeUpdates(listener) }
+            }
+        }
+    }
+
+    fun stopContinuousTracking() {
+        val listener = synchronized(trackingLock) {
+            latestTracked.set(null)
+            trackingListener.also { trackingListener = null }
+        }
+        if (listener != null) {
+            runCatching { manager.removeUpdates(listener) }
+        }
+    }
+
+    private fun activeProviders(fine: Boolean, requirePrecise: Boolean): List<String> {
+        val gps = LocationManager.GPS_PROVIDER
+        val network = LocationManager.NETWORK_PROVIDER
+        val isUiTest = com.knowyoursignal.BuildConfig.BUILD_TYPE == "uitest"
+        if (isUiTest) {
+            val primary = (if (fine) listOf(gps, network) else listOf(network))
+                .filter { manager.isProviderEnabled(it) }
+            return primary.ifEmpty {
+                if (!requirePrecise && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                    manager.isProviderEnabled(LocationManager.FUSED_PROVIDER)
+                ) {
+                    listOf(LocationManager.FUSED_PROVIDER)
+                } else {
+                    emptyList()
+                }
+            }
+        }
+        return buildList {
+            if (fine) add(gps)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                add(LocationManager.FUSED_PROVIDER)
+            }
+            add(network)
+        }.distinct().filter { manager.isProviderEnabled(it) }
+    }
+
+    private fun isBetterFix(candidate: Location, previous: Location?, now: Long): Boolean {
+        if (previous == null) return true
+        val previousAge = now - previous.elapsedMs
+        if (previousAge !in 0..MAX_READING_AGE_MS) return true
+        if (candidate.accuracy < MAX_ACCURACY_M) {
+            return candidate.accuracy <= previous.accuracy ||
+                candidate.elapsedMs - previous.elapsedMs >= 500L
+        }
+        // Never allow a coarse network fix (>=10 m) to overwrite a fresh precise fix (<10 m).
+        if (previous.accuracy < MAX_ACCURACY_M) return false
+        return candidate.accuracy <= previous.accuracy ||
+            candidate.elapsedMs - previous.elapsedMs > 1_500L
+    }
 
     @Suppress("MissingPermission")
     suspend fun read(requirePrecise: Boolean): Position {
@@ -29,28 +116,18 @@ internal class LocationReader(private val context: Context) {
         if (!fine && (requirePrecise || !has(Manifest.permission.ACCESS_COARSE_LOCATION))) {
             throw CaptureException("PERMISSION_DENIED")
         }
-        val gps = LocationManager.GPS_PROVIDER
-        val network = LocationManager.NETWORK_PROVIDER
-        val primaryProviders = (if (fine) listOf(gps, network) else listOf(network))
-            .filter { manager.isProviderEnabled(it) }
-        val providers = primaryProviders.ifEmpty {
-            if (!requirePrecise && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-                manager.isProviderEnabled(LocationManager.FUSED_PROVIDER)
-            ) {
-                listOf(LocationManager.FUSED_PROVIDER)
-            } else {
-                emptyList()
-            }
-        }
+        val providers = activeProviders(fine = fine, requirePrecise = requirePrecise)
         if (providers.isEmpty()) throw CaptureException("LOCATION_DISABLED")
 
         // Approximate location may be throttled. This only centers the map;
         // the stricter capture precision and freshness requirements are retained.
+        val now = SystemClock.elapsedRealtime()
         val cacheAge = if (requirePrecise) MAX_READING_SKEW_MS else MAX_MAP_LOCATION_AGE_MS
-        val candidates = providers.mapNotNull { manager.getLastKnownLocation(it) }
-            .filter { !it.isSimulated() && it.hasAccuracy() && SystemClock.elapsedRealtime() - it.elapsedMs in 0..cacheAge }
+        val tracked = latestTracked.get()
+        val candidates = (listOfNotNull(tracked) + providers.mapNotNull { manager.getLastKnownLocation(it) })
+            .filter { !it.isSimulated() && it.hasAccuracy() && it.accuracy > 0f && now - it.elapsedMs in 0..cacheAge }
         val cached = if (requirePrecise) {
-            candidates.filter { it.provider == gps && it.accuracy < MAX_ACCURACY_M }.minByOrNull { it.accuracy }
+            candidates.filter { it.accuracy < MAX_ACCURACY_M }.minByOrNull { it.accuracy }
                 ?: candidates.minByOrNull { it.accuracy }
         } else {
             candidates.maxByOrNull { it.elapsedMs }
@@ -65,11 +142,12 @@ internal class LocationReader(private val context: Context) {
             suspendCancellableCoroutine<Location> { continuation ->
                 val listener = object : LocationListener {
                     override fun onLocationChanged(location: Location) {
-                        if (location.isSimulated() || !location.hasAccuracy() || !continuation.isActive) return
+                        if (location.isSimulated() || !location.hasAccuracy() || location.accuracy <= 0f || !continuation.isActive) return
+                        val nowInner = SystemClock.elapsedRealtime()
                         val previous = best.get()
-                        if (previous == null || location.accuracy <= previous.accuracy ||
-                            location.elapsedMs - previous.elapsedMs > 1_500
-                        ) best.set(location)
+                        if (isBetterFix(location, previous, nowInner)) {
+                            best.set(location)
+                        }
                         if (!requirePrecise || location.accuracy < MAX_ACCURACY_M) {
                             manager.removeUpdates(this)
                             continuation.resume(location)

@@ -100,7 +100,9 @@ export function PersonalMapScreen({
   const [creatingSession, setCreatingSession] = useState(false);
   const [sessionNotice, setSessionNotice] = useState<string | null>(null);
   const cardRef = useRef<React.ComponentRef<typeof View>>(null);
+  const personalMapRef = useRef<MapView>(null);
   const sharing = useRef(false);
+  const [preparingPreview, setPreparingPreview] = useState(false);
   const requested = useRef<string | null>(null);
   const params = route.params;
 
@@ -516,6 +518,7 @@ export function PersonalMapScreen({
                   onLayout={event => setMapLayout(event.nativeEvent.layout)}
                 >
                   <MapView
+                    ref={personalMapRef}
                     style={StyleSheet.absoluteFill}
                     provider={PROVIDER_GOOGLE}
                     initialRegion={viewRegion}
@@ -662,13 +665,46 @@ export function PersonalMapScreen({
               </Reveal>
             )}
             <Button
-              label="Preparar evidencia PNG"
+              label={
+                preparingPreview
+                  ? 'Capturando mapa...'
+                  : 'Preparar evidencia PNG'
+              }
               icon="share"
-              disabled={!evidence}
-              onPress={() => {
+              busy={preparingPreview}
+              disabled={!evidence || preparingPreview}
+              onPress={async () => {
+                if (!evidence || preparingPreview) return;
                 setExportError(false);
                 setPreviewReady(false);
-                setPreview(evidence);
+                let mapImageUri: string | null = null;
+                if (mapConfig?.mapTiles && personalMapRef.current) {
+                  setPreparingPreview(true);
+                  try {
+                    const snapshotPromise =
+                      personalMapRef.current.takeSnapshot({
+                        format: 'png',
+                        quality: 0.95,
+                        result: 'file',
+                      });
+                    const uri = await Promise.race<string | null>([
+                      snapshotPromise,
+                      new Promise<null>(resolve =>
+                        setTimeout(() => resolve(null), 1_800),
+                      ),
+                    ]);
+                    if (uri) {
+                      mapImageUri = uri.startsWith('file://')
+                        ? uri
+                        : 'file://' + uri;
+                    }
+                  } catch {
+                    mapImageUri = null;
+                  } finally {
+                    setPreparingPreview(false);
+                  }
+                }
+                setPreview({ ...evidence, mapImageUri });
               }}
             />
             {current && mapLayout && (
